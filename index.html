@@ -1252,7 +1252,7 @@
       --ec-grille: #d6d6d1; --ec-flyout: #dcdcd7; --bordure-chrome: #c6c6c0;
     }
     :root[data-theme="light"]:not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
+      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
     :root[data-contrast="high"] {   /* SOMBRE + CONTRASTE ELEVE : noir, bord et texte blancs */
       --ec-page: #000;
       --ec-cat-txt: #fff; --ec-cat-hover: #333; --ec-cat-sel: #fff; --ec-cat-sel-txt: #000; --ec-cat-lisere: transparent;
@@ -1306,7 +1306,7 @@
       --ec-pan: #171c47; --ec-pan-bord: #2c3577; --ec-sep: #2c3577;
     }
     :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
-      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom-color: #e0218a; }
+      background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
     /* Filet du bandeau : neige (Noel) ; rayures « bonbon » orange, jaune, blanc (Halloween) ; magenta (salon). */
     :root[data-saison]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar { border-bottom-color: var(--accent-fonce); }
     :root[data-saison="halloween"]:not([data-theme="light"]):not([data-contrast="high"]) #toolbar {
