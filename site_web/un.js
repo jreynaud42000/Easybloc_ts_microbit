@@ -4153,6 +4153,10 @@ try {
         return toolbox;
     }
 
+    // Tiroir de blocs (colonne des categories) : taille fixe, quel que soit le zoom de la zone de programmation
+    // (demande de l'utilisateur, nov. 2026). Par defaut, Blockly lui donne l'echelle de l'espace de travail.
+    Blockly.Flyout.prototype.getFlyoutScale = function () { return 1; };
+
     window.workspace = Blockly.inject('blocklyDiv', {
       // Images (corbeille, fleches) et sons de Blockly : dossier LOCAL. Sans
       // cette option, Blockly va les chercher sur blockly-demo.appspot.com.
