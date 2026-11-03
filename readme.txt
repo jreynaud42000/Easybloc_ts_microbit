@@ -723,23 +723,34 @@ Apres toute modification des fichiers du projet :
 
    python -m PyInstaller app.spec --noconfirm
 
-Le fichier produit est dist/MicrobitEasybloc_V2.0E.exe (un seul fichier, ~16 Mo,
-sans installation). NUMERO DE VERSION (actuellement V2.0E) : a changer aux
+Le resultat est le DOSSIER dist/MicrobitEasybloc_V2.0E/ (MicrobitEasybloc_V2.0E.exe et _internal/,
+~50 Mo, sans installation). Depuis nov. 2026, mode dossier ("onedir") et non plus exe unique : l'exe unique
+(~26 Mo) etait supprime de dist/ par l'antivirus de Windows, faux positif courant avec PyInstaller. Distribuer
+le dossier ENTIER (par exemple zippe : Compress-Archive dist\MicrobitEasybloc_V2.0E
+dist\MicrobitEasybloc_V2.0E.zip), jamais l'exe seul : sans _internal/ il ne demarre pas. UPX n'est pas
+utilise (upx=False ; il n'etait de toute facon pas installe). Pour supprimer l'avertissement SmartScreen ou
+une detection persistante : signer l'exe (certificat de signature de code) ou signaler le faux positif a
+Microsoft (portail Microsoft Security Intelligence). NUMERO DE VERSION (actuellement V2.0E) : a changer aux
 QUATRE endroits suivants, sinon ils divergent : VERSION dans app.py (affichee
 dans la fenetre console de l'exe), version_info.txt (proprietes du fichier,
 onglet Details : filevers/prodvers en nombres + FileVersion/ProductVersion/
 OriginalFilename en texte), name= dans app.spec (nom du fichier .exe) et le
 texte de #copyright-toolbar dans index.html (barre d'outils de l'application).
-Supprimer ensuite l'ancien .exe de dist/ pour ne pas garder deux versions. Il embarque index.html, un.js, deux.js, trois.js, firmware.hex,
+Supprimer ensuite l'ancien dossier de dist/ pour ne pas garder deux versions. Il embarque index.html, un.js, deux.js, trois.js, firmware.hex,
 logo.png et readme.txt : tout NOUVEAU fichier utilise par l'application doit
 etre ajoute a la liste datas de app.spec, sinon il manquera dans l'exe (logo.png
 avait ete oublie). Double-clic : AUCUNE fenetre ne s'ouvre (l'exe
-est construit sans console : console=False dans app.spec) ; le navigateur
-s'ouvre directement sur http://localhost:8000. Le serveur tourne cache et
+est construit sans console : console=False dans app.spec) ; l'application
+s'ouvre directement dans UNE SEULE FENETRE, sans onglets ni barre d'adresse
+(Microsoft Edge en mode application : msedge.exe --app=http://localhost:8000
+--start-maximized, nov. 2026). Meme profil Edge que le navigateur habituel, donc
+memes donnees enregistrees ; port serie (envoi sur la carte) et camera
+inchanges ; F12 ouvre toujours les outils de developpement. Sans Edge, retour a
+un onglet du navigateur par defaut. Le serveur tourne cache et
 s'ARRETE TOUT SEUL quand la derniere page de l'application est fermee (voir
 "Cycle de vie" ci-dessous). Si le port 8000 est occupe par un autre programme,
 le suivant libre est pris (8001, 8002...). Si l'application tourne deja
-(double-clic repete), le navigateur est simplement rouvert dessus, sans lancer
+(double-clic repete), une fenetre est simplement rouverte dessus, sans lancer
 de seconde copie. Une erreur (aucun port libre) s'affiche dans une boite de
 dialogue Windows.
 Cycle de vie (app.py, exe uniquement ; `python app.py` garde sa console et ne
@@ -1433,5 +1444,10 @@ Demandes de l'utilisateur :
 - Zoom de la simulation : Ctrl + molette sur la carte micro:bit ou le montage (de 50 % a 300 %), comme la molette dans la
   zone de blocs ; la molette seule fait toujours defiler la colonne. Le bouton "Zoom ... % - revenir a 100 %" apparait
   des que le zoom n'est plus a 100 %. Un pave tactile (pincement) zoome de la meme facon.
+  Montage dans la colonne (variante 3 choisie par l'utilisateur, nov. 2026) : ce bouton devient une pastille toujours
+  visible a gauche d'"Agrandir". A 100 % elle indique "Ctrl + molette pour zoomer" (bordure en pointilles, hors de
+  l'ordre de tabulation, aria-disabled) ; une fois zoome elle affiche "Zoom ... % - revenir a 100 %" et remet l'echelle
+  d'origine au clic. Carte seule et montage agrandi : comportement inchange (bouton en haut de la colonne, visible
+  seulement une fois zoome). montage.js : placerZoom().
 - Theme clair (essai B choisi par l'utilisateur) : meme bandeau Educatech qu'en sombre, et fonds gris doux au lieu
   du blanc (zone de blocs #f2f2ef, colonne du simulateur #ececea, cadre du montage #dadad5).

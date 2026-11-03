@@ -1,4 +1,7 @@
 # -*- mode: python ; coding: utf-8 -*-
+# Mode dossier ("onedir", nov. 2026) : dist/MicrobitEasybloc_V2.0E/ contient l'exe et _internal/. Un exe unique
+# ("onefile") se decompresse dans un dossier temporaire a chaque lancement : Defender le classait comme dangereux et
+# le supprimait de dist/. Distribuer le dossier entier (zip), jamais l'exe seul.
 
 
 a = Analysis(
@@ -19,21 +22,28 @@ pyz = PYZ(a.pure)
 exe = EXE(
     pyz,
     a.scripts,
-    a.binaries,
-    a.datas,
     [],
+    exclude_binaries=True,
     name='MicrobitEasybloc_V2.0E',
     version='version_info.txt',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
-    upx_exclude=[],
-    runtime_tmpdir=None,
+    upx=False,
     console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+)
+
+coll = COLLECT(
+    exe,
+    a.binaries,
+    a.datas,
+    strip=False,
+    upx=False,
+    upx_exclude=[],
+    name='MicrobitEasybloc_V2.0E',
 )

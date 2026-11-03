@@ -1,7 +1,7 @@
 """Serveur local du projet micro:bit.
 
-Sert le dossier de l'application sur http://localhost:8000 et ouvre le
-navigateur. Fonctionne aussi bien lance directement (`python app.py`, avec sa
+Sert le dossier de l'application sur http://localhost:8000 et l'ouvre dans une
+seule fenetre (Edge en mode application, sinon le navigateur). Fonctionne aussi bien lance directement (`python app.py`, avec sa
 fenetre console) qu'empaquete par PyInstaller en .exe SANS fenetre console :
 dans ce cas le serveur tourne cache et s'arrete tout seul quand la derniere
 page de l'application est fermee (voir "Cycle de vie" plus bas).
@@ -54,7 +54,7 @@ _etat = {"vu": False, "dernier": 0.0}
 def dossier_de_lapplication():
     """Le dossier contenant index.html, les .js de la page, firmware.hex et lib/.
 
-    Empaquete par PyInstaller, les fichiers sont extraits dans sys._MEIPASS ;
+    Empaquete par PyInstaller (mode dossier), les fichiers sont dans _internal/, que designe sys._MEIPASS ;
     sinon ils sont a cote de ce script. Dans les deux cas il faut s'y placer,
     faute de quoi le serveur sert le repertoire courant de l'appelant.
     """
@@ -73,6 +73,40 @@ def alerte(message):
         except Exception:
             pass
     print(message)
+
+
+def trouver_edge():
+    """Chemin de msedge.exe, ou None (Edge absent, ou autre systeme que Windows)."""
+    if os.name != "nt":
+        return None
+    for variable in ("ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA"):
+        racine = os.environ.get(variable)
+        if racine:
+            chemin = os.path.join(racine, "Microsoft", "Edge", "Application", "msedge.exe")
+            if os.path.isfile(chemin):
+                return chemin
+    return None
+
+
+def ouvrir_fenetre(url):
+    """Ouvre l'application dans UNE seule fenetre, sans onglets ni barre d'adresse.
+
+    Edge en mode application (--app) : fenetre a part, meme profil que le
+    navigateur habituel, donc memes donnees enregistrees (localStorage) qu'avant
+    pour http://localhost:8000. Le port serie (envoi sur la carte) et la camera
+    y marchent comme dans un onglet. Sans Edge, ou s'il refuse de demarrer, on
+    revient a l'ancien comportement : un onglet du navigateur par defaut.
+    """
+    edge = trouver_edge()
+    if edge:
+        try:
+            import subprocess
+            subprocess.Popen([edge, "--app=" + url, "--start-maximized"],
+                             stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            return
+        except OSError:
+            pass
+    webbrowser.open(url)
 
 
 def signe_de_vie(identifiant):
@@ -215,8 +249,8 @@ if __name__ == "__main__":
 
     # Port 8000 de preference ; s'il est pris on essaie les neuf suivants plutot
     # que de s'arreter. Mais si le port est pris par une autre copie de CETTE
-    # application (exe deja lance, donc invisible), on se contente de rouvrir le
-    # navigateur dessus : un second double-clic ne doit pas empiler des serveurs
+    # application (exe deja lance, donc invisible), on se contente de rouvrir une
+    # fenetre dessus : un second double-clic ne doit pas empiler des serveurs
     # caches.
     httpd = None
     for port in range(PORT, PORT + 10):
@@ -226,16 +260,16 @@ if __name__ == "__main__":
         except OSError as erreur:
             print("Port %d indisponible : %s" % (port, erreur))
             if EXE and instance_existante(port):
-                webbrowser.open("http://localhost:%d" % port)
+                ouvrir_fenetre("http://localhost:%d" % port)
                 sys.exit(0)
     if httpd is None:
         alerte("Aucun port libre entre %d et %d.\nFermez les autres serveurs puis relancez l'application." % (PORT, PORT + 9))
         sys.exit(1)
     PORT = port
 
-    # Le navigateur est ouvert apres que le serveur ecoute, sinon il arrive
+    # La fenetre est ouverte apres que le serveur ecoute, sinon elle arrive
     # parfois trop tot et affiche une page d'erreur.
-    threading.Timer(0.5, webbrowser.open, ["http://localhost:%d" % PORT]).start()
+    threading.Timer(0.5, ouvrir_fenetre, ["http://localhost:%d" % PORT]).start()
 
     print("Application disponible sur http://localhost:%d" % PORT)
     if EXE:

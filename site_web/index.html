@@ -987,6 +987,11 @@
         color: var(--texte-chrome); border: 1px solid var(--bordure-chrome); border-radius: 6px; cursor: pointer; }
     .sim-zoom[hidden] { display: none; }
     .sim-zoom:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 2px; }
+    /* Dans la barre du montage : pastille a gauche d'« Agrandir » ; a 100 % simple aide (variante 3, nov. 2026). */
+    .sim-zoom { display: inline-flex; align-items: center; gap: 5px; }
+    .montage-colonne-outils .sim-zoom { align-self: center; margin: 0 0 0 auto; border-radius: 999px; white-space: nowrap; }
+    .montage-colonne-outils .sim-zoom + .montage-agrandir { margin-left: 0; }
+    .sim-zoom.indication { cursor: default; border-style: dashed; }
     .montage-colonne-zone { display: flex; justify-content: center; overflow: hidden; border-radius: 8px;
         background: var(--fond-chrome-profond); padding: 8px; }
     .montage-colonne-agrandi { display: none; margin: 0; padding: 16px; text-align: center; font-size: 13px;

@@ -707,8 +707,24 @@ function choixCarte() {
 
 // Zoom de la simulation (demande de l'utilisateur) : Ctrl + molette sur la carte ou le montage, comme la molette dans
 // la zone de blocs ; la molette seule fait toujours defiler la colonne. Le bouton « 100 % » remet l'echelle d'origine.
+// Dans la barre du montage (colonne), une pastille a cote d'« Agrandir » (demande de l'utilisateur, nov. 2026) : a 100 %
+// elle indique « Ctrl + molette pour zoomer », une fois zoome elle devient le bouton de retour. Ailleurs (carte seule,
+// montage agrandi), le bouton n'apparait qu'une fois zoome, en haut de la colonne, comme avant.
 const ZOOM_MIN = 0.5, ZOOM_MAX = 3;
-let zoomSim = 1, boutonZoom = null;
+let zoomSim = 1, boutonZoom = null, texteZoom = null;
+function placerZoom() {
+    if (!boutonZoom) return;
+    // Deplacer un element lui fait perdre le focus clavier : seulement s'il n'est pas deja a sa place.
+    if (mode === 'colonne') { if (boutonZoom.nextSibling !== agrandir) outilsColonne.insertBefore(boutonZoom, agrandir); }
+    else if (boutonZoom.parentNode !== console_ || console_.firstChild !== boutonZoom) console_.insertBefore(boutonZoom, console_.firstChild);
+    const indication = zoomSim === 1;
+    boutonZoom.hidden = indication && mode !== 'colonne';
+    boutonZoom.classList.toggle('indication', indication);
+    // A 100 % la pastille n'est qu'une aide : hors de l'ordre de tabulation, et annoncee comme inactive.
+    boutonZoom.tabIndex = indication ? -1 : 0;
+    boutonZoom.setAttribute('aria-disabled', String(indication));
+    texteZoom.textContent = indication ? 'Ctrl + molette pour zoomer' : 'Zoom ' + Math.round(zoomSim * 100) + ' % · revenir à 100 %';
+}
 function appliquerZoom() {
     const cadreCarte = $('carte-cadre');
     if (cadreCarte) cadreCarte.style.zoom = zoomSim === 1 ? '' : String(zoomSim);
@@ -717,20 +733,20 @@ function appliquerZoom() {
         zone.style.overflow = zoomSim > 1 ? 'auto' : '';
         zone.style.justifyContent = zoomSim > 1 ? 'flex-start' : '';
     }
-    if (boutonZoom) {
-        boutonZoom.hidden = zoomSim === 1;
-        boutonZoom.textContent = 'Zoom ' + Math.round(zoomSim * 100) + ' % · revenir à 100 %';
-    }
+    placerZoom();
     ajusterEchelle();
 }
 function installerZoom() {
     boutonZoom = document.createElement('button');
     boutonZoom.type = 'button';
     boutonZoom.className = 'sim-zoom';
-    boutonZoom.hidden = true;
     boutonZoom.title = 'Ctrl + molette pour zoomer sur la simulation';
-    boutonZoom.addEventListener('click', () => { zoomSim = 1; appliquerZoom(); });
-    console_.insertBefore(boutonZoom, console_.firstChild);
+    // Loupe dessinee (pas d'emoji) ; le texte vit dans son propre span pour ne pas effacer l'icone.
+    boutonZoom.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor"'
+        + ' stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L20 20M10 7.5v5M7.5 10h5"/></svg><span></span>';
+    texteZoom = boutonZoom.lastChild;
+    boutonZoom.addEventListener('click', () => { if (zoomSim !== 1) { zoomSim = 1; appliquerZoom(); } });
+    placerZoom();
     const molette = e => {
         if (!e.ctrlKey || !e.deltaY) return;   // molette seule : defilement normal ; Ctrl : zoom (et pas celui du navigateur)
         e.preventDefault();
@@ -1092,6 +1108,7 @@ function appliquerMode() {
     bouton.setAttribute('aria-expanded', String(mode === 'grand'));
     bouton.textContent = mode === 'grand' ? '🔌 Fermer le montage' : '🔌 Voir le montage';
     caseAgrandir.checked = mode === 'grand';
+    placerZoom();
     majReglages();
     if (voulu !== ancien) {
         if (voulu === 'grand') fermer.focus();
