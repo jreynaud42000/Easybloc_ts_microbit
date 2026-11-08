@@ -1558,4 +1558,6 @@ window.DICO_EN = {
   "Bras en bas": "Arms down",
   "Avance": "Forward",
   "Stop": "Stop",
+  "reste {t}": "{t} left",
+  "Aucun module branché pour l'instant.": "No module connected yet.",
 };

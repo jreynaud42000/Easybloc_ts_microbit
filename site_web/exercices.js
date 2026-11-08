@@ -207,7 +207,7 @@ function tictac() {
 }
 function chronoEval() {
     const ecoule = (Date.now() - session.debut) / 1000;
-    return session.limiteMs ? '⏱ reste ' + fmt(session.limiteMs / 1000 - ecoule) : '⏱ ' + fmt(ecoule);
+    return session.limiteMs ? 'reste ' + fmt(session.limiteMs / 1000 - ecoule) : fmt(ecoule);
 }
 function enregistrerResultat(ok, points) {
     const e = exo(session.liste[session.idx]);
@@ -362,7 +362,7 @@ function afficherPanneau() {
         const e = exo(session.liste[session.idx]);
         const s = session;
         html += '<div id="ex-entete" class="ex-eval"><span class="ex-titre">' + window.icone('evaluation') + 'Évaluation — ' + esc(s.nom) + ' — ' + (s.idx + 1) + '/' + s.liste.length + '</span>' +
-            '<span id="ex-chrono">' + esc(chronoEval()) + '</span><button data-act="reduire" title="Réduire / agrandir">–</button></div>';
+            window.icone('chrono') + '<span id="ex-chrono">' + esc(chronoEval()) + '</span><button data-act="reduire" title="Réduire / agrandir">–</button></div>';
         html += '<div class="ex-corps"><div class="ex-niveau">' + esc(e.id) + ' · ' + esc(e.titre) + ' · ' + e.points + ' pt' + (e.points > 1 ? 's' : '') + '</div>';
         html += '<p class="ex-consigne">' + esc(e.consigne) + '</p>';
         if (s.etat === 'remis') {
