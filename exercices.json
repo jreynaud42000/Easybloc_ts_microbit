@@ -279,6 +279,116 @@
           "points": 2
         }
       ]
+    },
+    {
+      "id": "n6",
+      "titre": "Niveau 6 — Modules Grove",
+      "notion": "Brancher des modules sur la carte Grove et les programmer",
+      "exercices": [
+        {
+          "id": "6.1",
+          "titre": "La LED Grove clignote",
+          "consigne": "Branche une LED Grove sur P0 et fais-la clignoter : allumée une seconde, éteinte une seconde, sans fin.",
+          "indices": [
+            "Les blocs des modules sont rangés dans la catégorie « Grove », sous-catégorie « LED ».",
+            "Le bloc « contrôler la LED » s'allume avec HAUT (1) et s'éteint avec BAS (0). Il faut l'attendre entre les deux.",
+            "Dans « répéter indéfiniment » : LED à HAUT (1) sur P0, attendre 1 s, LED à BAS (0) sur P0, attendre 1 s."
+          ],
+          "regle": {"tous": [{"bloc": "grove_led_etat", "champ": {"ETAT": "1"}, "ancetre": "boucle_infinie"}, {"bloc": "grove_led_etat", "champ": {"ETAT": "0"}, "ancetre": "boucle_infinie"}, {"bloc": "attendre_temps", "ancetre": "boucle_infinie", "min": 2}]},
+          "solution": {"blocks": [{"type": "au_demarrage", "next": {"block": {"type": "boucle_infinie", "inputs": {"DO": {"block": {"type": "grove_led_etat", "fields": {"ETAT": "1", "BROCHE": "pin0"}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}, "next": {"block": {"type": "grove_led_etat", "fields": {"ETAT": "0", "BROCHE": "pin0"}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}}}}}}}}}}}}, "x": 40, "y": 40}]}
+        },
+        {
+          "id": "6.2",
+          "titre": "La sonnette",
+          "consigne": "Fais sonner un buzzer Grove (sur P1) chaque fois qu'on appuie sur le bouton poussoir Grove (sur P0).",
+          "indices": [
+            "Il faut deux modules : un bouton poussoir et un buzzer, dans la catégorie « Grove ».",
+            "Le bouton a un bloc « lorsque … est appuyé » qui se pose seul dans la zone, comme « au démarrage ».",
+            "Pose « lorsque le bouton sur P0 est appuyé » et mets dedans « bip du buzzer sur P1 pendant 300 ms »."
+          ],
+          "regle": {"bloc": "grove_bouton_lorsque", "contient": "grove_buzzer_bip"},
+          "solution": {"blocks": [{"type": "au_demarrage", "x": 40, "y": 40}, {"type": "grove_bouton_lorsque", "fields": {"BROCHE": "pin0"}, "inputs": {"DO": {"block": {"type": "grove_buzzer_bip", "fields": {"BROCHE": "pin1"}, "inputs": {"DUREE": {"block": {"type": "math_number", "fields": {"NUM": 300}}}}}}}, "x": 40, "y": 240}]}
+        },
+        {
+          "id": "6.3",
+          "titre": "Le télémètre",
+          "consigne": "Affiche en permanence sur la matrice la distance mesurée par le capteur à ultrasons Grove (sur P0).",
+          "indices": [
+            "Le capteur à ultrasons est dans « Grove », sous-catégorie « Ultrason ». Il donne une distance en cm.",
+            "Pour montrer un nombre, utilise « afficher la valeur » de la catégorie « Matrice LED ».",
+            "Dans « répéter indéfiniment » : afficher la valeur de « distance (cm) sur P0 », puis attendre 1 s."
+          ],
+          "regle": {"tous": [{"bloc": "afficher_valeur", "ancetre": "boucle_infinie", "contient": "grove_ultrason_cm"}, {"bloc": "attendre_temps", "ancetre": "boucle_infinie"}]},
+          "solution": {"blocks": [{"type": "au_demarrage", "next": {"block": {"type": "boucle_infinie", "inputs": {"DO": {"block": {"type": "afficher_valeur", "inputs": {"VALEUR": {"block": {"type": "grove_ultrason_cm", "fields": {"BROCHE": "pin0"}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}}}}}}}}, "x": 40, "y": 40}]}
+        },
+        {
+          "id": "6.4",
+          "titre": "L'alarme de recul",
+          "consigne": "Comme sur une voiture : si un obstacle est à moins de 10 cm du capteur à ultrasons (P0), le buzzer (P1) bipe.",
+          "indices": [
+            "Il faut tester la distance en permanence : un « si » dans « répéter indéfiniment ».",
+            "La condition compare deux nombres : bloc « < » de la catégorie « Logique », avec la distance et 10.",
+            "Si « distance (cm) sur P0 » < 10, alors « bip du buzzer sur P1 pendant 200 ms »."
+          ],
+          "regle": {"bloc": "controls_if", "ancetre": "boucle_infinie", "contient": ["grove_ultrason_cm", "logic_compare", "grove_buzzer_bip"]},
+          "solution": {"blocks": [{"type": "au_demarrage", "next": {"block": {"type": "boucle_infinie", "inputs": {"DO": {"block": {"type": "controls_if", "inputs": {"IF0": {"block": {"type": "logic_compare", "fields": {"OP": "LT"}, "inputs": {"A": {"block": {"type": "grove_ultrason_cm", "fields": {"BROCHE": "pin0"}}}, "B": {"block": {"type": "math_number", "fields": {"NUM": 10}}}}}}, "DO0": {"block": {"type": "grove_buzzer_bip", "fields": {"BROCHE": "pin1"}, "inputs": {"DUREE": {"block": {"type": "math_number", "fields": {"NUM": 200}}}}}}}}}}}}, "x": 40, "y": 40}]}
+        },
+        {
+          "id": "6.5",
+          "titre": "Le bouton tournant",
+          "consigne": "Affiche en permanence l'angle du potentiomètre Grove (sur P0) : tourne-le dans « Périphériques » pour voir la valeur changer.",
+          "indices": [
+            "Le potentiomètre est dans « Grove », sous-catégorie « Potentiomètre ».",
+            "Comme pour le télémètre, la valeur s'affiche avec « afficher la valeur » dans une boucle.",
+            "Dans « répéter indéfiniment » : afficher la valeur de « potentiomètre sur P0 (angle) »."
+          ],
+          "regle": {"bloc": "afficher_valeur", "ancetre": "boucle_infinie", "contient": "grove_potentiometre"},
+          "solution": {"blocks": [{"type": "au_demarrage", "next": {"block": {"type": "boucle_infinie", "inputs": {"DO": {"block": {"type": "afficher_valeur", "inputs": {"VALEUR": {"block": {"type": "grove_potentiometre", "fields": {"BROCHE": "pin0", "UNITE": "angle"}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}}}}}}}}, "x": 40, "y": 40}]}
+        }
+      ]
+    },
+    {
+      "id": "n7",
+      "titre": "Niveau 7 — Cartes d'extension",
+      "notion": "Piloter des moteurs et des servos avec la DFR0548 ou la Motor:bit",
+      "exercices": [
+        {
+          "id": "7.1",
+          "titre": "Le moteur démarre",
+          "consigne": "Avec la carte DFR0548, fais tourner le moteur M1 pendant 2 secondes, puis arrête-le.",
+          "indices": [
+            "Les blocs sont dans « Cartes d'extension », sous-catégorie « DFR0548 ».",
+            "Un moteur tourne jusqu'à un autre ordre : il faut un bloc pour le démarrer, attendre, puis un bloc pour l'arrêter.",
+            "Au démarrage : « moteur M1 sens horaire vitesse 150 », « attendre 2 s », « arrêter le moteur M1 »."
+          ],
+          "regle": {"tous": [{"bloc": "dfr_moteur", "dans": ["au_demarrage"]}, {"bloc": "attendre_temps", "dans": ["au_demarrage"]}, {"bloc": "dfr_moteur_arreter", "dans": ["au_demarrage"]}]},
+          "solution": {"blocks": [{"type": "au_demarrage", "inputs": {"DO": {"block": {"type": "dfr_moteur", "fields": {"MOTEUR": "1", "SENS": "1"}, "inputs": {"VITESSE": {"block": {"type": "math_number", "fields": {"NUM": 150}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 2}}}}, "next": {"block": {"type": "dfr_moteur_arreter", "fields": {"MOTEUR": "1"}}}}}}}}, "x": 40, "y": 40}]}
+        },
+        {
+          "id": "7.2",
+          "titre": "Le servo balaie",
+          "consigne": "Avec la carte DFR0548, fais aller le servomoteur S1 de 0° à 180° et retour, sans fin, une seconde à chaque position.",
+          "indices": [
+            "Le servo de la DFR0548 se commande avec « servo S1 à … ° », dans « Cartes d'extension › DFR0548 ».",
+            "Il faut deux positions différentes, avec une attente après chacune, dans une boucle.",
+            "Dans « répéter indéfiniment » : servo S1 à 0°, attendre 1 s, servo S1 à 180°, attendre 1 s."
+          ],
+          "regle": {"tous": [{"bloc": "dfr_servo", "ancetre": "boucle_infinie", "min": 2}, {"bloc": "attendre_temps", "ancetre": "boucle_infinie", "min": 2}]},
+          "solution": {"blocks": [{"type": "au_demarrage", "next": {"block": {"type": "boucle_infinie", "inputs": {"DO": {"block": {"type": "dfr_servo", "fields": {"SERVO": "1"}, "inputs": {"ANGLE": {"block": {"type": "math_number", "fields": {"NUM": 0}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}, "next": {"block": {"type": "dfr_servo", "fields": {"SERVO": "1"}, "inputs": {"ANGLE": {"block": {"type": "math_number", "fields": {"NUM": 180}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}}}}}}}}}}}}, "x": 40, "y": 40}]}
+        },
+        {
+          "id": "7.3",
+          "titre": "Le robot fait un virage",
+          "consigne": "Avec la carte Motor:bit, fais avancer le robot 2 secondes (M1 et M2), puis tourner 1 seconde (M1 seul), puis arrête les deux moteurs.",
+          "indices": [
+            "Les blocs sont dans « Cartes d'extension », sous-catégorie « Motor:bit ».",
+            "Pour avancer, les deux moteurs tournent ; pour tourner, on en arrête un. Chaque étape dure le temps d'une attente.",
+            "Au démarrage : M1 et M2 à 150, attendre 2 s, arrêter M2, attendre 1 s, arrêter les deux moteurs."
+          ],
+          "regle": {"tous": [{"bloc": "motorbit_moteur", "min": 2}, {"bloc": "attendre_temps", "min": 2}, {"bloc": "motorbit_moteur_arreter"}]},
+          "solution": {"blocks": [{"type": "au_demarrage", "inputs": {"DO": {"block": {"type": "motorbit_moteur", "fields": {"MOTEUR": "1", "SENS": "1"}, "inputs": {"VITESSE": {"block": {"type": "math_number", "fields": {"NUM": 150}}}}, "next": {"block": {"type": "motorbit_moteur", "fields": {"MOTEUR": "2", "SENS": "1"}, "inputs": {"VITESSE": {"block": {"type": "math_number", "fields": {"NUM": 150}}}}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 2}}}}, "next": {"block": {"type": "motorbit_moteur_arreter", "fields": {"MOTEUR": "2"}, "next": {"block": {"type": "attendre_temps", "fields": {"UNITE": "s"}, "inputs": {"TEMPS": {"block": {"type": "math_number", "fields": {"NUM": 1}}}}, "next": {"block": {"type": "motorbit_moteur_arreter", "fields": {"MOTEUR": "tous"}}}}}}}}}}}}}}, "x": 40, "y": 40}]}
+        }
+      ]
     }
   ]
 }
