@@ -8,7 +8,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('index.html', '.'), ('multi.html', '.'), ('un.js', '.'), ('deux.js', '.'), ('trois.js', '.'), ('ia.js', '.'), ('ia-son-immediat.js', '.'), ('ia-immediat.js', '.'), ('tuto.js', '.'), ('bandeau.js', '.'), ('montage.js', '.'), ('exercices.js', '.'), ('exercices.json', '.'), ('firmware.hex', '.'), ('logo.png', '.'), ('logo_ts.png', '.'), ('readme.txt', '.'), ('lib', 'lib')],
+    datas=[('index.html', '.'), ('multi.html', '.'), ('un.js', '.'), ('deux.js', '.'), ('trois.js', '.'), ('ia.js', '.'), ('ia-son-immediat.js', '.'), ('ia-immediat.js', '.'), ('tuto.js', '.'), ('bandeau.js', '.'), ('montage.js', '.'), ('modules-dessins.js', '.'), ('langue.js', '.'), ('langue-en.js', '.'), ('icones.js', '.'), ('aide', 'aide'), ('exercices.js', '.'), ('exercices.json', '.'), ('firmware.hex', '.'), ('logo.png', '.'), ('logo_ts.png', '.'), ('readme.txt', '.'), ('lib', 'lib')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

@@ -150,8 +150,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     # MediaPipe (lib/mediapipe) est un module JavaScript en .mjs, plus un .wasm.
     # Python 3.8 sous Windows annonce le .mjs en text/plain : le navigateur
     # refuse alors de l'importer comme module. On fixe les deux types.
+    # Police Inter (lib/polices) : .woff2, inconnu de certaines versions de Python.
     extensions_map = dict(http.server.SimpleHTTPRequestHandler.extensions_map,
-                          **{".mjs": "text/javascript", ".wasm": "application/wasm"})
+                          **{".mjs": "text/javascript", ".wasm": "application/wasm", ".woff2": "font/woff2"})
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store, no-cache, must-revalidate")

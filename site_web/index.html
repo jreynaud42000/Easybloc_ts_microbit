@@ -47,11 +47,20 @@
   <script src="lib/blockly/blockly_compressed.js"></script>
   <script src="lib/blockly/blocks_compressed.js"></script>
   <script src="lib/blockly/python_compressed.js"></script>
+  <!-- Langues (etape 9) : messages anglais de Blockly lus d'abord et mis de cote (MSG_EN), puis les francais ;
+       langue.js remet les anglais si la langue choisie est l'anglais. Tout est enregistre dans le logiciel (RGPD). -->
+  <script src="lib/blockly/msg/en.js"></script>
+  <script>window.MSG_EN = Object.assign({}, Blockly.Msg);</script>
   <script src="lib/blockly/msg/fr.js"></script>
+  <script src="langue-en.js"></script>
+  <script src="langue.js"></script>
+  <script src="icones.js"></script>
   
   <script src="lib/brython/brython.min.js"></script>
   <script src="lib/brython/brython_stdlib.min.js"></script>
-  
+  <!-- Police Inter enregistree dans le logiciel (licence OFL dans lib/polices) : aucun appel en ligne -->
+  <link rel="stylesheet" href="lib/polices/inter.css">
+
   <style>
     /* Theme clair/sombre : variables pour les grandes surfaces (barre d'outils,
        panneaux lateraux, panneau de code, champs de saisie sur fond sombre) —
@@ -157,9 +166,12 @@
        ═══════════════════════════════════════════════════════════════════════ */
     :root {
       --bandeau: #ff5501; --bandeau-sombre: #d94700; --accent: #ff5501; --accent-fonce: #b33a00; --top-h: 44px;   /* charte Technologie Services : bandeau orange (clair #ff5501, sombre un peu plus profond), filet bas orange fonce */
-      --font: 'Segoe UI', Arial, sans-serif;
+      --font: 'Inter', 'Segoe UI', Arial, sans-serif;   /* police Inter (lib/polices), comme la version Arduino R4 */
       --btn-green: #4caa3c; --btn-green-h: #3d8e2f;
-      --couleur-bandeau: var(--bandeau);
+      /* Couleur du bandeau pour les textes poses sur fond blanc (cadre du nom, numero de carte) et les titres et boutons
+         principaux des fenetres : violet du degrade Educatech, le bandeau affiche (choix de l'utilisateur, nov. 2026 ;
+         contraste 8,8 sur blanc). Themes Halloween et Noel : couleur de leur bandeau ; contraste eleve : noir. */
+      --couleur-bandeau: #6a2c91;
     }
     :root:not([data-theme="light"]) { --couleur-bandeau: var(--bandeau-sombre); }
     :root[data-contrast="high"] { --couleur-bandeau: #000; }
@@ -167,7 +179,9 @@
     #toolbar {
       min-height: var(--top-h); box-sizing: border-box; position: relative;
       background: var(--bandeau); color: #fff; border-bottom: 3px solid var(--couleur-bandeau);   /* filet de la couleur du bandeau : plus de liseré orange fonce */
-      display: flex; align-items: center; flex-wrap: wrap; gap: 4px 2px;
+      /* JAMAIS sur deux lignes, comme la version Arduino R4 : quand la place manque, le bandeau se compacte par paliers
+         (bandeau.js, classes .compact-1 a .compact-5). Pas d'overflow: hidden, qui couperait les menus deroulants. */
+      display: flex; align-items: center; flex-wrap: nowrap; gap: 4px 2px;
       padding: 3px 6px; flex-shrink: 0;
       box-shadow: 0 2px 4px rgba(0,0,0,0.25); z-index: 100; font-family: var(--font);
     }
@@ -187,6 +201,24 @@
     #btn-vue-console:not(.inactif), #btn-vue-simu:not(.inactif), #btn-vue-code:not(.inactif), #btn-vue-ia:not(.inactif) {
       box-shadow: inset 0 -3px 0 #fff; border-radius: 4px 4px 0 0; }
     .tb-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.25); margin: 0 2px; }
+    /* Icones SVG au trait des menus du bandeau (a la place des emojis, comme la version Arduino R4) : couleur du texte. */
+    .tb-dropdown-menu .ic-menu { vertical-align: -2px; margin-right: 7px; flex-shrink: 0; }
+    #toolbar > * { flex-shrink: 0; }
+    #toolbar > #tb-nomfichier { flex-shrink: 1; min-width: 80px; }
+    /* Paliers de compactage du bandeau (bandeau.js choisit le plus petit qui suffit ; ils se cumulent), comme la version
+       Arduino R4 : 1 = boutons plus serres, nom plus court ; 2 = Capture, console, simulation, code en icones seules (la
+       bulle donne le nom) ; 3 = IA et Radio en icones, selecteur de carte plus etroit ; 4 = Fichier et Aide reduits a leur
+       icone, logo masque ; 5 = Televerser et Lancer la simulation en icones (dernier recours, tres petit ecran). */
+    #toolbar.compact-1 .tb-btn { padding: 5px 4px; }
+    #toolbar.compact-1 .tb-sep { margin: 0 1px; }
+    #toolbar.compact-1 #tb-nomfichier { max-width: 170px; }
+    #toolbar.compact-2 .tb-libelle { display: none; }
+    #toolbar.compact-3 .tb-libelle-2 { display: none; }
+    #toolbar.compact-3 #port-select { max-width: 110px; }
+    #toolbar.compact-4 .tb-libelle-3 { display: none; }
+    #toolbar.compact-4 #tb-logo { display: none; }
+    #toolbar.compact-4 #tb-nomfichier { max-width: 130px; }
+    #toolbar.compact-5 .tb-libelle-5 { display: none; }
     #btn-radio-multi[hidden] { display: none; }   /* .tb-btn impose display: flex (bouton cache dans le multi-editeur) */
 
     /* Logo (accessoire : le fichier logo.png actuel est conserve) */
@@ -205,9 +237,11 @@
       padding: 4px 10px; margin: 0 2px; border: 2px solid #fff; border-radius: 5px;
       box-shadow: inset 0 0 0 1px rgba(0,0,0,.12); cursor: text;
     }
-    #tb-nomfichier:hover { background: #eef7f7; border-color: #eef7f7; }
+    #tb-nomfichier:hover { background: #f4eef8; border-color: #f4eef8; }   /* teinte tres claire du violet du bandeau */
+    /* Largeur du champ ajustee au nom par bandeau.js (cadre de 80 a 240 px, comme le modele) ; un nom trop long est coupe
+       par « … » et la bulle le montre en entier. */
     #nom-fichier {
-      width: 84px; min-width: 0; border: none; outline: none; background: transparent;
+      width: 84px; max-width: 100%; min-width: 0; border: none; outline: none; background: transparent;
       color: inherit; font: inherit; font-weight: 700; padding: 0; margin: 0; text-overflow: ellipsis;
     }
     #nom-fichier::placeholder { color: var(--couleur-bandeau); opacity: 0.6; font-weight: 600; }
@@ -232,7 +266,12 @@
     .tb-dropdown-menu button.choisi { font-weight: 700; color: var(--accent-fonce); }
     .tb-dropdown-menu button.choisi::after { content: '  ✓'; }
     #menu-affichage-panneau { left: 0; min-width: 190px; }
-    #menu-aide-panneau { left: auto; right: 0; min-width: 230px; }     /* Aide : tout a droite, s'ouvre vers la gauche */
+    #menu-aide-panneau { left: auto; right: 0; min-width: 230px; }
+    /* Langue : drapeau SVG (pas d'emoji), menu ouvert vers la gauche */
+    #btn-langue { display: inline-flex; align-items: center; gap: 4px; }
+    #menu-langue { left: auto; right: 0; min-width: 150px; }
+    #menu-langue button { display: flex; align-items: center; gap: 8px; }
+    .drapeau { width: 21px; height: 14px; border-radius: 2px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.25); flex: 0 0 auto; }     /* Aide : tout a droite, s'ouvre vers la gauche */
 
     /* Selecteur de carte (non disponible sur micro:bit : grise), pousse a droite */
     #port-group {
@@ -316,26 +355,134 @@
     #panneau-options p { margin: 0 0 12px 0; font-size: 12px; color: #b8b8b8; max-width: 40ch; }
     #panneau-options .actions { display: flex; gap: 8px; }
     #panneau-options .actions button { margin: 0; font-size: 13px; padding: 7px 12px; }
-    /* Fenetre d'envoi sur la carte : au-dessus de tout (le z-index de Blockly
-       pour ses menus deroulants monte tres haut), bloque les clics tant que
-       le transfert dure. */
-    #voile-envoi { position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    /* Fenetre d'envoi sur la carte, comme la version Arduino R4 (STYLE_PROGRESSION de r4-televersement.js, nov. 2026) :
+       au milieu de l'ecran, fond legerement grise (noir a 28 %) qui bloque les clics pendant l'envoi, barre par etapes,
+       bouton « Annuler le televersement » ; une fois fini, elle disparait seule (3 s, 6 s en cas d'erreur) et un clic
+       sur le fond la ferme tout de suite. Au-dessus de tout (les menus de Blockly montent tres haut). */
+    #voile-envoi { position: fixed; inset: 0; background: rgba(0,0,0,0.28); transition: opacity .4s;
                    display: none; align-items: center; justify-content: center; z-index: 200000; }
     #voile-envoi.ouvert { display: flex; }
-    #fenetre-envoi { background: var(--fond-code); color: var(--texte-chrome); border-radius: 10px;
-                     padding: 22px 26px; width: 360px; max-width: 90vw; text-align: center;
-                     box-shadow: 0 8px 30px rgba(0,0,0,0.5); border: 1px solid var(--bordure-chrome); }
-    #fenetre-envoi h3 { margin: 0 0 6px 0; color: #ff7a33; font-size: 15px; text-transform: uppercase; }
-    #envoi-phase { margin: 0 0 14px 0; font-size: 13px; min-height: 1.3em; }
-    #envoi-barre { height: 14px; background: var(--fond-saisie); border: 1px solid var(--bordure-chrome);
-                   border-radius: 7px; overflow: hidden; }
-    #envoi-remplissage { height: 100%; width: 0%; background: #ff5501; transition: width 0.12s linear; }
-    #envoi-pourcent { margin: 10px 0 0 0; font-size: 22px; font-weight: bold; }
+    #voile-envoi.fini { cursor: pointer; }
+    #voile-envoi.disparait { opacity: 0; }
+    #fenetre-envoi { width: min(420px, calc(100vw - 32px)); box-sizing: border-box; padding: 14px 16px; cursor: default;
+                     background: #fff; color: #222; border: 1px solid #d0d7de; border-radius: 8px;
+                     box-shadow: 0 10px 30px rgba(0,0,0,.25); font-size: 13px; font-family: var(--font); }
+    #fenetre-envoi .tete { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-weight: 600; }
+    #envoi-pourcent { white-space: nowrap; }
+    #envoi-barre { height: 12px; background: #e9ecef; border-radius: 6px; overflow: hidden; }
+    #envoi-remplissage { height: 100%; width: 0%; background: var(--couleur-bandeau); border-radius: 6px; transition: width .25s linear; }
+    #fenetre-envoi .etapes { display: flex; justify-content: space-between; margin-top: 5px; font-size: 11.5px; color: #777; }
+    #fenetre-envoi .etapes .faite { color: #2b8a3e; font-weight: 600; }
+    #fenetre-envoi .etapes .active { color: #222; font-weight: 600; }
+    #envoi-phase { margin: 8px 0 0; min-height: 1.3em; }
+    #fenetre-envoi.ok #envoi-remplissage { background: #2b8a3e; }
+    #fenetre-envoi.erreur #envoi-remplissage { background: #c92a2a; }
+    #fenetre-envoi.erreur .tete, #fenetre-envoi.erreur #envoi-phase { color: #c92a2a; }
+    #fenetre-envoi.annule #envoi-remplissage { background: #868e96; }
+    #fenetre-envoi.annule #envoi-pourcent { display: none; }
+    #envoi-annuler { display: block; margin: 10px 0 0 auto; min-height: 32px; padding: 6px 14px; border: 1px solid #c92a2a;
+                     border-radius: 6px; background: #fff; color: #c92a2a; font: inherit; font-weight: 600; cursor: pointer;
+                     transition: background-color .15s, color .15s; }
+    #envoi-annuler:hover { background: #c92a2a; color: #fff; }
+    #envoi-annuler:focus-visible { outline: 2px solid #1c7ed6; outline-offset: 2px; }
+    #envoi-annuler:disabled { opacity: .6; cursor: default; }
+    #fenetre-envoi.ok #envoi-annuler, #fenetre-envoi.erreur #envoi-annuler, #fenetre-envoi.annule #envoi-annuler { display: none; }
+    :root:not([data-theme="light"]) #fenetre-envoi { background: #25272b; color: #e6e6e6; border-color: #3a3d42; }
+    :root:not([data-theme="light"]) #envoi-barre { background: #3a3d42; }
+    :root:not([data-theme="light"]) #fenetre-envoi .etapes { color: #a8abb2; }
+    :root:not([data-theme="light"]) #fenetre-envoi .etapes .active { color: #e6e6e6; }
+    :root:not([data-theme="light"]) #fenetre-envoi.erreur .tete, :root:not([data-theme="light"]) #fenetre-envoi.erreur #envoi-phase { color: #ff8787; }
+    :root:not([data-theme="light"]) #envoi-annuler { background: #25272b; color: #ff8787; border-color: #ff8787; }
+    :root:not([data-theme="light"]) #envoi-annuler:hover { background: #ff8787; color: #25272b; }
+    :root[data-contrast="high"] #fenetre-envoi { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-contrast="high"] #envoi-remplissage { background: #fff; }
+    :root[data-contrast="high"] #envoi-annuler { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-theme="light"][data-contrast="high"] #fenetre-envoi { background: #fff; color: #000; border-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] #envoi-remplissage { background: #000; }
+    :root[data-theme="light"][data-contrast="high"] #envoi-annuler { background: #fff; color: #000; border-color: #000; }
+    :root[data-contrast="high"] #fenetre-envoi .etapes, :root[data-contrast="high"] #fenetre-envoi .etapes .faite,
+    :root[data-contrast="high"] #fenetre-envoi .etapes .active { color: inherit; }
+    :root[data-contrast="high"] #fenetre-envoi .etapes .active { text-decoration: underline; }
+    /* ═══ FENETRES : aspect commun, comme la version Arduino R4 (STYLE_NOM de blockly-jeulin.html, nov. 2026) ═══
+       Titre sur un bandeau de la couleur du bandeau (--couleur-bandeau), texte blanc ; coins de 10 px, ombre douce ;
+       pied gris clair ; bouton principal de la couleur du bandeau, boutons secondaires blancs bordes de gris.
+       Classes reutilisables (.fen-*) ; les fenetres existantes reprennent les memes valeurs sur leurs propres id. */
+    .fen-voile { position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 200050;
+                 display: flex; align-items: center; justify-content: center; }
+    .fen-boite { background: #fff; color: #222; border-radius: 10px; width: min(440px, calc(100vw - 32px)); overflow: hidden;
+                 box-shadow: 0 10px 30px rgba(0,0,0,.25); font-family: var(--font); }
+    .fen-titre { margin: 0; padding: 12px 16px; background: var(--couleur-bandeau); color: #fff; font-size: 16px; font-weight: 600; }
+    .fen-corps { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; font-size: 14px; }
+    .fen-corps p { margin: 0; }
+    .fen-corps input { font-size: 16px; padding: 8px 10px; border: 2px solid #ccc; border-radius: 6px; font-family: inherit; }
+    .fen-corps input:focus { outline: none; border-color: var(--couleur-bandeau); }
+    .fen-exemple { font-size: 12px; color: #777; }
+    .fen-pied { display: flex; justify-content: flex-end; gap: 8px; padding: 10px 16px; background: #f6f6f6; }
+    .fen-btn { padding: 7px 16px; border-radius: 6px; border: 1px solid #bbb; background: #fff; color: #222; cursor: pointer;
+               font-size: 14px; font-family: inherit; }
+    .fen-btn.principal { background: var(--couleur-bandeau); border-color: var(--couleur-bandeau); color: #fff; font-weight: 600; }
+    .fen-btn.principal:disabled { opacity: .45; cursor: default; }
+    :root:not([data-theme="light"]) .fen-boite { background: #303237; color: #e6e6e6; }
+    :root:not([data-theme="light"]) .fen-corps input { background: #25272b; color: #e6e6e6; border-color: #4a4d53; }
+    :root:not([data-theme="light"]) .fen-pied { background: #2a2c30; }
+    :root:not([data-theme="light"]) .fen-btn:not(.principal) { background: #3a3d42; color: #e6e6e6; border-color: #4a4d53; }
+    :root:not([data-theme="light"]) .fen-exemple { color: #a8abb2; }
+    :root[data-contrast="high"] .fen-boite { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-contrast="high"] .fen-titre, :root[data-contrast="high"] .fen-btn.principal { border: 1px solid #fff; }
+    :root[data-contrast="high"] .fen-corps input { background: #000; color: #fff; border-color: #fff; }
+    :root[data-contrast="high"] .fen-pied { background: #000; border-top: 2px solid #fff; }
+    :root[data-contrast="high"] .fen-btn:not(.principal) { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-contrast="high"] .fen-exemple { color: #fff; }
+    :root[data-theme="light"][data-contrast="high"] .fen-boite { background: #fff; color: #000; border-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] .fen-corps input { background: #fff; color: #000; border-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] .fen-pied { background: #fff; border-top-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] .fen-btn:not(.principal) { background: #fff; color: #000; border-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] .fen-exemple { color: #000; }
+
+    /* Fenetre d'aide d'un bloc : meme aspect (titre sur bandeau de couleur, fond clair ou sombre, boutons). Le bloc de regles
+       d'origine plus bas fixe la mise en page ; ces regles « :root » l'emportent pour les couleurs. */
+    :root #voile-aide { background: rgba(0,0,0,.4); }
+    :root #fenetre-aide { background: #fff; color: #222; border: none; box-shadow: 0 10px 30px rgba(0,0,0,.25); padding-top: 0; }
+    :root #aide-entete { margin: 0 -24px 14px; padding: 12px 16px; background: var(--couleur-bandeau); }
+    :root #fenetre-aide h3 { color: #fff; font-size: 16px; font-weight: 600; text-transform: none; }
+    :root #aide-exemple-titre { color: var(--couleur-bandeau); }
+    :root #aide-inserer, :root #aide-fermer { padding: 7px 16px; border-radius: 6px; font-size: 14px; font-family: inherit; cursor: pointer; }
+    :root #aide-inserer { background: var(--couleur-bandeau); border: 1px solid var(--couleur-bandeau); color: #fff; font-weight: 600; }
+    :root #aide-fermer { display: block; margin: 0 0 0 auto; background: #fff; border: 1px solid #bbb; color: #222; }
+    :root:not([data-theme="light"]) #fenetre-aide { background: #303237; color: #e6e6e6; }
+    :root:not([data-theme="light"]) #aide-exemple-titre { color: #d3b5e8; }   /* violet eclairci : lisible sur fond sombre */
+    :root:not([data-theme="light"]) #aide-fermer { background: #3a3d42; color: #e6e6e6; border-color: #4a4d53; }
+    :root[data-contrast="high"] #fenetre-aide { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-contrast="high"] #aide-entete, :root[data-contrast="high"] #aide-inserer { border: 1px solid #fff; }
+    :root[data-contrast="high"] #aide-exemple-titre { color: inherit; }
+    :root[data-contrast="high"] #aide-fermer { background: #000; color: #fff; border: 2px solid #fff; }
+    :root[data-theme="light"][data-contrast="high"] #fenetre-aide { background: #fff; color: #000; border-color: #000; }
+    :root[data-theme="light"][data-contrast="high"] #aide-fermer { background: #fff; color: #000; border-color: #000; }
+
+    /* Nom du programme : le cadre du bandeau ouvre la fenetre « Renommer le programme » (bandeau.js), comme le modele ;
+       le champ n'est plus saisi directement. */
+    #tb-nomfichier { cursor: pointer; }
+    #tb-nomfichier:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+    #nom-fichier { pointer-events: none; cursor: pointer; }
+
     /* Fenetre d'aide d'un bloc (clic droit > "Aide sur ce bloc"). Au-dessus
        du menu contextuel de Blockly. */
     #voile-aide { position: fixed; inset: 0; background: rgba(0,0,0,0.55);
                   display: none; align-items: center; justify-content: center; z-index: 200100; }
     #voile-aide.ouvert { display: flex; }
+    /* Fiche d'aide d'un bloc (etape 10) : fenetre integree, la fiche (page blanche) dans un cadre */
+    #voile-fiche { position: fixed; inset: 0; background: rgba(0,0,0,0.55); display: none; align-items: center;
+                   justify-content: center; z-index: 200100; padding: 24px; }
+    #voile-fiche.ouvert { display: flex; }
+    #fiche-boite { background: #fff; width: min(900px, 92vw); height: min(90vh, 900px); border-radius: 8px; overflow: hidden;
+                   display: flex; flex-direction: column; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
+    #fiche-entete { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 14px;
+                    background: var(--couleur-bandeau, #6a2c91); color: #fff; font-weight: 600; font-size: 14px; }
+    #fiche-fermer { background: rgba(255,255,255,0.15); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 5px;
+                    padding: 4px 12px; cursor: pointer; font: inherit; font-size: 13px; }
+    #fiche-fermer:hover { background: rgba(255,255,255,0.28); }
+    #fiche-corps { flex: 1; overflow: auto; background: #f2f2f2; }
+    #fiche-corps iframe { width: 100%; height: 100%; border: 0; display: block; }
     #fenetre-aide { background: var(--fond-code); color: var(--texte-chrome); border-radius: 10px;
                     padding: 20px 24px; width: 460px; max-width: 92vw; max-height: 85vh; overflow-y: auto;
                     box-shadow: 0 8px 30px rgba(0,0,0,0.5); border: 1px solid var(--bordure-chrome); }
@@ -626,20 +773,38 @@
     .blocklyToolboxDiv, .blocklyToolboxCategory, .blocklyTreeLabel { font-family: var(--font, 'Segoe UI', Arial, sans-serif) !important; }
     /* Puces rondes (au lieu de la bande rectangulaire) : Blockly pose la couleur de la categorie en bordure gauche
        de la ligne ; bandeau.js la copie dans --puce, la bordure est supprimee et la puce est dessinee en rond. */
-    .blocklyToolboxCategory .blocklyTreeRow { border-left-width: 0 !important; position: relative; padding-left: 33px !important; }
+    /* Mesures de la version Arduino R4 (nov. 2026) : colonne de 160 px, lignes de 10 px de marge haute et basse, pastille de
+       14 px a 12 px du bord (apres le lisere de 3 px), texte 8 px plus loin ; un nom long passe sur deux lignes. */
+    .blocklyToolboxDiv { width: 160px !important; overflow-x: hidden !important; scrollbar-width: thin; }
+    .blocklyToolboxContents > *, .blocklyToolboxCategory { min-width: 0; max-width: 100%; box-sizing: border-box; }
+    .blocklyToolboxCategory .blocklyTreeLabel { white-space: normal !important; }
+    .blocklyToolboxCategory .blocklyTreeRow { border-left-width: 0 !important; position: relative; height: auto !important;
+        line-height: 1.3; white-space: normal; padding: 10px 12px 10px 37px !important; }
+    .blocklyToolboxCategory .blocklyTreeRowContentContainer { display: flex; align-items: center; }
+    .blocklyToolboxCategory .blocklyTreeLabel { min-width: 0; overflow-wrap: break-word; }
     .blocklyToolboxCategory .blocklyTreeRow::before {
-        content: ''; position: absolute; left: 6px; top: 50%; width: 18px; height: 18px; margin-top: -9px; border-radius: 50%;
-        background: var(--puce, #888); box-shadow: 0 0 0 1.5px rgba(255,255,255,0.55); }
+        content: ''; position: absolute; left: 15px; top: 50%; width: 14px; height: 14px; margin-top: -7px; border-radius: 50%;
+        background: var(--puce, #888); }
     /* Zone de recherche de blocs (bandeau.js), collee en haut de la colonne de categories pendant son defilement. */
     #recherche-blocs { position: sticky; top: 0; z-index: 5; padding: 8px 8px 6px; background: inherit; }
     #recherche-blocs svg { position: absolute; left: 17px; top: 50%; margin-top: -4px; color: #9a9a9a; pointer-events: none; }
     #recherche-blocs input { width: 100%; box-sizing: border-box; padding: 6px 8px 6px 28px; font-size: 13px; font-family: var(--font, sans-serif);
         border-radius: 4px; border: 1px solid var(--bordure-chrome); background: var(--fond-saisie); color: var(--texte-saisie); }
     #recherche-blocs input::placeholder { color: #8a8a8a; }
+    /* Croix d'effacement (bandeau.js), comme la version Arduino R4 ; la croix native du champ de recherche est masquee. */
+    #recherche-blocs input { padding-right: 24px; }
+    #recherche-blocs input::-webkit-search-cancel-button { display: none; }
+    #recherche-blocs-effacer { display: none; position: absolute; right: 12px; top: 50%; margin-top: -8px; width: 18px; height: 18px;
+        border: none; border-radius: 50%; padding: 0; background: transparent; color: var(--texte-saisie); font-size: 11px; line-height: 18px; cursor: pointer; }
+    #recherche-blocs-effacer:hover { background: #666; color: #fff; }
+    #recherche-blocs.remplie #recherche-blocs-effacer { display: block; }
+    /* Titres des resultats de recherche (« Grove · LED ») : droits et en gras, comme le modele. */
+    .injectionDiv .blocklyFlyout .titre-recherche .blocklyFlyoutLabelText { font-style: normal !important; font-weight: 700 !important; }
     #recherche-blocs input:focus { outline: 2px solid #ff5501; outline-offset: 0; }
-    /* Sous-categories (Radio > Groupe..., Grove > LED...) : puce et texte decales de 14 px vers la droite. */
-    .blocklyToolboxCategory .blocklyToolboxCategory .blocklyTreeRow { padding-left: 47px !important; }
-    .blocklyToolboxCategory .blocklyToolboxCategory .blocklyTreeRow::before { left: 20px; }
+    /* Sous-categories (Radio > Groupe..., Grove > LED...) : comme le modele, pastille a 16 px du bord,
+       texte 6 px plus loin, marges de 7 px. */
+    .blocklyToolboxCategory .blocklyToolboxCategory .blocklyTreeRow { padding: 7px 4px 7px 39px !important; }
+    .blocklyToolboxCategory .blocklyToolboxCategory .blocklyTreeRow::before { left: 19px; }
     /* Visite guidee (tuto.js) : le voile ne bloque pas les clics, l'utilisateur manipule les vrais outils. */
     #tuto-voile { display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); z-index: 9000; pointer-events: none; }
     #tuto-spot { display: none; position: fixed; z-index: 9001; pointer-events: none; border-radius: 6px;
@@ -657,6 +822,15 @@
     #tuto-bulle button { font-size: 12px; padding: 5px 10px; margin: 0; background: #4a4a4a; color: #fff; }
     #tuto-bulle button:hover { background: #5e5e5e; }
     #tuto-bulle #tuto-suivant.pret { background: #27ae60; }
+    /* Decor d'une visite (tuto.js) : menu du clic droit simule, construit a partir du vrai menu, et pointeur. */
+    .tuto-faux { position: fixed; z-index: 9001; pointer-events: none; }
+    .tuto-faux-menu { background: #fff; color: #000; border-radius: 4px; padding: 4px 0; min-width: 190px; font-size: 13px;
+        box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35); }
+    .tuto-faux-menu div { padding: 6px 20px 6px 14px; white-space: nowrap; }
+    .tuto-faux-menu .inactif { color: #aaa; }
+    .tuto-faux-menu .surligne { background: #fff3bf; outline: 2px solid #f59f00; outline-offset: -2px; font-weight: 700; }
+    .tuto-faux-curseur { width: 22px; height: 22px; filter: drop-shadow(0 1px 2px rgba(0, 0, 0, .5)); }
+    :root[data-contrast="high"] .tuto-faux-menu { border: 2px solid #000; box-shadow: none; }
     /* Message d'accueil de tuto.js : propose de visiter le menu Fichier (visites guidees). */
     #tuto-accueil { position: fixed; z-index: 9003; width: 320px; max-width: calc(100vw - 16px); box-sizing: border-box;
         padding: 14px 16px; background: #fffdf5; color: #1b2733; border: 2px solid #ff5501; border-radius: 10px;
@@ -923,10 +1097,10 @@
     .montage-reglages-bascule[hidden] { display: none; }
     .montage-reglages-bascule:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 2px; }
     #grove-panneau.montage-reglages > h4 { display: none; }
-    #grove-panneau.montage-reglages > .grove-bloc:not(#grove-sec-ultrason):not(#grove-sec-joystick):not(#grove-sec-potentiometre):not(#grove-sec-bouton):not(#grove-sec-lumiere):not(#grove-sec-pir):not(#grove-sec-pression):not(#grove-sec-cov):not(#grove-sec-gestes):not(#grove-sec-th):not(#grove-sec-co2):not(#grove-sec-couleur):not(#grove-sec-radio) { display: none !important; }
+    #grove-panneau.montage-reglages .grove-bloc:not(#grove-sec-ultrason):not(#grove-sec-joystick):not(#grove-sec-potentiometre):not(#grove-sec-bouton):not(#grove-sec-lumiere):not(#grove-sec-pir):not(#grove-sec-pression):not(#grove-sec-cov):not(#grove-sec-gestes):not(#grove-sec-th):not(#grove-sec-co2):not(#grove-sec-couleur):not(#grove-sec-radio) { display: none !important; }
     /* Bouton poussoir : il s'actionne dans le montage ; seule la case « maintenu enfonce » reste a regler. */
     #grove-panneau.montage-reglages #grove-bouton-appui { display: none; }
-    #grove-panneau.montage-reglages.reglages-replies > .grove-bloc { display: none !important; }
+    #grove-panneau.montage-reglages.reglages-replies .grove-bloc { display: none !important; }
     #grove-panneau.montage-reglages.reglages-vides { display: none !important; }
     .montage-appui { cursor: pointer; touch-action: none; }
     .montage-appui:focus { outline: none; }
@@ -937,11 +1111,15 @@
     .mv-palonnier { transform-box: view-box; transition: transform 0.25s ease-out; }
     .mv-palonnier.mv-tourne { animation: servo-tour var(--duree, 2s) linear infinite; transition: none; }
     .mv-palonnier.mv-tourne.inverse { animation-direction: reverse; }
+    /* Servomoteur dessine d'apres le modele : roue du servo continu (meme vitesse que le cadran de « Peripheriques ») */
+    .mv-roue-servo { transform-box: fill-box; transform-origin: center; }
+    .mv-roue-servo.mv-tourne { animation: servo-tour var(--duree, 2s) linear infinite; }
+    .mv-roue-servo.mv-tourne.inverse { animation-direction: reverse; }
     .mv-onde { opacity: 0; }
     .mv-onde.actif { animation: mv-onde 0.9s ease-out infinite; }
     @keyframes mv-onde { 0% { opacity: 0.9; } 100% { opacity: 0; } }
     @media (prefers-reduced-motion: reduce) {
-        #montage-scene .dfr-roue.tourne, .mv-palonnier.mv-tourne { animation: none; }
+        #montage-scene .dfr-roue.tourne, .mv-palonnier.mv-tourne, .mv-roue-servo.mv-tourne { animation: none; }
         .mv-onde.actif { animation: none; opacity: 0.9; }
         .mv-palonnier, #montage-scene .dfr-axe { transition: none !important; }
     }
@@ -980,6 +1158,7 @@
     .montage-agrandir { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; margin: 0 0 0 auto;
         font-size: 13px; color: var(--texte-chrome); opacity: 0.85; cursor: pointer; white-space: nowrap; }
     .montage-agrandir:hover { opacity: 1; }
+    .montage-agrandir[hidden] { display: none; }
     .montage-agrandir input { width: 16px; height: 16px; margin: 0; accent-color: #2bb3a0; cursor: pointer; }
     .montage-agrandir input:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 2px; }
     /* Zoom de la simulation (Ctrl + molette, montage.js) : rappel du niveau et retour a 100 %. */
@@ -1004,6 +1183,78 @@
     #carte-cadre.montage-carte-absente { align-items: center; }
     #carte-cadre.montage-carte-absente::after { content: "La carte est affichée dans le montage."; font-size: 13px;
         color: var(--texte-chrome); opacity: 0.8; text-align: center; }
+
+    /* ═══ SIMULATION COMME ESPACE DE TRAVAIL (montage.js, comme la version Arduino R4, nov. 2026) ═══
+       La scene (carte seule ou montage) est toujours affichee dans une zone a ECHELLE FIXE : elargir la colonne donne de
+       la place autour, la carte ne grossit pas. Molette = zoom, glisser le fond = se deplacer, boutons Recentrer / + / −
+       en bas a droite. Le cadre remplit sa zone ; la scene y est placee par une transformation (translation + echelle). */
+    .montage-colonne-zone { position: relative; height: clamp(280px, 55vh, 640px); padding: 0; background: transparent;
+        border: 1px solid var(--ec-bord, var(--bordure-chrome)); }
+    .montage-zone { position: relative; overflow: hidden; padding: 0; }
+    .montage-cadre-echelle { position: absolute; inset: 0; overflow: hidden; cursor: default; touch-action: none; user-select: none; -webkit-user-select: none; }
+    .montage-cadre-echelle.vue-deplacee { cursor: grabbing; }
+    #montage-scene { transform-origin: 0 0; }
+    /* Curseurs comme le modele : doigt = appuyer (bouton, joystick du montage, boutons et logo de la carte) */
+    .montage-cadre-echelle .montage-appui, .montage-cadre-echelle #microbit-board .mb-btn-inner,
+    .montage-cadre-echelle #mb-logo { cursor: pointer; }
+    /* Fleches en croix = deplacer un module (montage.js) ; bouton et joystick se deplacent par leurs libelles. */
+    .montage-cadre-echelle .montage-module { cursor: move; }
+    .montage-cadre-echelle .montage-module.montage-appui { cursor: pointer; }
+    /* Ruban de LED : fixe au-dessus de la carte, il ne se deplace pas */
+    .montage-cadre-echelle .montage-module[data-fixe] { cursor: default; }
+    /* Modules dessines d'apres le modele (bouton) : doigt sur la touche seulement, fleches ailleurs. */
+    .montage-cadre-echelle .montage-module.montage-appui:has(.mv-appui),
+    .montage-cadre-echelle .montage-module.montage-appui:has(.mv-manche) { cursor: move; }
+    .montage-cadre-echelle .montage-module .mv-appui { cursor: pointer; }
+    /* Bouton du potentiometre dessine : main pour le tourner (comme le modele) */
+    .montage-cadre-echelle .montage-module .mv-tourner, .montage-cadre-echelle .montage-module .mv-manche { cursor: grab; }
+    .montage-cadre-echelle.module-tourne, .montage-cadre-echelle.module-tourne * { cursor: grabbing; }
+    .montage-module[role="slider"]:focus { outline: none; }
+    .montage-module[role="slider"]:focus-visible .mv-tourner circle { stroke: #4fc3d9; stroke-width: 4; }
+    .montage-cadre-echelle .montage-module.montage-appui text,
+    .montage-cadre-echelle.module-deplace, .montage-cadre-echelle.module-deplace * { cursor: move; }
+    .vue-boutons { position: absolute; right: 10px; bottom: 10px; z-index: 5; display: flex; flex-direction: column; gap: 6px; }
+    /* Modules dessines d'apres le modele (modules-dessins.js) : encoche du circuit = fond de la simulation ; menu des
+       couleurs de la LED (clic sur le module). */
+    .mod-encoche { fill: var(--ec-sim); }
+    #menu-couleur-module { display: block; min-width: 160px; }
+    #menu-couleur-module .menu-pastille { display: inline-block; width: 12px; height: 12px; margin-right: 8px; border-radius: 50%;
+        border: 1px solid rgba(0,0,0,.35); vertical-align: -1px; }
+    .vue-boutons button { width: 32px; height: 32px; padding: 0; margin: 0; display: flex; align-items: center; justify-content: center;
+        border-radius: 50%; border: 1px solid var(--bordure-chrome); background: var(--fond-chrome); color: var(--texte-chrome);
+        box-shadow: 0 1px 3px rgba(0,0,0,.25); cursor: pointer; opacity: .85; }
+    .vue-boutons button:hover { opacity: 1; }
+    .vue-boutons button:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 2px; }
+    :root[data-contrast="high"] .vue-boutons button { opacity: 1; border-width: 2px; }
+
+    /* Barre de la simulation (comme le modele) : titre, menus Affichage et Carte d'extension, Reinitialiser, puis
+       Agrandir / Fermer a droite. Jamais sur deux lignes : les libelles disparaissent par paliers (bandeau.js). */
+    #sim-barre { width: 100%; display: flex; align-items: center; gap: 4px; flex-wrap: nowrap; margin-bottom: 4px; }
+    #sim-barre h3 { width: auto; margin: 0 4px 0 0; white-space: nowrap; flex-shrink: 0; }
+    #sim-barre > * { flex-shrink: 0; }
+    .sim-btn { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 8px; margin: 0; width: auto;
+        border: 1px solid var(--bordure-chrome); border-radius: 6px; background: transparent; color: var(--texte-chrome);
+        font: 13px var(--font); white-space: nowrap; cursor: pointer; }
+    .sim-btn:hover { background: rgba(127,127,127,.15); }
+    .sim-btn:focus-visible { outline: 3px solid #4fc3d9; outline-offset: 2px; }
+    #sim-agrandir { margin-left: auto; }
+    .sim-menu[hidden] { display: none; }
+    .sim-menu .tb-dropdown-menu { min-width: 170px; }
+    .sim-menu .montage-choix-auto { margin: 0; padding: 6px 14px 10px; font-size: 12px; color: #666; white-space: normal; max-width: 230px; }
+    #sim-barre.compact-1 #sim-reinit .sim-lib { display: none; }
+    #sim-barre.compact-2 #sim-agrandir .sim-lib { display: none; }
+    #sim-barre.compact-3 .sim-menu .sim-lib { display: none; }
+    #sim-barre.compact-4 h3 { display: none; }
+    /* Ancien bouton « Reinitialiser la simulation » : remplace par celui de la barre ; il reste le moteur d'« Arreter ». */
+    #simulateur-actions #btn-reset { display: none; }
+    /* Affichage : simulation seule, tableau seul, ou les deux (bandeau.js) */
+    #simulator-container.vue-tableau #simulateur-console { display: none; }
+    #simulator-container.vue-simulation #simulateur-panneaux { display: none; }
+    #simulator-container.vue-simulation .montage-colonne-zone { height: calc(100vh - 210px); max-height: none; }
+    /* Vue agrandie : par-dessus les colonnes de categories et de blocs, le bandeau reste visible ; le tableau prend
+       toute la hauteur de la colonne de droite. */
+    #montage-panneau { inset: 0; border-radius: 0; border-width: 0 2px 0 0; }
+    #simulator-container.simulation-agrandie #simulateur-panneaux { display: grid; }
     @keyframes secousse {
         0%, 100% { transform: translateX(0) rotate(0deg); }
         20% { transform: translateX(-7px) rotate(-2deg); }
@@ -1022,9 +1273,13 @@
        haut) applique un niveau plus bas, pour que les modules se rangent a
        plusieurs par ligne des que le panneau Grove a la largeur pour — pas
        seulement le panneau Grove entier. */
-    #grove-panneau { width: 100%; box-sizing: border-box; border-top: 1px solid var(--bordure-chrome); padding-top: 12px;
-        display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 4px 18px; align-items: start; }
-    #grove-panneau h4 { grid-column: 1 / -1; margin: 0 0 10px 0; color: #b39ddb; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+    /* Tableau range en colonnes, comme la version Arduino R4 (r4RangerTableau, nov. 2026, montage.js) : autant de colonnes
+       de 190 px au moins que la largeur le permet ; chaque panneau va, du plus haut au plus petit, dans la colonne la moins
+       haute (plus de trous sous les petits panneaux). */
+    #grove-panneau { width: 100%; box-sizing: border-box; border-top: 1px solid var(--bordure-chrome); padding-top: 12px; }
+    #grove-panneau .tab-colonnes { display: flex; gap: 0 18px; align-items: flex-start; }
+    #grove-panneau .tab-col { flex: 1 1 0; min-width: 0; }
+    #grove-panneau h4 { margin: 0 0 10px 0; color: #b39ddb; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
     .grove-bloc { margin-bottom: 12px; font-size: 12px; color: var(--texte-chrome); }
     .grove-titre { display: block; margin-bottom: 4px; color: #b8b8b8; }
     .grove-bloc label { display: block; margin: 3px 0; }
@@ -1050,13 +1305,14 @@
     #grove-4digit-ecran { display: flex; align-items: center; justify-content: center; gap: 6px;
                           transform: skewX(-8deg); }
     .digit7 { width: 26px; height: 46px; display: block; }
-    .digit7 .seg { fill: #1b2f2c; transition: fill 0.08s; }
-    .digit7 .seg.on { fill: #24e8c6; filter: drop-shadow(0 0 3px rgba(36, 232, 198, 0.85)); }
+    .digit7 .seg { fill: #383838; transition: fill 0.08s; }
+    /* Rouge comme le vrai afficheur et le modele R4 (choix du professeur, nov. 2026) */
+    .digit7 .seg.on { fill: #ff2a1a; filter: drop-shadow(0 0 3px rgba(255, 42, 26, 0.85)); }
     .digit7-points { display: flex; flex-direction: column; justify-content: center; gap: 11px;
                      height: 46px; padding: 0 1px; }
-    .digit7-points span { width: 5px; height: 5px; border-radius: 50%; background: #1b2f2c;
+    .digit7-points span { width: 5px; height: 5px; border-radius: 50%; background: #383838;
                           transition: background 0.08s; }
-    .digit7-points.on span { background: #24e8c6; box-shadow: 0 0 4px rgba(36, 232, 198, 0.9); }
+    .digit7-points.on span { background: #ff2a1a; box-shadow: 0 0 4px rgba(255, 42, 26, 0.9); }
 
     /* LED simples : une pastille par broche pilotee. L'eclat suit la valeur
        ecrite ; la pastille eteinte reste visible, comme une LED au repos. */
@@ -1090,7 +1346,7 @@
                 background: rgba(255,255,255,0.055);
                 font-family: Consolas, "DejaVu Sans Mono", monospace;
                 font-size: 14px; line-height: 16px; text-align: center;
-                color: var(--lcd-texte, #f4f8ff); text-shadow: 0 0 3px rgba(215,232,255,0.8); }
+                color: var(--lcd-texte, #f4f8ff); text-shadow: var(--lcd-ombre, 0 0 3px rgba(215,232,255,0.8)); }
     /* La trame est une grille sombre au pas du point, posee PAR-DESSUS le
        texte : elle decoupe les jambages en points et donne l'aspect matriciel
        sans avoir a redessiner une fonte 5x8 caractere par caractere. */
@@ -1235,26 +1491,26 @@
        ═══════════════════════════════════════════════════════════════════════ */
     :root {   /* SOMBRE, contraste normal */
       --ec-page: #1b1c1f;
-      --ec-cat-txt: #ddd; --ec-cat-hover: #2a2c30; --ec-cat-sel: #34363b; --ec-cat-sel-txt: #fff; --ec-cat-lisere: #e8a020;
+      --ec-cat-txt: #ddd; --ec-cat-hover: #35373c; --ec-cat-sel: #3f4146; --ec-cat-sel-txt: #fff; --ec-cat-lisere: #e8a020;   /* comme le modele (nov. 2026) */
       --ec-cat-fw: normal; --ec-cat-bord-droit: 0 solid transparent;
-      --ec-puce-lisere: rgba(255,255,255,0.55); --ec-puce-lisere-w: 1.5px;
-      --ec-grille: #34373d; --ec-flyout: #2a2c31; --ec-flyout-contour: none;
+      --ec-puce-lisere: transparent; --ec-puce-lisere-w: 0px;   /* pastille sans lisere (modele) ; contour en contraste eleve seulement */
+      --ec-grille: #40434a; --ec-flyout: #35373c; --ec-flyout-contour: none;   /* fonds de la version Arduino R4 v1.2.9 (nov. 2026) */
       --ec-label: #b5b8bf; --ec-label-fw: normal;
-      --ec-sim: #1e1f23; --ec-bord: #3c3f45; --ec-bord-w: 2px; --ec-code: #222327; --ec-code-bord: #3c3f45;
+      --ec-sim: #2a2c30; --ec-bord: #3c3f45; --ec-bord-w: 2px; --ec-code: #222327; --ec-code-bord: #3c3f45;
       --ec-pan: #2a2c31; --ec-pan-bord: #3c3f45; --ec-pan-w: 1px; --ec-pan-txt: #e6e6e6; --ec-sep: #3c3f45;
     }
     :root[data-theme="light"] {   /* CLAIR, contraste normal */
       --ec-page: #e8e8e8;
       --ec-cat-txt: #ddd; --ec-cat-hover: #444; --ec-cat-sel: #555;
-      --ec-grille: #e8e8e8; --ec-flyout: #d9d9d9;
+      --ec-grille: #d9d9d9; --ec-flyout: #d9d9d9;   /* fonds de la version Arduino R4 v1.2.9 (nov. 2026) */
       --ec-label: #555;
       --ec-sim: #f7f7f7; --ec-bord: #aaa; --ec-code: var(--fond-code); --ec-code-bord: var(--fond-chrome); --ec-sep: #ccc;
     }
-    /* Clair, contraste normal : fonds gris doux plutot que blancs (essai B choisi par l'utilisateur, 31 oct. 2026) et
-       bandeau Educatech, le meme qu'en sombre. Le fond de la zone de blocs est dans le theme Blockly (un.js). */
+    /* Clair, contraste normal : page et panneaux gris doux (essai B choisi par l'utilisateur, 31 oct. 2026) et bandeau
+       Educatech, le meme qu'en sombre. Zone de blocs, grille, colonne de blocs et simulation : fonds de la version
+       Arduino R4 (nov. 2026, variables ci-dessus et theme Blockly dans un.js). */
     :root[data-theme="light"]:not([data-contrast="high"]) {
-      --ec-page: #e4e4e0; --ec-sim: #ececea; --fond-chrome-profond: #dadad5; --fond-chrome: #e7e7e3;
-      --ec-grille: #d6d6d1; --ec-flyout: #dcdcd7; --bordure-chrome: #c6c6c0;
+      --ec-page: #e4e4e0; --fond-chrome-profond: #dadad5; --fond-chrome: #e7e7e3; --bordure-chrome: #c6c6c0;
     }
     :root[data-theme="light"]:not([data-contrast="high"]) #toolbar {
       background: linear-gradient(90deg, #1f9e8f, #6a2c91); border-bottom: none; }   /* sans filet magenta (demande de l'utilisateur, nov. 2026) */
@@ -1301,9 +1557,14 @@
       --ec-sim: #0d1b2a; --ec-bord: #22405f; --ec-code: #0b1826; --ec-code-bord: #22405f;
       --ec-pan: #13263a; --ec-pan-bord: #22405f; --ec-sep: #22405f;
     }
-    /* Charte Educatech : theme sombre par defaut (demande de l'utilisateur, 31 oct. 2026), et theme du salon. */
+    /* Charte Educatech : bandeau et accents du theme sombre par defaut (demande de l'utilisateur, 31 oct. 2026) et du
+       salon. Ses fonds bleu nuit ne servent plus qu'au theme « Salon » : le sombre par defaut prend ceux de la version
+       Arduino R4 (nov. 2026). */
     :root:is([data-saison="salon"], :not([data-saison])):not([data-theme="light"]):not([data-contrast="high"]) {
       --bandeau-sombre: #4b3a9e; --accent-fonce: #e0218a;
+      --couleur-bandeau: #6a2c91;   /* violet du degrade, comme en clair (choix de l'utilisateur, nov. 2026) */
+    }
+    :root[data-saison="salon"]:not([data-theme="light"]):not([data-contrast="high"]) {
       --fond-saisie: #0c1030; --texte-saisie: #e6e9ff; --fond-code: #0f1438; --bordure-chrome: #2f3a7a;
       --ec-page: #0c1030; --ec-cat-hover: #222a63; --ec-cat-sel: #2c3577; --ec-cat-lisere: #2bb3a0;
       --ec-grille: #222a5c; --ec-flyout: #171c47;
@@ -1393,9 +1654,15 @@
         box-shadow: 0 0 0 var(--ec-puce-lisere-w) var(--ec-puce-lisere); }
 
     /* Fleche de depliage (Radio, Grove) : le sprite noir de Blockly est remplace par ▸ / ▾ a la couleur du texte (visible dans les 4 modes). */
-    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIcon { background-image: none !important; color: var(--ec-cat-txt); font-size: 14px; line-height: 16px; text-align: center; }
-    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIconClosed::before { content: '▸'; }
-    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIconOpen::before { content: '▾'; }
+    /* Comme le modele (nov. 2026) : ▸ de 16 px en gras, a droite du nom, qui pivote vers le bas a l'ouverture. */
+    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIcon { background-image: none !important; color: var(--ec-cat-txt); font-size: 16px; font-weight: 700;
+        line-height: 1; width: auto !important; height: auto !important; order: 2; margin-left: auto; padding-left: 4px; transition: transform 0.15s; }
+    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIcon::before { content: '▸'; }
+    .blocklyToolboxCategory > .blocklyTreeRow .blocklyTreeIconOpen { transform: rotate(90deg); }
+    /* Categorie parente d'une sous-categorie ouverte (classe posee par bandeau.js) : lisere orange et texte blanc, comme le modele. */
+    .blocklyToolboxCategory > .blocklyTreeRow.contient-actif { box-shadow: inset 3px 0 0 var(--ec-cat-lisere); }
+    .blocklyToolboxCategory > .blocklyTreeRow.contient-actif .blocklyTreeLabel,
+    .blocklyToolboxCategory > .blocklyTreeRow.contient-actif .blocklyTreeIcon { color: var(--ec-cat-sel-txt) !important; }
     .blocklyToolboxCategory > .blocklyTreeRow.blocklyTreeSelected .blocklyTreeIcon { color: var(--ec-cat-sel-txt); }
     /* Zone de programmation : grille (le fond vient du theme Blockly). */
     pattern line { stroke: var(--ec-grille) !important; }
@@ -1407,8 +1674,13 @@
         fill: var(--ec-label) !important; font-style: italic; font-weight: var(--ec-label-fw); }
 
     /* Trait entre deux groupes de blocs d'une meme sous-categorie (un.js : titres groupe-flyout). */
-    .trait-groupe-flyout { stroke: var(--ec-label); stroke-opacity: 0.45; stroke-width: 1px; }
-    :root[data-contrast="high"] .trait-groupe-flyout { stroke-opacity: 1; stroke-width: 2px; }
+    /* Titres et traits de groupe comme la version Arduino R4 (nov. 2026) : titre droit en epaisseur 600, trait gris de 2 px
+       aux bouts arrondis (#8a8f98 en clair, #8c9099 en sombre ; couleur du texte en contraste eleve). */
+    .injectionDiv .blocklyFlyout .groupe-flyout .blocklyFlyoutLabelText { font-style: normal !important; font-weight: 600 !important; }
+    :root[data-contrast="high"] .injectionDiv .blocklyFlyout .groupe-flyout .blocklyFlyoutLabelText { font-weight: 700 !important; }
+    .trait-groupe-flyout { stroke: #8a8f98; stroke-width: 2px; stroke-linecap: round; }
+    :root:not([data-theme="light"]) .trait-groupe-flyout { stroke: #8c9099; }
+    :root[data-contrast="high"] .trait-groupe-flyout { stroke: var(--ec-label); }
 
     /* Simulation, panneau de code, console : fond, bord et separateur (« :root » = specificite superieure aux regles d'origine). */
     :root #simulator-container { background: var(--ec-sim); border-left: var(--ec-bord-w) solid var(--ec-bord); }
@@ -1487,6 +1759,9 @@
     #ia-pied { flex: 0 0 auto; display: flex; align-items: center; flex-wrap: wrap; gap: 12px 20px; padding: 12px 22px;
         border-top: 1px solid var(--ia-trait); background: var(--ia-fond-carte); }
     #ia-pied button { margin: 0; border-radius: 8px; font-size: 14px; }
+    #ia-pied .ia-imm-exporter, #ia-pied .ia-imm-importer { display: inline-flex; align-items: center; gap: 6px; }
+    #ia-panneau button:has(> .ia-icone) { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    #ia-panneau .ia-icone { flex: 0 0 auto; }
     #ia-pied .ia-pied-effacer { padding: 8px 16px; background: transparent; color: var(--texte-code); border: 1px solid var(--ia-trait-fort); }
     #ia-pied .ia-pied-effacer:hover { background: var(--ia-fond-carte); }
     #ia-panneau:not([data-onglet="immediat"]) .ia-pied-effacer { visibility: hidden; transition: none; }
@@ -1580,17 +1855,17 @@
       </button>
       <div id="menu-affichage-panneau" class="tb-dropdown-menu menu-panneau">
         <div class="menu-titre">Thème</div>
-        <button id="aff-theme-clair">☀ Clair</button>
-        <button id="aff-theme-sombre">☾ Sombre</button>
+        <button id="aff-theme-clair"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg>Clair</button>
+        <button id="aff-theme-sombre"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>Sombre</button>
         <div class="menu-titre">Contraste</div>
-        <button id="aff-contraste-normal">◑ Normal</button>
-        <button id="aff-contraste-eleve">● Élevé</button>
+        <button id="aff-contraste-normal"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>Normal</button>
+        <button id="aff-contraste-eleve"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="currentColor"/></svg>Élevé</button>
         <div class="menu-titre">Saison</div>
         <button id="aff-saison-aucune">Aucune</button>
-        <button id="aff-saison-halloween">🎃 Halloween</button>
-        <button id="aff-saison-noel">🎄 Noël</button>
-        <button id="aff-saison-salon" title="Salon Educatech Expo, 2 au 4 décembre 2026, stand K3">🎓 Salon Educatech Expo</button>
-        <button id="aff-saison-auto" title="Halloween du 15 octobre au 2 novembre, salon Educatech Expo du 2 au 4 décembre 2026, Noël le reste de décembre">📅 Selon la date</button>
+        <button id="aff-saison-halloween"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7c-5 0-8 3-8 7s3 6 8 6 8-2 8-6-3-7-8-7z"/><path d="M12 7c-2 2-2 11 0 13M12 7c2 2 2 11 0 13M12 7V4l2-1"/></svg>Halloween</button>
+        <button id="aff-saison-noel"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l-6 8h4l-5 7h14l-5-7h4z"/><path d="M12 18v3"/></svg>Noël</button>
+        <button id="aff-saison-salon" title="Salon Educatech Expo, 2 au 4 décembre 2026, stand K3"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v5"/></svg>Salon Educatech Expo</button>
+        <button id="aff-saison-auto" title="Halloween du 15 octobre au 2 novembre, salon Educatech Expo du 2 au 4 décembre 2026, Noël le reste de décembre"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Selon la date</button>
         <button id="btn-theme" class="btn-vue" style="display:none" title="Passer au thème clair">Thème</button>
         <button id="btn-contraste" class="btn-vue" style="display:none" title="Passer en contraste élevé">Contraste élevé</button>
       </div>
@@ -1602,7 +1877,7 @@
     <div id="menu-fichier-conteneur" class="tb-dropdown menu-deroulant">
       <button id="menu-fichier-btn" class="tb-btn menu-btn">
         <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><rect x="0" y="0" width="14" height="2" rx="1"/><rect x="0" y="6" width="10" height="2" rx="1"/><rect x="0" y="12" width="12" height="2" rx="1"/></svg>
-        Fichier ▾
+        <span class="tb-libelle-3">Fichier</span> ▾
       </button>
       <div id="menu-fichier-panneau" class="tb-dropdown-menu menu-panneau">
         <div class="menu-titre">Projet</div>
@@ -1616,17 +1891,17 @@
         <button id="download-py-btn">Télécharger .py</button>
         <button id="tb-telecharger-xml" disabled title="Non disponible dans cette version">Télécharger .xml</button>
         <div class="menu-titre">Apprendre</div>
-        <button id="ex-menu-btn" title="Exercices progressifs avec indices, étoiles et progression enregistrée">🎓 Exercices pas à pas</button>
+        <button id="ex-menu-btn" title="Exercices progressifs avec indices, étoiles et progression enregistrée"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/><path d="M22 9v5"/></svg>Exercices pas à pas</button>
         <!-- Multi-editeur radio (multi.html) : deux editeurs cote a cote, leurs simulations communiquent par radio -->
         <div class="menu-titre">Radio</div>
-        <button id="multi-editeur-btn" title="Ouvre deux éditeurs côte à côte dans un nouvel onglet : les deux cartes simulées communiquent par radio">📡 Multi-éditeur radio (2 cartes)</button>
+        <button id="multi-editeur-btn" title="Ouvre deux éditeurs côte à côte dans un nouvel onglet : les deux cartes simulées communiquent par radio"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>Multi-éditeur radio (2 cartes)</button>
       </div>
     </div>
 
-    <!-- 5. Nom du programme : encadre blanc (champ de saisie, un clic permet de le renommer) -->
-    <label class="tb-btn" id="tb-nomfichier" title="Nom de votre programme — cliquez pour le renommer. Laissez vide pour le nom par défaut.">
+    <!-- 5. Nom du programme : encadre blanc ; un clic ouvre la fenetre « Renommer le programme » (bandeau.js), comme le modele -->
+    <label class="tb-btn" id="tb-nomfichier" tabindex="0" role="button" title="Nom de votre programme — cliquez pour le renommer.">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-      <input id="nom-fichier" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="programme" aria-label="Nom du fichier">
+      <input id="nom-fichier" type="text" maxlength="60" spellcheck="false" autocomplete="off" placeholder="programme" aria-label="Nom du fichier" readonly tabindex="-1">
     </label>
 
     <div class="tb-sep"></div>
@@ -1646,32 +1921,32 @@
     <!-- 10. Capture -->
     <button id="capture-ecran-btn" class="tb-btn" title="Capture d'écran des blocs (.png)" aria-label="Capture d'écran des blocs (.png)">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
-      Capture
+      <span class="tb-libelle">Capture</span>
     </button>
 
     <!-- 11-13. Afficher / masquer la console, la simulation, le code (libelles geres par bandeau.js) -->
     <button id="btn-vue-console" class="tb-btn inactif" title="Afficher ou masquer la console, en bas (print du simulateur et de la carte). Le voyant indique si la carte est connectée : se connecte avec « Connecter » dans la console." aria-label="Afficher ou masquer la console">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="15" x2="21" y2="15"/></svg>
-      <span id="lib-console">Afficher la console</span><span id="voyant-carte" class="voyant" role="img" aria-label="Carte non connectée" title="Carte non connectée"></span>
+      <span id="lib-console" class="tb-libelle">Afficher la console</span><span id="voyant-carte" class="voyant" role="img" aria-label="Carte non connectée" title="Carte non connectée"></span>
     </button>
     <button id="btn-vue-simu" class="tb-btn" title="Masquer ou afficher le panneau de simulation, à droite" aria-label="Afficher ou masquer le simulateur">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="15" y1="3" x2="15" y2="21"/></svg>
-      <span id="lib-simulation">Masquer la simulation</span>
+      <span id="lib-simulation" class="tb-libelle">Masquer la simulation</span>
     </button>
     <!-- Au lancement, le code est masque (classe inactif ici, replie sur #code-container) : demande de l'utilisateur. -->
     <button id="btn-vue-code" class="tb-btn inactif" title="Afficher ou masquer le code MicroPython, à gauche de la simulation" aria-label="Afficher ou masquer la transcription MicroPython">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
-      <span id="lib-code">Afficher le code</span>
+      <span id="lib-code" class="tb-libelle">Afficher le code</span>
     </button>
-    <!-- Specifique a ce logiciel (absent du modele) : panneau IA, apres Code -->
+    <!-- Bouton IA (comme le modele R4 : fenetre IA avec ses onglets IA et QR code), apres Code -->
     <button id="btn-vue-ia" class="tb-btn inactif" title="IA : reconnaissance d'images et de sons (caméra, micro)" aria-label="Afficher ou masquer le panneau IA">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19 9l1.25-2.75L23 5l-2.75-1.25L19 1l-1.25 2.75L15 5l2.75 1.25L19 9zm-7.5.5L9 4 6.5 9.5 1 12l5.5 2.5L9 20l2.5-5.5L17 12l-5.5-2.5zM19 15l-1.25 2.75L15 19l2.75 1.25L19 23l1.25-2.75L23 19l-2.75-1.25L19 15z"/></svg>
-      IA
+      <span class="tb-libelle-2">IA</span>
     </button>
     <!-- Bouton Radio : ouvre le multi-editeur radio (meme effet que Fichier > Multi-editeur radio, bandeau.js) -->
     <button id="btn-radio-multi" class="tb-btn" title="Multi-éditeur radio : deux cartes simulées côte à côte qui communiquent par radio (nouvel onglet)" aria-label="Ouvrir le multi-éditeur radio">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2" fill="currentColor"/><path d="M8.5 8.5a5 5 0 0 0 0 7"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M5.5 5.5a9 9 0 0 0 0 13"/><path d="M18.5 5.5a9 9 0 0 1 0 13"/></svg>
-      Radio
+      <span class="tb-libelle-2">Radio</span>
     </button>
 
     <div class="tb-sep"></div>
@@ -1689,13 +1964,13 @@
     <!-- 17. Televerser = Envoyer sur la carte -->
     <button id="btn-envoyer" class="tb-btn" title="Envoyer sur la carte : écrire le programme sur le lecteur MICROBIT" aria-label="Téléverser sur la carte">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V6"/><polyline points="5 12 12 5 19 12"/><line x1="5" y1="21" x2="19" y2="21"/></svg>
-      <span id="lib-televerser">Téléverser</span>
+      <span id="lib-televerser" class="tb-libelle-5">Téléverser</span>
     </button>
 
     <!-- 18. Lancer la simulation / Arreter (bascule geree par bandeau.js : #run-sim / #btn-reset) -->
     <button id="tb-lancer" title="Lancer la simulation (Arrêter pendant son exécution)">
       <svg id="tb-lancer-icone" width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
-      <span id="tb-lancer-label">Lancer la simulation</span>
+      <span id="tb-lancer-label" class="tb-libelle-5">Lancer la simulation</span>
     </button>
 
     <button id="btn-options" class="btn-vue" title="Panneau administrateur">Options</button>
@@ -1704,20 +1979,25 @@
     <div id="menu-aide-conteneur" class="tb-dropdown menu-deroulant">
       <button id="menu-aide-btn" class="tb-btn menu-btn" title="Visites guidées">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-        Aide ▾
+        <span class="tb-libelle-3">Aide</span> ▾
       </button>
       <div id="menu-aide-panneau" class="tb-dropdown-menu menu-panneau">
-        <button id="tuto-menu-btn">🧭 Visite guidée</button>
-        <button id="tuto-ia-menu-btn">🧠 Visite guidée IA</button>
-        <button id="tb-mission" disabled title="Non disponible dans cette version">🚀 Mon premier programme</button>
-        <button id="tuto-clicdroit-menu-btn">🖱 Visite guidée clic droit</button>
-        <button id="tuto-console-menu-btn">⌨ Visite guidée Console</button>
+        <button id="tuto-menu-btn"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>Visite guidée</button>
+        <button id="tuto-ia-menu-btn"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/><path d="M10 10h4v4h-4zM9 2v4M15 2v4M9 18v4M15 18v4M2 9h4M2 15h4M18 9h4M18 15h4"/></svg>Visite guidée IA</button>
+        <button id="tb-mission" disabled title="Non disponible dans cette version"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3 2 5 5 5 9l-2 4H9l-2-4c0-4 2-7 5-9z"/><circle cx="12" cy="10" r="1.5"/><path d="M9 16l-2 4M15 16l2 4"/></svg>Mon premier programme</button>
+        <button id="tuto-clicdroit-menu-btn"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="3" width="10" height="18" rx="5"/><path d="M12 7v3"/></svg>Visite guidée clic droit</button>
+        <button id="tuto-console-menu-btn"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M7 14h10"/></svg>Visite guidée Console</button>
         <!-- Annule « Ne plus proposer » du bandeau multi-editeur radio (bandeau.js) ; grise tant que rien n'est a annuler -->
-        <button id="proposition-radio-reactiver" title="La proposition d'ouvrir le multi-éditeur radio reviendra au prochain bloc Radio glissé">📡 Réactiver la proposition du multi-éditeur</button>
+        <button id="proposition-radio-reactiver" title="La proposition d'ouvrir le multi-éditeur radio reviendra au prochain bloc Radio glissé"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="2"/><path d="M8.5 8.5a5 5 0 0 0 0 7M15.5 8.5a5 5 0 0 1 0 7M5.6 5.6a9 9 0 0 0 0 12.8M18.4 5.6a9 9 0 0 1 0 12.8"/></svg>Réactiver la proposition du multi-éditeur</button>
         <!-- Numero de version : en dernier dans le menu Aide (texte de #copyright-toolbar, a tenir
              identique a app.py, app.spec et version_info.txt). Simple mention, pas un bouton. -->
         <div class="menu-version">Version <span id="copyright-toolbar">V2.0E</span></div>
       </div>
+    </div>
+    <!-- 20. Langue (comme le modele R4) : drapeau SVG a droite du menu Aide ; menu Francais / English (langue.js) -->
+    <div id="menu-langue-conteneur" class="tb-dropdown menu-deroulant">
+      <button id="btn-langue" class="tb-btn menu-btn" title="Langue"></button>
+      <div id="menu-langue" class="tb-dropdown-menu menu-panneau"></div>
     </div>
   </div>
   
@@ -1728,14 +2008,8 @@
       <section id="montage-panneau" hidden aria-labelledby="montage-titre">
         <div class="montage-entete">
           <div><h3 id="montage-titre">Montage</h3><span id="montage-sous-titre"></span></div>
-          <fieldset id="montage-choix" class="montage-choix">
-            <legend>Carte d'extension</legend>
-            <label><input type="radio" name="montage-carte" value="grove" checked> Grove Shield v2.0</label>
-            <label><input type="radio" name="montage-carte" value="bitmaker"> BitMaker V2</label>
-            <label><input type="radio" name="montage-carte" value="motorbit"> Motor:bit V1.6</label>
-          </fieldset>
-          <p id="montage-choix-auto" class="montage-choix-auto" hidden>Carte DFR0548 : choisie car le programme utilise ses blocs.</p>
-          <button id="montage-fermer">✕ Fermer</button>
+          <!-- Fermer : bouton « Agrandir » / « Fermer » de la barre de la simulation (et Echap) -->
+          <button id="montage-fermer" hidden>Fermer</button>
         </div>
         <div class="montage-zone"><div class="montage-cadre-echelle"><div id="montage-scene">
           <svg id="montage-svg-bas" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
@@ -1743,19 +2017,19 @@
           <svg id="montage-svg-haut" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"></svg>
         </div></div></div>
         <ul id="montage-resume" class="montage-sr" aria-label="Branchements"></ul>
-        <p class="montage-aide">Le montage montre où chaque module est branché ; son état s'affiche dans « Périphériques ». Échap pour fermer.</p>
+        <p class="montage-aide">Le montage montre où chaque module est branché ; son état s'affiche dans « Périphériques ». « Fermer » ou Échap pour revenir.</p>
       </section>
       <div id="voile-blocs-figes"><span>✎ Blocs figés — édition manuelle du code en cours</span></div>
       <!-- Proposition du multi-editeur radio (bandeau.js) : au premier bloc Radio pose par l'eleve -->
       <div id="proposition-radio" role="status" hidden>
-        <span>📡 Ce programme utilise la radio. Pour tester l'échange entre deux cartes, ouvre le multi-éditeur radio.</span>
+        <span><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>Ce programme utilise la radio. Pour tester l'échange entre deux cartes, ouvre le multi-éditeur radio.</span>
         <span class="proposition-radio-boutons">
           <button id="proposition-radio-ouvrir" class="proposition-radio-primaire">Ouvrir le multi-éditeur</button>
           <button id="proposition-radio-plus-tard">Plus tard</button>
           <button id="proposition-radio-jamais">Ne plus proposer</button>
         </span>
       </div>
-      <div id="proposition-radio-info" role="status" hidden>📡 La proposition reviendra au prochain bloc Radio glissé.</div>
+      <div id="proposition-radio-info" role="status" hidden><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>La proposition reviendra au prochain bloc Radio glissé.</div>
     </div>
     <div id="code-container" class="replie">
       <div class="code-entete">
@@ -1769,13 +2043,35 @@
     </div>
     <div id="simulateur-redimensionneur" title="Glisser pour redimensionner le simulateur"></div>
     <div id="simulator-container">
-      <h3>Simulateur visuel <span id="mb-version-tag">V2</span></h3>
+      <!-- Barre de la simulation, comme la version Arduino R4 (nov. 2026) : menus « Affichage » (simulation, tableau, les
+           deux) et « Carte d'extension » (montage.js), bouton « Reinitialiser » (= Arreter puis Lancer, bandeau.js ; icone
+           seule quand la place manque), bouton « Agrandir » / « Fermer » a droite (montage.js). -->
+      <div id="sim-barre">
+        <h3>Simulateur visuel <span id="mb-version-tag">V2</span></h3>
+        <div id="sim-affichage" class="tb-dropdown menu-deroulant sim-menu">
+          <button type="button" class="menu-btn sim-btn" title="Afficher la simulation, le tableau des modules, ou les deux"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 13h18"/></svg><span class="sim-lib">Affichage</span> ▾</button>
+          <div class="tb-dropdown-menu menu-panneau">
+            <button type="button" data-vue="simulation">Simulation</button>
+            <button type="button" data-vue="tableau">Tableau</button>
+            <button type="button" data-vue="deux">Les deux</button>
+          </div>
+        </div>
+        <div id="sim-carte" class="tb-dropdown menu-deroulant sim-menu" hidden>
+          <button type="button" class="menu-btn sim-btn" title="Carte d'extension du montage"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="14" rx="2"/><path d="M8 19v2M12 19v2M16 19v2M9 9h6v4H9z"/></svg><span class="sim-lib" id="sim-carte-nom">Carte</span> ▾</button>
+          <div class="tb-dropdown-menu menu-panneau">
+            <div class="menu-titre">Carte d'extension</div>
+            <button type="button" data-carte="grove">Grove Shield v2.0</button>
+            <button type="button" data-carte="bitmaker">BitMaker V2</button>
+            <button type="button" data-carte="motorbit">Motor:bit V1.6</button>
+            <p id="montage-choix-auto" class="montage-choix-auto" hidden>Carte DFR0548 : choisie car le programme utilise ses blocs.</p>
+          </div>
+        </div>
+        <button type="button" id="sim-reinit" class="sim-btn" title="Réinitialiser : arrêter puis relancer la simulation" aria-label="Réinitialiser la simulation"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg><span class="sim-lib">Réinitialiser</span></button>
+        <button type="button" id="sim-agrandir" class="sim-btn" aria-controls="montage-panneau" title="Agrandir la simulation"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg><span class="sim-lib">Agrandir</span></button>
+      </div>
       <div id="simulateur-console">
       <!-- Montage dans la colonne (montage.js) : remplace la carte seule des qu'un bloc d'extension est pose -->
       <div id="montage-colonne" hidden>
-        <div class="montage-colonne-outils" id="montage-colonne-outils">
-          <label class="montage-agrandir" title="Afficher le montage en grand, par-dessus les blocs (Échap pour revenir)"><input type="checkbox" id="montage-agrandir" aria-controls="montage-panneau"> Agrandir</label>
-        </div>
         <div class="montage-colonne-zone" id="montage-colonne-zone"></div>
         <p class="montage-colonne-agrandi">Le montage est affiché en grand, par-dessus les blocs.</p>
       </div>
@@ -1841,10 +2137,10 @@
       </div>
       </div>
       <div id="simulateur-actions">
-      <button id="btn-shake">🤚 Secouer la carte</button>
+      <button id="btn-shake"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v5"/><path d="M14 10V4a2 2 0 0 0-4 0v6"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-6-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>Secouer la carte</button>
       <button id="run-sim">▶ Lancer la simulation</button>
       <button id="btn-reset">⟲ Réinitialiser la simulation</button>
-      <button id="btn-montage" hidden aria-expanded="false" aria-controls="montage-panneau">🔌 Voir le montage</button>
+      <button id="btn-montage" hidden aria-expanded="false" aria-controls="montage-panneau"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>Voir le montage</button>
       </div>
       </div>
 
@@ -2070,9 +2366,9 @@
       </span>
       <span id="console-etat">Simulateur : les « afficher dans la console » apparaissent ici.</span>
       <span id="console-boutons">
-        <button id="btn-console-carte" class="btn-vue" title="Connecter la carte micro:bit branchée en USB pour lire ses print() (Chrome ou Edge)">🔌 Connecter</button>
-        <button id="btn-console-effacer" class="btn-vue" title="Effacer la console" aria-label="Effacer la console">🗑</button>
-        <button id="btn-console-exporter" class="btn-vue" title="Exporter la console dans un fichier Excel (.xlsx)" aria-label="Exporter la console en fichier Excel">📊</button>
+        <button id="btn-console-carte" class="btn-vue" title="Connecter la carte micro:bit branchée en USB pour lire ses print() (Chrome ou Edge)"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22v-5"/><path d="M9 8V2"/><path d="M15 8V2"/><path d="M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8Z"/></svg>Connecter</button>
+        <button id="btn-console-effacer" class="btn-vue" title="Effacer la console" aria-label="Effacer la console"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></button>
+        <button id="btn-console-exporter" class="btn-vue" title="Exporter la console dans un fichier Excel (.xlsx)" aria-label="Exporter la console en fichier Excel"><svg class="ic-menu" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg></button>
         <button id="btn-console-aide" class="btn-vue" title="Aide : comment utiliser la console" aria-label="Aide sur la console">?</button>
         <button id="btn-console-fermer" class="btn-vue" title="Masquer la console" aria-label="Masquer la console">✕</button>
       </span>
@@ -2093,17 +2389,17 @@
   <section id="ia-panneau" class="replie" data-onglet="immediat" aria-label="Intelligence artificielle">
    <div id="ia-fenetre" role="dialog" aria-modal="true" aria-labelledby="ia-fenetre-titre">
     <div id="ia-entete">
-      <h3 id="ia-fenetre-titre"><span aria-hidden="true">🧠</span> <span id="ia-titre-texte">Entraîner l'IA à reconnaître des objets ou des images</span></h3>
+      <h3 id="ia-fenetre-titre"><span id="ia-titre-texte">Entraîner l'IA à reconnaître des objets ou des images</span></h3>
       <span id="ia-boutons">
         <button id="btn-ia-aide" class="btn-vue" title="Aide : comment utiliser l'IA" aria-label="Aide sur l'IA">?</button>
         <button id="btn-ia-fermer" class="btn-vue" title="Fermer la fenêtre IA (la reconnaissance en cours continue)" aria-label="Fermer la fenêtre IA">✕</button>
       </span>
     </div>
     <div id="ia-onglets" role="tablist" aria-label="Modes de l'IA">
-      <button type="button" class="ia-onglet" role="tab" data-onglet="immediat">⚡ Apprentissage immédiat <span class="ia-onglet-point" aria-hidden="true"></span></button>
-      <button type="button" class="ia-onglet" role="tab" data-onglet="vision">📷 Modèle Teachable Machine (caméra) <span class="ia-onglet-point" aria-hidden="true"></span></button>
-      <button type="button" class="ia-onglet" role="tab" data-onglet="son">🎤 Modèle Teachable Machine (micro) <span class="ia-onglet-point" aria-hidden="true"></span></button>
-      <button type="button" class="ia-onglet" role="tab" data-onglet="qr">🔳 QR codes et codes-barres <span class="ia-onglet-point" aria-hidden="true"></span></button>
+      <button type="button" class="ia-onglet" role="tab" data-onglet="immediat">IA <span class="ia-onglet-point" aria-hidden="true"></span></button>
+      <button type="button" class="ia-onglet" role="tab" data-onglet="vision">Teachable Machine (caméra) <span class="ia-onglet-point" aria-hidden="true"></span></button>
+      <button type="button" class="ia-onglet" role="tab" data-onglet="son">Teachable Machine (micro) <span class="ia-onglet-point" aria-hidden="true"></span></button>
+      <button type="button" class="ia-onglet" role="tab" data-onglet="qr">QR code <span class="ia-onglet-point" aria-hidden="true"></span></button>
     </div>
     <div id="ia-colonnes">
       <!-- Apprentissage immediat (sans entrainement) et QR codes : moteur dans ia-immediat.js.
@@ -2114,10 +2410,10 @@
           <span class="ia-imm-choix-titre">L'IA doit reconnaître :</span>
           <label class="ia-imm-type-label">Reconnaître :
             <select class="ia-imm-type" title="Ce que l'IA apprend à reconnaître">
-              <option value="images">objets et images</option>
-              <option value="mains">gestes de la main</option>
+              <option value="images">objets ou images</option>
+              <option value="mains">signes de la main</option>
               <option value="bras">positions des bras</option>
-              <option value="sons">sons et mots (micro)</option>
+              <option value="sons">sons ou mots (micro)</option>
             </select>
           </label>
         </div>
@@ -2127,9 +2423,7 @@
             <button class="btn-vue ia-ajouter-classe">+ Ajouter une classe</button>
             <p class="ia-imm-note">Évitez les accents et les caractères spéciaux dans les noms des classes : ils peuvent s'afficher sur un écran Grove, qui ne sait pas les montrer.</p>
             <div class="ia-creer-actions">
-              <button class="btn-vue ia-imm-exporter" title="Télécharger l'apprentissage dans un fichier .json (il est aussi rangé dans le .py téléchargé)">💾 Exporter</button>
-              <button class="btn-vue ia-imm-importer" title="Ouvrir un apprentissage enregistré (.json)">📂 Importer</button>
-              <button class="btn-vue ia-tout-effacer" hidden title="Supprimer toutes les classes et leurs exemples">🗑 Tout effacer</button>
+              <button class="btn-vue ia-tout-effacer" hidden title="Supprimer toutes les classes et leurs exemples">Tout effacer</button>
             </div>
             <input type="file" class="ia-imm-fichiers" accept="image/png,image/jpeg,image/webp" multiple style="display:none;">
             <input type="file" class="ia-imm-import-fichier" accept=".json,application/json" style="display:none;">
@@ -2138,7 +2432,7 @@
             <div class="ia-imm-cadre eteint" data-toujours="1"><video class="ia-imm-video" autoplay muted playsinline></video><canvas class="ia-imm-calque"></canvas><span class="ia-imm-cadre-vide">Caméra éteinte</span></div>
             <div class="ia-imm-niveau replie" title="Volume du micro au-dessus du bruit de fond (vert : son détecté)"><i></i></div>
             <div class="ia-imm-capteur">
-              <button class="btn-vue ia-imm-camera" title="Allumer la caméra pour ajouter des exemples">📷 Caméra</button>
+              <button class="btn-vue ia-imm-camera" title="Allumer la caméra pour ajouter des exemples"><svg class="ia-icone" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/></svg><span>Allumer la caméra</span></button>
               <span class="ia-creer-statut" aria-live="polite"></span>
             </div>
             <div class="ia-imm-test">
@@ -2168,7 +2462,7 @@
         </div>
         <video id="ia-video" class="ia-apercu replie" autoplay muted playsinline></video>
         <div class="ia-classes"></div>
-        <p class="ia-creer-aide">Pour créer vos propres classes d'images, utilisez l'onglet « ⚡ Apprentissage immédiat ».</p>
+        <p class="ia-creer-aide">Pour créer vos propres classes d'images, utilisez l'onglet « IA ».</p>
       </div>
       <div class="ia-colonne" data-genre="son" role="tabpanel">
         <h4>Son <small class="ia-sous-titre">modèle Teachable Machine · micro</small></h4>
@@ -2184,7 +2478,7 @@
           <span class="ia-statut">Aucun modèle chargé.</span>
         </div>
         <div class="ia-classes"></div>
-        <p class="ia-creer-aide">Pour créer vos propres classes de sons, utilisez l'onglet « ⚡ Apprentissage immédiat » (des sons ou des mots).</p>
+        <p class="ia-creer-aide">Pour créer vos propres classes de sons, utilisez l'onglet « IA » (des sons ou des mots).</p>
       </div>
       <div class="ia-colonne" data-genre="qr" role="tabpanel">
         <h4>QR codes <small class="ia-sous-titre">et codes-barres · caméra</small></h4>
@@ -2196,16 +2490,16 @@
         <div class="ia-imm-cadre replie"><video class="ia-imm-video" autoplay muted playsinline></video></div>
         <div class="ia-qr-texte"></div>
         <details class="ia-creer" open>
-          <summary>✚ Créer un QR code à imprimer</summary>
+          <summary>Créer un QR code à imprimer</summary>
           <div class="ia-modele">
             <input type="text" class="ia-url ia-qr-a-creer" maxlength="200" placeholder="Texte du QR code (ex. : avancer)" spellcheck="false">
             <button class="btn-vue ia-qr-creer">Créer</button>
-            <button class="btn-vue ia-qr-telecharger" disabled title="Télécharger l'image (.png)">💾 PNG</button>
+            <button class="btn-vue ia-qr-telecharger" disabled title="Télécharger l'image (.png)"><svg class="ia-icone" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>PNG</span></button>
           </div>
           <canvas class="ia-qr-image replie"></canvas>
         </details>
         <details class="ia-creer ia-qr-planche">
-          <summary>🖨 Planche de QR codes à imprimer (A4)</summary>
+          <summary>Planche de QR codes à imprimer (A4)</summary>
           <p class="ia-intro">Un texte par ligne : chaque ligne donne un QR code. Une ligne écrite deux fois donne deux exemplaires.</p>
           <textarea class="ia-qr-liste" rows="5" spellcheck="false" placeholder="avancer&#10;reculer&#10;gauche&#10;droite&#10;stop"></textarea>
           <div class="ia-modele ia-qr-planche-options">
@@ -2217,7 +2511,7 @@
               </select>
             </label>
             <label class="ia-qr-avec-texte"><input type="checkbox" class="ia-qr-legende" checked> Texte sous chaque code</label>
-            <button class="btn-vue ia-qr-imprimer">🖨 Imprimer la planche</button>
+            <button class="btn-vue ia-qr-imprimer"><svg class="ia-icone" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg><span>Imprimer la planche</span></button>
           </div>
           <span class="ia-qr-planche-statut" aria-live="polite"></span>
         </details>
@@ -2225,12 +2519,16 @@
     </div>
     <div id="ia-pied">
       <button type="button" class="btn-vue ia-pied-effacer" title="Supprimer toutes les classes et leurs exemples">Tout effacer</button>
+      <!-- Comme le modele R4 : « Exporter le modele » / « Importer un modele » dans le pied (fichier .json : noms des classes
+           et resumes chiffres des exemples, jamais d'image ni de son) -->
+      <button type="button" class="btn-vue ia-pied-effacer ia-imm-exporter" title="Télécharger le modèle IA dans un fichier .json (il est aussi rangé dans le .py téléchargé)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Exporter le modèle</span></button>
+      <button type="button" class="btn-vue ia-pied-effacer ia-imm-importer" title="Ouvrir un modèle IA enregistré (.json)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>Importer un modèle</span></button>
       <span id="ia-seuil-groupe">
         <label for="ia-seuil">Seuil de confiance</label>
         <input type="range" id="ia-seuil" min="30" max="99" value="80">
         <span class="ia-pilule"><b id="ia-seuil-val">80</b> %</span>
       </span>
-      <label id="ia-carte-label" title="Envoyer aussi les résultats à la vraie carte (connectée par le bouton 🔌 de la console)">
+      <label id="ia-carte-label" title="Envoyer aussi les résultats à la vraie carte (connectée par le bouton « Connecter » de la console)">
         <input type="checkbox" id="ia-vers-carte"> Envoyer à la carte
       </label>
       <span id="ia-etat-carte"></span>
@@ -2268,6 +2566,7 @@
   <script type="text/python">
     from browser import window, document, alert
     import math
+    import random   # blocs « nombre aléatoire » : le programme de l'élève l'importe, mais l'import est retiré (voir env)
     import re
     import textwrap
     import ast
@@ -3130,6 +3429,7 @@
             'pin8': PinMock('8'), 'pin12': PinMock('12'), 'pin13': PinMock('13'),
             'pin14': PinMock('14'), 'pin15': PinMock('15'), 'pin16': PinMock('16'),
             'math': math,
+            'random': random,
             # Grove : substituts des pilotes retires du code
             'neopixel': _NeoPixelModuleMock(), '_grove_lum': _grove_lum,
             '_grove_teinte': _grove_teinte, '_Afficheur4': _Afficheur4Mock,
@@ -3356,12 +3656,14 @@
   </script>
   <div id="voile-envoi" role="dialog" aria-modal="true" aria-labelledby="envoi-titre">
     <div id="fenetre-envoi">
-      <h3 id="envoi-titre">Envoi sur la carte</h3>
-      <p id="envoi-phase" aria-live="polite"></p>
+      <div class="tete"><span id="envoi-titre">Envoi sur la carte</span><span id="envoi-pourcent">0 %</span></div>
       <div id="envoi-barre" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
         <div id="envoi-remplissage"></div>
       </div>
-      <p id="envoi-pourcent">0 %</p>
+      <!-- Etapes de l'envoi, comme la version Arduino R4 (faite en vert, en cours en gras) -->
+      <div class="etapes"><span data-etape="generation">Génération</span><span data-etape="lecteur">Lecteur MICROBIT</span><span data-etape="ecriture">Écriture</span></div>
+      <p id="envoi-phase" aria-live="polite"></p>
+      <button type="button" id="envoi-annuler">Annuler le téléversement</button>
     </div>
   </div>
   <div id="voile-aide" role="dialog" aria-modal="true" aria-labelledby="aide-bloc-nom">
@@ -3384,6 +3686,15 @@
         <button id="aide-inserer" type="button">Insérer cet exemple dans mon espace de travail</button>
       </div>
       <button id="aide-fermer" type="button">Fermer</button>
+    </div>
+  </div>
+  <!-- Fiche d'aide d'un bloc (etape 10, comme le modele R4) : page HTML locale aide/<type>.html, affichee DANS
+       EasyBloc (jamais une page web) ; clic droit > « Expliquer ce bloc ». Sans fiche : l'aide ci-dessus. -->
+  <div id="voile-fiche" role="dialog" aria-modal="true" aria-labelledby="fiche-titre">
+    <div id="fiche-boite">
+      <div id="fiche-entete"><span id="fiche-titre">Expliquer ce bloc</span>
+        <button id="fiche-fermer" type="button" title="Fermer (Échap)">✕ Fermer</button></div>
+      <div id="fiche-corps"></div>
     </div>
   </div>
   <div id="toast-admin"></div>

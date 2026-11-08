@@ -321,7 +321,9 @@ function arreterSon() {
 function majBouton(genre) {
     const b = $('.ia-demarrer', colonne(genre));
     const enMarche = moteurs[genre].enMarche;
-    b.textContent = enMarche ? '■ Arrêter' : '▶ Démarrer';
+    // (pas d'emoji : icone au trait pour Arreter, consigne du professeur nov. 2026)
+    b.innerHTML = enMarche ? '<svg class="ia-icone" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" '
+        + 'aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5"/></svg><span>Arrêter</span>' : '▶ Démarrer';
     b.classList.toggle('en-marche', enMarche);
 }
 
@@ -413,11 +415,11 @@ window.iaClassesConnues = function (genre) {
     const choix = $('.ia-imm-type');
     const onglets = Array.from(document.querySelectorAll('#ia-onglets .ia-onglet'));
     const TITRES = {
-        images: 'Entraîner l\'IA à reconnaître des objets ou des images', mains: 'Entraîner l\'IA à reconnaître des gestes de la main',
+        images: 'Entraîner l\'IA à reconnaître des objets ou des images', mains: 'Entraîner l\'IA à reconnaître des signes de la main',
         bras: 'Entraîner l\'IA à reconnaître des positions des bras', sons: 'Entraîner l\'IA à reconnaître des sons ou des mots',
     };
     const AUTRES = { vision: 'Utiliser un modèle Teachable Machine (caméra)', son: 'Utiliser un modèle Teachable Machine (micro)',
-                     qr: 'Lire des QR codes et des codes-barres' };
+                     qr: 'Créer ou lire un QR code' };   // modele : « Créer un QR code » ; ici l'onglet lit aussi
     const majTitre = () => {
         const o = panneau.dataset.onglet;
         if (titre) titre.textContent = o === 'immediat' ? TITRES[choix ? choix.value : 'images'] || TITRES.images : AUTRES[o] || '';
@@ -502,7 +504,8 @@ window.iaClassesConnues = function (genre) {
     // Pastilles « L'IA doit reconnaitre »
     const col = $('.ia-colonne[data-genre="immediat"]'), ligne = choix && choix.closest('.ia-modele');
     if (col && ligne) {
-        const LONGS = { images: '🖼 Des objets ou des images', mains: '✋ Des gestes de la main', bras: '💪 Des positions des bras', sons: '🎤 Des sons ou des mots' };
+        // Libelles du modele R4, sans emoji (consigne du professeur, nov. 2026) ; « signes » : les « gestes » sont ceux du capteur Grove
+        const LONGS = { images: 'Des objets ou des images', mains: 'Des signes de la main', bras: 'Des positions des bras', sons: 'Des sons ou des mots' };
         const groupe = document.createElement('div');
         groupe.className = 'ia-imm-pastilles';
         groupe.setAttribute('role', 'group');

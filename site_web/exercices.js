@@ -341,19 +341,19 @@ function afficherPanneau() {
             html += '<ol class="ex-indices">' + indices.slice(0, session.indices).map(t => '<li>' + esc(t) + '</li>').join('') + '</ol>';
         }
         if (session.valide) {
-            html += '<p class="ex-ok">✔ Bien joué ! ' + etoiles(etoilesPour(session)) + (session.solution ? ' (solution vue)' : '') + '</p>';
-            html += '<div class="ex-boutons"><button class="ex-primaire" data-act="suivant">' + (plat[plat.findIndex(x => x.id === e.id) + 1] ? 'Exercice suivant ▶' : 'Terminer 🎉') + '</button>' +
+            html += '<p class="ex-ok">✓ Bien joué ! ' + etoiles(etoilesPour(session)) + (session.solution ? ' (solution vue)' : '') + '</p>';
+            html += '<div class="ex-boutons"><button class="ex-primaire" data-act="suivant">' + (plat[plat.findIndex(x => x.id === e.id) + 1] ? 'Exercice suivant ▶' : 'Terminer') + '</button>' +
                 '<button data-act="recommencer">Recommencer</button><button data-act="liste">Liste</button></div>';
         } else if (!e.regle) {
             html += '<p class="ex-attente">Cet exercice sera corrigé par ton professeur : clique sur « J\'ai terminé » quand ton programme est prêt.</p>';
-            html += '<div class="ex-boutons"><button class="ex-primaire" data-act="termine">✔ J\'ai terminé</button>' +
-                (session.indices < indices.length ? '<button data-act="indice">💡 Indice (' + session.indices + '/' + indices.length + ')</button>' : '') +
+            html += '<div class="ex-boutons"><button class="ex-primaire" data-act="termine">✓ J\'ai terminé</button>' +
+                (session.indices < indices.length ? '<button data-act="indice">' + window.icone('ampoule') + 'Indice (' + session.indices + '/' + indices.length + ')</button>' : '') +
                 (e.solution ? '<button data-act="solution">Solution</button>' : '') +
                 '<button data-act="recommencer">Recommencer</button><button data-act="passer">Passer</button><button data-act="liste">Liste</button></div>';
         } else {
             html += '<p class="ex-attente">Le contrôle se fait tout seul : pose tes blocs, la validation apparaît quand c\'est bon.</p>';
             html += '<div class="ex-boutons">' +
-                (session.indices < indices.length ? '<button data-act="indice">💡 Indice (' + session.indices + '/' + indices.length + ')</button>' : '') +
+                (session.indices < indices.length ? '<button data-act="indice">' + window.icone('ampoule') + 'Indice (' + session.indices + '/' + indices.length + ')</button>' : '') +
                 (e.solution ? '<button data-act="solution">Solution</button>' : '') +
                 '<button data-act="recommencer">Recommencer</button><button data-act="passer">Passer</button><button data-act="liste">Liste</button></div>';
         }
@@ -361,21 +361,21 @@ function afficherPanneau() {
     } else {
         const e = exo(session.liste[session.idx]);
         const s = session;
-        html += '<div id="ex-entete" class="ex-eval"><span class="ex-titre">📝 Évaluation — ' + esc(s.nom) + ' — ' + (s.idx + 1) + '/' + s.liste.length + '</span>' +
+        html += '<div id="ex-entete" class="ex-eval"><span class="ex-titre">' + window.icone('evaluation') + 'Évaluation — ' + esc(s.nom) + ' — ' + (s.idx + 1) + '/' + s.liste.length + '</span>' +
             '<span id="ex-chrono">' + esc(chronoEval()) + '</span><button data-act="reduire" title="Réduire / agrandir">–</button></div>';
         html += '<div class="ex-corps"><div class="ex-niveau">' + esc(e.id) + ' · ' + esc(e.titre) + ' · ' + e.points + ' pt' + (e.points > 1 ? 's' : '') + '</div>';
         html += '<p class="ex-consigne">' + esc(e.consigne) + '</p>';
         if (s.etat === 'remis') {
-            html += '<p class="ex-ok">✔ Exercice remis : ton professeur le corrigera.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
+            html += '<p class="ex-ok">✓ Exercice remis : ton professeur le corrigera.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
                 (s.idx + 1 >= s.liste.length ? 'Terminer ▶' : 'Exercice suivant ▶') + '</button></div>';
         } else if (s.etat === 'reussi') {
-            html += '<p class="ex-ok">✔ Exercice validé.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
+            html += '<p class="ex-ok">✓ Exercice validé.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
                 (s.idx + 1 >= s.liste.length ? 'Terminer ▶' : 'Exercice suivant ▶') + '</button></div>';
         } else if (s.etat === 'echec') {
-            html += '<p class="ex-ko">✘ Trois essais utilisés : l\'exercice est terminé.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
+            html += '<p class="ex-ko">✕ Trois essais utilisés : l\'exercice est terminé.</p><div class="ex-boutons"><button class="ex-primaire" data-act="suivant-eval">' +
                 (s.idx + 1 >= s.liste.length ? 'Terminer ▶' : 'Exercice suivant ▶') + '</button></div>';
         } else {
-            html += (s.etat === 'retente' ? '<p class="ex-ko">✘ Ce n\'est pas encore ça. Relis la consigne.</p>' : '') +
+            html += (s.etat === 'retente' ? '<p class="ex-ko">✕ Ce n\'est pas encore ça. Relis la consigne.</p>' : '') +
                 '<p class="ex-attente">Essai ' + (s.essais + 1) + ' sur ' + ESSAIS_MAX + '. Clique sur « Valider » quand ton programme est prêt.</p>' +
                 '<div class="ex-boutons"><button class="ex-primaire" data-act="valider">Valider</button>' +
                 '<button data-act="passer-eval">Passer</button><button data-act="abandonner">Arrêter</button></div>';
@@ -404,7 +404,7 @@ async function ouvrirFenetre(onglet = 'exercices') {
     if (session && session.mode === 'eval') return;
     const nomActuel = donnees.profil;
     const noms = Object.keys(donnees.profils);
-    let contenu = '<div class="ex-haut"><h2>🎓 ' + esc(defs.titre || 'Exercices') + '</h2><button class="ex-x" data-f="fermer" title="Fermer">✕</button></div>';
+    let contenu = '<div class="ex-haut"><h2>' + esc(defs.titre || 'Exercices') + '</h2><button class="ex-x" data-f="fermer" title="Fermer">✕</button></div>';
     contenu += '<div class="ex-profil"><label>Nom de l\'élève <input id="ex-nom" type="text" value="' + esc(nomActuel) + '" maxlength="40" list="ex-noms" autocomplete="off"></label>' +
         '<datalist id="ex-noms">' + noms.map(n => '<option value="' + esc(n) + '">').join('') + '</datalist>' +
         '<label class="ex-libre"><input id="ex-libre" type="checkbox"' + (donnees.libre ? ' checked' : '') + '> Accès libre (tout déverrouiller)</label></div>';
@@ -468,7 +468,7 @@ function htmlExercices() {
         for (const e of n.exercices) {
             const idx = i++;
             const f = fait(e.id), ouvert = accessible(idx);
-            const marque = f ? (f.passe ? '↷ passé' : etoiles(f.etoiles)) : ouvert ? '▶ à faire' : '🔒';
+            const marque = f ? (f.passe ? '↷ passé' : etoiles(f.etoiles)) : ouvert ? '▶ à faire' : '<span class="ex-verrou" role="img" aria-label="verrouillé" title="verrouillé">' + window.icone('cadenas') + '</span>';
             h += '<button class="ex-carte' + (f && !f.passe ? ' fait' : '') + '" data-exo="' + esc(e.id) + '"' + (ouvert ? '' : ' disabled') + '>' +
                 '<b>' + esc(e.id) + '</b> ' + esc(e.titre) + '<span>' + marque + '</span></button>';
         }
@@ -506,7 +506,7 @@ function htmlResultats() {
             const der = donnees.evaluations.filter(r => r.nom === n).slice(-1)[0];
             return '<tr><td>' + esc(n) + '</td>' + plat.map(e => '<td>' + (f[e.id] ? (f[e.id].passe ? '↷' : f[e.id].etoiles + '★') : '·') + '</td>').join('') + '<td>' + (der ? der.note + '/20' : '—') + '</td></tr>';
         }).join('') + '</table></div>';
-    h += '<div class="ex-boutons ex-noprint"><button data-a="imprimer">🖨 Imprimer</button><button data-a="csv-classe">Exporter la classe (CSV)</button>' +
+    h += '<div class="ex-boutons ex-noprint"><button data-a="imprimer">' + window.icone('imprimante') + 'Imprimer</button><button data-a="csv-classe">Exporter la classe (CSV)</button>' +
         '<button data-a="export">Exporter ma progression</button><button data-a="import">Importer des progressions…</button>' +
         '<input id="ex-import-fichier" type="file" accept=".json,application/json" multiple hidden>' +
         '<button class="ex-danger" data-a="effacer">Effacer cet élève</button></div>' +
@@ -516,13 +516,13 @@ function htmlResultats() {
 
 function ouvrirRapport(r) {
     if (!r) return;
-    const lignes = r.details.map(d => '<tr><td>' + esc(d.id) + '</td><td>' + esc(d.titre) + '</td><td>' + (d.nonFait ? 'non traité' : d.aCorriger ? '✎ à corriger' : d.ok ? '✔ réussi' : d.essais === 0 ? '↷ passé' : '✘ échec') +
+    const lignes = r.details.map(d => '<tr><td>' + esc(d.id) + '</td><td>' + esc(d.titre) + '</td><td>' + (d.nonFait ? 'non traité' : d.aCorriger ? '✎ à corriger' : d.ok ? '✓ réussi' : d.essais === 0 ? '↷ passé' : '✕ échec') +
         '</td><td>' + d.essais + '</td><td>' + fmt(d.secondes) + '</td><td>' + d.points + ' / ' + d.sur + '</td></tr>').join('');
-    const v = voile('<div class="ex-haut"><h2>📝 Rapport d\'évaluation</h2><button class="ex-x ex-noprint" data-f="fermer" title="Fermer">✕</button></div>' +
+    const v = voile('<div class="ex-haut"><h2>Rapport d\'évaluation</h2><button class="ex-x ex-noprint" data-f="fermer" title="Fermer">✕</button></div>' +
         '<p><b>' + esc(r.nom) + '</b> — ' + esc(new Date(r.date).toLocaleString('fr-FR')) + ' — durée ' + fmt(r.secondes) + (r.motif ? ' (' + esc(r.motif) + ')' : '') + '</p>' +
         '<p class="ex-grand">Note : <b>' + r.note + ' / 20</b> <small>(' + r.points + ' point' + (r.points > 1 ? 's' : '') + ' sur ' + r.total + ')</small></p>' +
         '<table class="ex-table"><tr><th>N°</th><th>Exercice</th><th>Résultat</th><th>Essais</th><th>Temps</th><th>Points</th></tr>' + lignes + '</table>' +
-        '<div class="ex-boutons ex-noprint"><button class="ex-primaire" data-a="imprimer">🖨 Imprimer</button><button data-a="csv">Exporter (CSV)</button>' +
+        '<div class="ex-boutons ex-noprint"><button class="ex-primaire" data-a="imprimer">' + window.icone('imprimante') + 'Imprimer</button><button data-a="csv">Exporter (CSV)</button>' +
         '<button data-a="json">Exporter (JSON)</button><button data-f="fermer">Fermer</button></div>', 'ex-rapport');
     v.addEventListener('click', ev => {
         if (ev.target.closest('[data-f="fermer"]')) fermerFenetres();
@@ -614,19 +614,28 @@ style.textContent = `
 #ex-panneau button:not(#ex-entete button), #ex-voile button { font-family: inherit; font-size: 12px; padding: 5px 10px; margin: 0; border-radius: 5px; border: 1px solid var(--bordure-chrome, #555);
   background: var(--fond-saisie, #202020); color: var(--texte-saisie, #e6e6e6); cursor: pointer; }
 #ex-panneau button:not(#ex-entete button):hover, #ex-voile button:hover { filter: brightness(1.25); }
-#ex-panneau .ex-primaire, #ex-voile .ex-primaire { background: #ff5501; border-color: #ff5501; color: #fff; font-weight: 700; }
+#ex-panneau .ex-primaire, #ex-voile .ex-primaire { background: var(--couleur-bandeau, #6a2c91); border-color: var(--couleur-bandeau, #6a2c91); color: #fff; font-weight: 700; }
 #ex-voile .ex-danger { color: #e74c3c; border-color: #e74c3c; }
-#ex-voile { position: fixed; inset: 0; z-index: 9100; background: rgba(0,0,0,.55); display: flex; align-items: center; justify-content: center; padding: 12px; }
+/* Fenetres d'exercices et de seances : aspect commun de la version Arduino R4 (nov. 2026) : fond grise, titre sur le
+   bandeau de couleur (--couleur-bandeau), coins de 10 px, ombre douce, fond clair ou sombre selon le theme. */
+#ex-voile { position: fixed; inset: 0; z-index: 9100; background: rgba(0,0,0,.4); display: flex; align-items: center; justify-content: center; padding: 12px; }
 .ex-fenetre { width: min(900px, 100%); max-height: calc(100vh - 24px); overflow: auto; box-sizing: border-box; padding: 14px 18px 18px;
-  background: var(--fond-code, #1e1e1e); color: var(--texte-code, #d4d4d4); border: 2px solid #ff5501; border-radius: 10px; font-family: var(--font, 'Segoe UI', Arial, sans-serif); font-size: 13px; }
-.ex-haut { display: flex; align-items: center; justify-content: space-between; }
-.ex-haut h2 { margin: 0; font-size: 18px; color: #ff7a33; }
-.ex-x { width: 28px; height: 28px; padding: 0 !important; }
+  background: #303237; color: #e6e6e6; border: none; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  font-family: var(--font, 'Segoe UI', Arial, sans-serif); font-size: 13px; }
+:root[data-theme="light"] .ex-fenetre { background: #fff; color: #222; }
+:root[data-contrast="high"] .ex-fenetre { background: #000; color: #fff; border: 2px solid #fff; box-shadow: none; }
+:root[data-theme="light"][data-contrast="high"] .ex-fenetre { background: #fff; color: #000; border-color: #000; }
+.ex-haut { display: flex; align-items: center; justify-content: space-between; position: sticky; top: -14px; z-index: 1;
+  margin: -14px -18px 12px; padding: 10px 12px 10px 16px; background: var(--couleur-bandeau, #6a2c91); color: #fff; }
+.ex-haut h2 { margin: 0; font-size: 16px; font-weight: 600; color: #fff; }
+:root[data-contrast="high"] .ex-haut { border-bottom: 2px solid #fff; }
+#ex-voile .ex-haut .ex-x { width: 28px; height: 28px; padding: 0 !important; background: transparent; border: none; color: #fff; font-size: 14px; }
+#ex-voile .ex-haut .ex-x:hover { background: rgba(255,255,255,.15); filter: none; }
 .ex-profil { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; margin: 10px 0; }
 .ex-profil input[type=text] { padding: 4px 8px; border-radius: 4px; border: 1px solid var(--bordure-chrome, #555); background: var(--fond-saisie, #202020); color: var(--texte-saisie, #e6e6e6); }
-.ex-onglets { display: flex; gap: 4px; border-bottom: 2px solid #ff5501; margin-bottom: 10px; }
+.ex-onglets { display: flex; gap: 4px; border-bottom: 2px solid var(--couleur-bandeau, #6a2c91); margin-bottom: 10px; }
 .ex-onglets button { border-radius: 6px 6px 0 0 !important; border-bottom: none !important; }
-.ex-onglets button.actif { background: #ff5501 !important; color: #fff !important; border-color: #ff5501 !important; font-weight: 700; }
+.ex-onglets button.actif { background: var(--couleur-bandeau, #6a2c91) !important; color: #fff !important; border-color: var(--couleur-bandeau, #6a2c91) !important; font-weight: 700; }
 .ex-fenetre h3 { margin: 14px 0 6px; font-size: 15px; } .ex-fenetre h3 small, .ex-fenetre h4 small { font-weight: normal; opacity: .7; font-size: 12px; }
 .ex-fenetre h4 { margin: 14px 0 6px; }
 .ex-cartes { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 8px; }

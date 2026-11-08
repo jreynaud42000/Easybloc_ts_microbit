@@ -13,8 +13,8 @@
           "consigne": "Fais apparaître un cœur sur la matrice de LED dès que le programme démarre.",
           "indices": [
             "Les blocs d'affichage sont rangés dans la catégorie « Matrice LED ».",
-            "Il faut le bloc « afficher l'icône », à glisser à l'intérieur du bloc « Au démarrage ».",
-            "Dans « Au démarrage », pose « afficher l'icône » et choisis « Cœur » dans la liste. Lance ensuite la simulation."
+            "Il faut le bloc « afficher l'icône », à glisser à l'intérieur du bloc « au démarrage ».",
+            "Dans « au démarrage », pose « afficher l'icône » et choisis « Cœur » dans la liste. Lance ensuite la simulation."
           ],
           "regle": { "bloc": "afficher_icone", "champ": { "ICONE": "HEART" }, "dans": ["au_demarrage"] },
           "solution": { "blocks": [ { "type": "au_demarrage", "x": 40, "y": 40, "inputs": { "DO": { "block": { "type": "afficher_icone", "fields": { "ICONE": "HEART" } } } }, "next": { "block": { "type": "boucle_infinie" } } } ] }
@@ -26,7 +26,7 @@
           "indices": [
             "Pour écrire du texte, regarde encore dans la catégorie « Matrice LED ».",
             "Le bloc « faire défiler » contient un texte : clique dessus pour le modifier.",
-            "Pose « faire défiler » dans « Au démarrage », puis remplace « Bonjour ! » par ton prénom."
+            "Pose « faire défiler » dans « au démarrage », puis remplace « Bonjour ! » par ton prénom."
           ],
           "regle": { "bloc": "faire_defiler", "dans": ["au_demarrage"], "texte_sauf": "Bonjour !" },
           "solution": { "blocks": [ { "type": "au_demarrage", "x": 40, "y": 40, "inputs": { "DO": { "block": { "type": "faire_defiler", "inputs": { "VALEUR": { "block": { "type": "text", "fields": { "TEXT": "Léa" } } } } } } }, "next": { "block": { "type": "boucle_infinie" } } } ] }
@@ -38,7 +38,7 @@
           "indices": [
             "Cherche encore dans « Matrice LED », mais pas l'icône cette fois.",
             "Le bloc « afficher l'image » a une grille de 25 cases à cocher.",
-            "Pose « afficher l'image » dans « Au démarrage » et coche les cases des LED que tu veux allumer (au moins trois)."
+            "Pose « afficher l'image » dans « au démarrage » et coche les cases des LED que tu veux allumer (au moins trois)."
           ],
           "regle": { "bloc": "afficher_image_matrice", "dans": ["au_demarrage"], "leds_min": 3 },
           "solution": { "blocks": [ { "type": "au_demarrage", "x": 40, "y": 40, "inputs": { "DO": { "block": { "type": "afficher_image_matrice", "fields": { "LED_2_0": "TRUE", "LED_2_1": "TRUE", "LED_2_2": "TRUE", "LED_2_3": "TRUE", "LED_2_4": "TRUE" } } } }, "next": { "block": { "type": "boucle_infinie" } } } ] }
@@ -55,9 +55,9 @@
           "titre": "Le cœur qui clignote",
           "consigne": "Fais clignoter un cœur sans arrêt : il s'allume, attend, s'éteint, attend.",
           "indices": [
-            "Ce qui se répète doit être dans le bloc « Répéter indéfiniment ».",
+            "Ce qui se répète doit être dans le bloc « répéter indéfiniment ».",
             "Il faut : afficher l'icône, attendre, effacer l'écran, attendre.",
-            "Dans « Répéter indéfiniment », empile « afficher l'icône » (cœur), « attendre 1 seconde », « effacer l'écran », « attendre 1 seconde »."
+            "Dans « répéter indéfiniment », empile « afficher l'icône » (cœur), « attendre 1 seconde », « effacer l'écran », « attendre 1 seconde »."
           ],
           "regle": { "tous": [
             { "bloc": "afficher_icone", "ancetre": "boucle_infinie" },
@@ -72,7 +72,7 @@
           "consigne": "Alterne deux images différentes (par exemple « Heureux » puis « Triste »), avec une pause entre chaque.",
           "indices": [
             "Une animation, c'est plusieurs images qui se suivent.",
-            "Il te faut deux blocs d'affichage et deux attentes, dans « Répéter indéfiniment ».",
+            "Il te faut deux blocs d'affichage et deux attentes, dans « répéter indéfiniment ».",
             "Empile : afficher l'icône « Heureux », attendre 1 s, afficher l'icône « Triste », attendre 1 s."
           ],
           "regle": { "tous": [
@@ -181,7 +181,7 @@
           "indices": [
             "Une condition se teste avec un bloc « si … alors ».",
             "Tu peux utiliser « si le bouton A est appuyé alors » (Entrées/Sorties) ou « si » avec une condition.",
-            "Dans « Répéter indéfiniment », pose « si le bouton A est appuyé alors » et, dedans, « afficher l'icône » Cœur."
+            "Dans « répéter indéfiniment », pose « si le bouton A est appuyé alors » et, dedans, « afficher l'icône » Cœur."
           ],
           "regle": { "ou": [
             { "bloc": "si_bouton_appuye", "ancetre": "boucle_infinie", "contient": { "bloc": ["afficher_icone", "afficher_valeur", "faire_defiler", "afficher_image_matrice"] } },
@@ -217,8 +217,8 @@
           "consigne": "Affiche en continu la température mesurée par la carte, avec une pause entre deux mesures.",
           "indices": [
             "La carte possède un capteur de température, dans la catégorie « Capteurs ».",
-            "Mets le bloc « température » dans un bloc « afficher », à l'intérieur de « Répéter indéfiniment ».",
-            "« Répéter indéfiniment » : « afficher » (température) puis « attendre 1 seconde »."
+            "Mets le bloc « température » dans un bloc « afficher », à l'intérieur de « répéter indéfiniment ».",
+            "« répéter indéfiniment » : « afficher » (température) puis « attendre 1 seconde »."
           ],
           "regle": { "tous": [
             { "bloc": "afficher_valeur", "ancetre": "boucle_infinie", "contient": "capteur_temperature" },
@@ -233,7 +233,7 @@
           "indices": [
             "Utilise un capteur d'inclinaison de la catégorie « Capteurs » (accélération ou rotation).",
             "Compare sa valeur avec un nombre dans un bloc « si … alors ».",
-            "Dans « Répéter indéfiniment » : « si accélération x > 200 alors afficher Heureux, sinon afficher Triste » (tu peux choisir d'autres valeurs)."
+            "Dans « répéter indéfiniment » : « si accélération x > 200 alors afficher Heureux, sinon afficher Triste » (tu peux choisir d'autres valeurs)."
           ],
           "regle": { "bloc": "boucle_infinie", "contient": [
             { "bloc": ["capteur_acceleration", "capteur_rotation"] },
@@ -249,7 +249,7 @@
           "indices": [
             "Les blocs de communication sont dans la catégorie « Radio ». Il faut d'abord allumer la radio.",
             "Il te faut : « allumer la radio », un bloc d'envoi, un bloc « quand la radio reçoit » et un bloc de son (« Actionneurs »).",
-            "« Au démarrage » : « allumer la radio ». « lorsque le bouton A » : « envoyer msg radio ». « quand la radio reçoit » : « jouer la musique »."
+            "« au démarrage » : « allumer la radio ». « lorsque le bouton A » : « envoyer msg radio ». « quand la radio reçoit » : « jouer la musique »."
           ],
           "regle": { "tous": [
             { "bloc": "radio_activer" },

@@ -1,0 +1,17 @@
+/* Police Inter (Rasmus Andersson, licence SIL OFL 1.1 : voir Inter-LICENCE-OFL.txt),
+   version 4.1, enregistrée dans EasyBloc : aucun appel à un service en ligne (RGPD, hors ligne).
+   Police « variable » : un seul fichier couvre toutes les graisses, de 100 à 900. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('InterVariable.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: italic;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('InterVariable-Italic.woff2') format('woff2');
+}

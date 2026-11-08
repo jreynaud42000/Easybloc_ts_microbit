@@ -483,7 +483,7 @@ try {
         this.appendDummyInput().appendField("lorsque la broche")
             .appendField(new Blockly.FieldDropdown([["P0", "pin0"], ["P1", "pin1"], ["P2", "pin2"]]), "BROCHE")
             .appendField("est")
-            .appendField(new Blockly.FieldDropdown([["activée", "touched"], ["relachée", "released"]]), "ETAT");
+            .appendField(new Blockly.FieldDropdown([["activée", "touched"], ["relâchée", "released"]]), "ETAT");
         this.appendStatementInput("DO").setCheck(null);
         this.setColour(300);
     }};
@@ -496,7 +496,7 @@ try {
     Blockly.Blocks['lorsque_son_detecte'] = { init: function() {
         this.appendDummyInput().appendField("lorsque le son")
             .appendField(new Blockly.FieldDropdown([["bruyant", "LOUD"], ["faible", "QUIET"]]), "SON")
-            .appendField("est detecté");
+            .appendField("est détecté");
         this.appendStatementInput("DO").setCheck(null);
         this.setColour(300);
     }};
@@ -507,7 +507,7 @@ try {
 
     Blockly.Blocks['lorsque_logo'] = { init: function() {
         this.appendDummyInput().appendField("sur le logo")
-            .appendField(new Blockly.FieldDropdown([["appuyé", "touched"], ["relaché", "released"]]), "ACTION");
+            .appendField(new Blockly.FieldDropdown([["appuyé", "touched"], ["relâché", "released"]]), "ACTION");
         this.appendStatementInput("DO").setCheck(null);
         this.setColour(300);
     }};
@@ -781,7 +781,7 @@ try {
     };
 
     Blockly.Blocks['gamme_accelerometre'] = { init: function() {
-        this.appendDummyInput().appendField("spécifier la gamme de l'acceleromètre")
+        this.appendDummyInput().appendField("spécifier la gamme de l'accéléromètre")
             .appendField(new Blockly.FieldDropdown([["1g", "1"], ["2g", "2"], ["4g", "4"], ["8g", "8"]]), "GAMME");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
@@ -850,7 +850,7 @@ try {
     Blockly.Blocks['music_jouer_melodie'] = { init: function() {
         this.appendDummyInput().appendField("[Music] jouer la mélodie")
             .appendField(new Blockly.FieldDropdown([
-                ["Dadadadum", "DADADADUM"], ["Pirates", "PUNCHLINE"], ["Entertainer", "ENTERTAINER"]
+                ["Dadadadum", "DADADADUM"], ["Punchline", "PUNCHLINE"], ["Entertainer", "ENTERTAINER"]
             ]), "MELODY");
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
@@ -908,7 +908,7 @@ try {
     // Bloc de demarrage : son contenu s'execute une fois, avant tout le reste.
     // Ni encoche du dessus ni du dessous — il vit seul, comme dans MakeCode.
     Blockly.Blocks['au_demarrage'] = { init: function() {
-        this.appendDummyInput().appendField("Au démarrage");
+        this.appendDummyInput().appendField("au démarrage");
         this.appendStatementInput("DO").setCheck(null);
         // Encoche du bas seulement (pas du haut) : "Au démarrage" reste
         // toujours le bloc le plus haut — rien ne s'accroche AU-DESSUS —
@@ -1101,7 +1101,7 @@ try {
     };
 
     Blockly.Blocks['boucle_infinie'] = { init: function() {
-        this.appendDummyInput().appendField("Répéter indéfiniment");
+        this.appendDummyInput().appendField("répéter indéfiniment");
         this.appendStatementInput("DO").setCheck(null);
         this.setPreviousStatement(true, null);
         this.setNextStatement(true, null);
@@ -1176,10 +1176,11 @@ try {
     };
 
     Blockly.Blocks['math_convert'] = { init: function() {
-        this.appendValueInput("NUM").setCheck("Number").appendField("convert");
-        this.appendDummyInput().appendField("from")
+        // Libelles en francais (ils etaient restes en anglais) ; la traduction anglaise est dans langue-en.js
+        this.appendValueInput("NUM").setCheck("Number").appendField("convertir");
+        this.appendDummyInput()
             .appendField(new Blockly.FieldDropdown([
-                ["degrees to radians", "radians"], ["radians to degrees", "degrees"]
+                ["des degrés en radians", "radians"], ["des radians en degrés", "degrees"]
             ]), "OP");
         this.setOutput(true, "Number");
         this.setColour(280);
@@ -1795,10 +1796,13 @@ try {
         return '_grove_ruban()[' + index + '] = (0, 0, 0)\n_grove_ruban().show()\n';
     };
 
+    // Composante verte des couleurs R V B : « G » en anglais (pas de cle « V » dans le dictionnaire : la serigraphie
+    // « V » des cartes, dans le montage, ne doit pas changer).
+    const VERT_RGB = window.LANGUE === 'en' ? 'G' : 'V';
     Blockly.Blocks['grove_ruban_perso'] = { init: function() {
         this.appendDummyInput().appendField("colorer tout le ruban en R");
         this.appendValueInput("R").setCheck("Number");
-        this.appendValueInput("V").setCheck("Number").appendField("V");
+        this.appendValueInput("V").setCheck("Number").appendField(VERT_RGB);
         this.appendValueInput("B").setCheck("Number").appendField("B");
         this.setInputsInline(false);
         this.setPreviousStatement(true, null);
@@ -1816,7 +1820,7 @@ try {
     Blockly.Blocks['grove_ruban_perso_index'] = { init: function() {
         this.appendValueInput("INDEX").setCheck("Number").appendField("colorer la LED n°");
         this.appendValueInput("R").setCheck("Number").appendField("en R");
-        this.appendValueInput("V").setCheck("Number").appendField("V");
+        this.appendValueInput("V").setCheck("Number").appendField(VERT_RGB);
         this.appendValueInput("B").setCheck("Number").appendField("B");
         this.setInputsInline(false);
         this.setPreviousStatement(true, null);
@@ -3774,7 +3778,7 @@ try {
     Blockly.Blocks['grove_moteur_action'] = { init: function() {
         this.appendDummyInput()
             .appendField(new Blockly.FieldDropdown([
-                ["arrêter", "arret"], ["freiner", "frein"], ["effacer le défaut de", "effacer_defaut"]
+                ["arrêter", "arret"], ["freiner", "frein"], ["effacer le défaut sur", "effacer_defaut"]
             ]), "ACTION")
             .appendField("le moteur canal").appendField(menuCanalMoteur(), "CANAL");
         this.setPreviousStatement(true, null);
@@ -4041,31 +4045,31 @@ try {
     // ---------- Couleurs des categories ----------
     // Une couleur par categorie, UNE seule table : la puce de la colonne de categories (bandeau.js la recopie depuis la
     // couleur de la categorie) ET les blocs de la categorie. Demande de l'utilisateur : les blocs ont exactement la couleur
-    // de leur puce. Couleurs alignees sur la version Arduino R4 (EasyBloc) ; Capteurs, Actionneurs et Servos, sans
-    // equivalent Arduino, ont une couleur choisie la plus eloignee possible des autres. Aucune couleur identique entre deux
-    // categories. Les sous-categories (Radio, Grove) heritent de leur parent. Sur une couleur claire, le texte du
-    // bloc passe en fonce (voir texteSombreSurBlocsClairs). Pour changer une couleur : modifier la ligne ci-dessous.
+    // de leur puce. Couleurs de la version Arduino R4 v1.2.9 (COULEUR_CATEGORIE de r4-blocks.js, nov. 2026) : Radio prend
+    // la couleur Wi-Fi, Servos celle de Grove (le modele range les servos dans Grove). Capteurs, Actionneurs et Cartes
+    // d'extension, sans equivalent Arduino : couleurs foncees choisies loin des 14 du modele (texte blanc lisible,
+    // contraste 5,7 a 9,2). Les sous-categories (Radio, Grove, Cartes d'extension) ont la couleur de leur parent.
+    // Pour changer une couleur : modifier la ligne ci-dessous.
     const PALETTE_CATEGORIES = {
-        'Boucles': '#fd7e14',
-        'Temps': '#15aabf',
-        'Matrice LED': '#f03e3e',
-        'Entrées/Sorties': '#343a40',
-        'Capteurs': '#d2cc79',
-        'Actionneurs (Audio)': '#622d86',
-        'Servos': '#25f478',
-        // Cartes d'extension : chaque carte garde sa couleur (ses blocs ne changent pas de teinte).
-        'Cartes d\'extension': '#0b7285',
-        'DFR0548': '#0b7285',
-        'Motor:bit': '#1971c2',
-        'Radio': '#1864ab',
-        'IA': '#9c6644',
-        'Grove': '#2b8a3e',
-        'Logique': '#fcc419',
-        'Variables': '#e64980',
-        'Maths': '#82c91e',
-        'Texte': '#7048e8',
-        'Fonctions': '#cc5de8',
-        'Listes': '#a61e4d',
+        'Boucles': '#BD4500',
+        'Temps': '#2242A9',
+        'Matrice LED': '#B6131D',
+        'Entrées/Sorties': '#3D4B62',
+        'Capteurs': '#00727A',
+        'Actionneurs (Audio)': '#7B2E2E',
+        'Servos': '#356D48',
+        'Cartes d\'extension': '#5C5C1E',
+        'DFR0548': '#5C5C1E',
+        'Motor:bit': '#5C5C1E',
+        'Radio': '#336C93',
+        'IA': '#607610',
+        'Grove': '#356D48',
+        'Logique': '#936D0A',
+        'Variables': '#A10D6E',
+        'Maths': '#6A244E',
+        'Texte': '#6D4415',
+        'Fonctions': '#5F2BD4',
+        'Listes': '#88009B',
     };
     // Texte des blocs : blanc par defaut ; fonce sur les couleurs claires, ou le blanc contraste a moins de 3:1 (seuil
     // WCAG, luminance relative) : Boucles, Temps, Capteurs, Servos, Logique, Maths. Regle CSS par couleur : « un bloc dont le fond a cette
@@ -4157,7 +4161,162 @@ try {
     // (demande de l'utilisateur, nov. 2026). Par defaut, Blockly lui donne l'echelle de l'espace de travail.
     Blockly.Flyout.prototype.getFlyoutScale = function () { return 1; };
 
+    // Taille et forme des blocs, comme la version Arduino R4 v1.2.9 (patch du rendu thrasos de blockly-jeulin.html,
+    // ecrit pour Blockly 13.1.1 et adapte a Blockly 10.4.3 ; nov. 2026). Renderer « thrasos » (option des deux inject) :
+    // - bloc d'instruction d'UNE ligne : 40 px de haut (texte centre) ; blocs ronds, blocs a plusieurs lignes et petits
+    //   blocs des fenetres d'engrenage (mutateurs) inchanges ;
+    // - bloc en C : partie haute (et parties du milieu) de 40 px, partie basse de 14 px sans la languette, branches
+    //   d'au moins 60 px apres le bord interieur du C ;
+    // - bloc « si » : parties « si » et « sinon si » a la hauteur exacte de leur condition, « sinon » de la meme
+    //   epaisseur que la derniere condition, mots centres sur leur branche ;
+    // - encoche en haut de la partie basse d'un bloc en C, ou se loge la languette du dernier bloc range dedans.
+    // Seul le dessin change : definition des blocs, code genere et simulation sont intacts.
+    (function formeDesBlocs() {
+        const HAUTEUR_INSTRUCTION = 40, BAS_C = 14, BRANCHE_MIN = 60, HAUTEUR_CONDITION = 28;
+        // Fenetre d'engrenage (mutateur) ET sa petite colonne de blocs : tailles d'origine. La colonne n'est pas marquee
+        // isMutator dans Blockly 10, d'ou le test sur l'espace de travail qu'elle sert (targetWorkspace).
+        const dansMutateur = b => !!b.workspace && (b.workspace.isMutator
+            || !!(b.workspace.isFlyout && b.workspace.targetWorkspace && b.workspace.targetWorkspace.isMutator));
+        const estSi = b => !!b && (b.type === 'controls_if' || b.type === 'controls_ifelse') && !dansMutateur(b);
+        const info = Blockly.thrasos.RenderInfo.prototype, finalize = info.finalize_;
+        info.finalize_ = function () {
+            const b = this.block_;
+            if (b && !b.outputConnection && (b.previousConnection || b.nextConnection) && !dansMutateur(b)) {
+                const lignes = this.rows.filter(r => r instanceof Blockly.blockRendering.InputRow);
+                if (lignes.length === 1 && !this.rows.some(r => r.hasStatement)) {
+                    const total = this.rows.reduce((t, r) => t + r.height, 0);
+                    if (total < HAUTEUR_INSTRUCTION) lignes[0].height += HAUTEUR_INSTRUCTION - total;
+                }
+            }
+            // Blocs en C : on agrandit la derniere ligne de texte de chaque partie (texte centre), sinon l'espace.
+            if (b && !dansMutateur(b) && this.rows.some(r => r.hasStatement)) {
+                const agrandir = (debut, fin, cible, versLeBas) => {
+                    const rangs = this.rows.slice(debut, fin);
+                    const total = rangs.reduce((t, r) => t + r.height, 0) - (versLeBas ? this.bottomRow.descenderHeight : 0);
+                    if (!rangs.length) return;
+                    const T = Blockly.blockRendering.Types;
+                    const lignes = rangs.filter(r => r instanceof Blockly.blockRendering.InputRow);
+                    const r = lignes.length ? lignes[lignes.length - 1] : rangs[versLeBas ? 0 : rangs.length - 1];
+                    const k = rangs.indexOf(r), prise = r.getLastInput && r.getLastInput();
+                    const conditionSi = estSi(this.block_) && k > 0 && prise && T.isExternalInput(prise);
+                    const cond = conditionSi && prise.connectedBlock ? prise.connectedBlock.getHeightWidth().height : HAUTEUR_CONDITION;
+                    const decalage = this.constants_.TAB_OFFSET_FROM_TOP;
+                    // « si » et « sinon si » : la partie a la hauteur de sa condition, collee au bloc du dessus et au
+                    // premier bloc range dessous (la condition commence TAB_OFFSET_FROM_TOP au-dessus de sa ligne ; apres
+                    // un bloc range, elle remonte de la languette de celui-ci).
+                    if (conditionSi) {
+                        const avant = rangs.slice(0, k).reduce((t, x) => t + x.height, 0);
+                        const precedent = debut > 0 && this.rows[debut - 1].getLastInput();
+                        const remonte = precedent && precedent.connectedBlock ? this.constants_.NOTCH_HEIGHT : 0;
+                        rangs[k - 1].height += Math.max(-rangs[k - 1].height, decalage - remonte - avant);
+                        rangs.slice(k + 1).forEach(x => { x.height = 0; });
+                        const texte = Math.max(0, ...r.elements.filter(e => T.isField(e)).map(e => e.height));
+                        r.height = Math.max(texte, cond - decalage);
+                        return;
+                    }
+                    // « sinon » (partie vide entre deux encoches) : aussi epaisse que la branche de la derniere condition.
+                    if (estSi(this.block_) && debut > 0 && !lignes.length) {
+                        const entrees = this.block_.inputList.filter(e => /^IF\d+$/.test(e.name));
+                        const derniere = entrees.length && entrees[entrees.length - 1].connection.targetBlock();
+                        const epaisseur = derniere ? derniere.getHeightWidth().height : HAUTEUR_CONDITION;
+                        const precedent = this.rows[debut - 1].getLastInput();
+                        const remonte = precedent && precedent.connectedBlock ? this.constants_.NOTCH_HEIGHT : 0;
+                        rangs.forEach((x, n) => { x.height = n ? 0 : Math.max(0, epaisseur - remonte); });
+                        return;
+                    }
+                    if (total >= cible) return;
+                    r.height += cible - total;
+                };
+                let debut = 0;
+                this.rows.forEach((r, i) => {
+                    if (!r.hasStatement) return;
+                    agrandir(debut, i, HAUTEUR_INSTRUCTION, false);
+                    debut = i + 1;
+                });
+                agrandir(debut, this.rows.length, BAS_C, true);
+            }
+            return finalize.call(this);
+        };
+        // Mots du bloc « si » centres sur leur branche, sur l'encre des lettres (mesuree au canevas) et non sur la boite
+        // de la police : des minuscules centrees sur la boite paraissent trop basses.
+        const centre = info.getElemCenterline_;
+        const encre = {};
+        const decalageEncre = (texte, police) => {
+            const cle = police + '|' + texte;
+            if (!(cle in encre)) {
+                const ctx = (decalageEncre.c = decalageEncre.c || document.createElement('canvas')).getContext('2d');
+                ctx.font = police;
+                const m = ctx.measureText(texte);
+                encre[cle] = ((m.actualBoundingBoxDescent - m.actualBoundingBoxAscent) - (m.fontBoundingBoxDescent - m.fontBoundingBoxAscent)) / 2;
+            }
+            return encre[cle];
+        };
+        info.getElemCenterline_ = function (row, elem) {
+            const T = Blockly.blockRendering.Types;
+            if (!estSi(this.block_) || !T.isField(elem) || elem.isEditable || !elem.field) return centre.call(this, row, elem);
+            const rangs = this.rows, i = rangs.indexOf(row);
+            const y = [];
+            rangs.reduce((t, r, n) => (y[n] = t) + r.height, 0);
+            const bande = n => {   // milieu de la partie qui contient la ligne n (hors encoches)
+                let a = n, z = n;
+                while (a > 0 && !rangs[a - 1].hasStatement) a--;
+                while (z < rangs.length - 1 && !rangs[z + 1].hasStatement) z++;
+                return (y[a] + y[z] + rangs[z].height) / 2;
+            };
+            let cible = bande(i);
+            const prise = row.getLastInput && row.getLastInput();
+            if (!row.hasStatement && prise && T.isExternalInput(prise)) {   // « si », « sinon si » : milieu de la condition
+                const cond = prise.connectedBlock ? prise.connectedBlock.getHeightWidth().height : HAUTEUR_CONDITION;
+                cible = y[i] - this.constants_.TAB_OFFSET_FROM_TOP + cond / 2;
+            }
+            if (row.hasStatement) {   // « faire », « sinon »
+                let n = i - 1, texte = false;
+                while (n >= 0 && !rangs[n].hasStatement) { if (rangs[n] instanceof Blockly.blockRendering.InputRow) texte = true; n--; }
+                const remonte = n >= 0 && rangs[n].getLastInput() && rangs[n].getLastInput().connectedBlock ? this.constants_.NOTCH_HEIGHT : 0;
+                cible = (!texte && n >= 0) ? bande(i - 1) - remonte / 2
+                    : y[i] + Math.min(row.height, HAUTEUR_INSTRUCTION - this.constants_.NOTCH_HEIGHT) / 2;
+            }
+            const t = elem.field.textElement_ || (elem.field.getSvgRoot && elem.field.getSvgRoot().querySelector('text'));
+            const police = t ? getComputedStyle(t).font : '';
+            return cible - (police ? decalageEncre(elem.field.getText(), police) : 0);
+        };
+        const bornes = info.computeBounds_;
+        info.computeBounds_ = function () {
+            bornes.call(this);
+            const b = this.block_;
+            if (!b || dansMutateur(b) || !this.rows.some(r => r.hasStatement)) return;
+            const manque = this.startX + this.statementEdge + BRANCHE_MIN - this.width;
+            if (manque > 0) {
+                this.width += manque;
+                this.widthWithChildren = Math.max(this.widthWithChildren, this.width);
+            }
+        };
+        // Encoche en haut de la partie basse d'un bloc en C, juste sous la languette du dernier bloc range dedans (copie de
+        // Drawer.drawStatementInput_, encoche ajoutee apres le coin interieur du bas). Drawer de thrasos seulement.
+        const dessin = (Blockly.thrasos.Drawer || Blockly.blockRendering.Drawer).prototype;
+        dessin.drawStatementInput_ = function (row) {
+            const input = row.getLastInput();
+            if (!input) return;
+            const P = Blockly.utils.svgPaths, coins = this.constants_.INSIDE_CORNERS;
+            const x = input.xPos + input.notchOffset + input.shape.width;
+            const coinHaut = input.shape.pathRight + P.lineOnAxis('h', -(input.notchOffset - coins.width)) + coins.pathTop;
+            let dernier = input.connectedBlock;
+            while (dernier && dernier.getNextBlock()) dernier = dernier.getNextBlock();
+            const languette = dernier && dernier.nextConnection ? this.constants_.NOTCH_HEIGHT : 0;
+            this.outlinePath_ += P.lineOnAxis('H', x) + coinHaut
+                + P.lineOnAxis('v', row.height - 2 * coins.height - languette) + coins.pathBottom
+                + P.lineOnAxis('H', input.xPos + input.notchOffset) + input.shape.pathLeft
+                + P.lineOnAxis('H', row.xPos + row.width);
+            this.positionStatementInputConnection_(row);
+        };
+    })();
+
     window.workspace = Blockly.inject('blocklyDiv', {
+      renderer: 'thrasos',   // dessin des blocs de la version Arduino R4 (voir formeDesBlocs ci-dessus)
+      // Police Inter des le depart (meme police que POLICE_BLOCS, plus bas) : chaque texte de bloc garde la mesure de
+      // la police du theme en vigueur a sa creation ; sans cela, les premiers blocs restent mesures en sans-serif.
+      theme: Blockly.Theme.defineTheme('demarrageMicrobitV2', {
+        base: Blockly.Themes.Classic, fontStyle: { family: "Inter, 'Segoe UI', Arial, sans-serif", weight: '500' } }),
       // Images (corbeille, fleches) et sons de Blockly : dossier LOCAL. Sans
       // cette option, Blockly va les chercher sur blockly-demo.appspot.com.
       media: 'lib/blockly/media/',
@@ -4185,7 +4344,7 @@ try {
         // On defile desormais au glisser (fond de l'espace) ou aux barres de defilement.
         wheel: false
       },
-      grid: { spacing: 20, length: 3, colour: '#e8e8e8', snap: true },
+      grid: { spacing: 20, length: 3, colour: '#d9d9d9', snap: true },   // comme la version Arduino R4 (couleur par mode : --ec-grille)
       trashcan: true,
       // Un seul bloc de demarrage a la fois : deux rendraient l'ordre
       // d'execution ambigu. Le tiroir grise le bloc quand il est deja pose.
@@ -4196,9 +4355,13 @@ try {
           {
             "kind": "category", "name": "Temps", "colour": "230",
             "contents": [
+              // Titres de groupes comme la version Arduino R4 (GROUPES de r4-blocks.js, nov. 2026)
+              { "kind": "label", "text": "Attendre", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "attendre_temps", "inputs": { "TEMPS": { "shadow": { "type": "math_number", "fields": { "NUM": "1" } } } } },
               { "kind": "block", "type": "attendre_jusqua" },
+              { "kind": "label", "text": "Répéter régulièrement", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "repeter_toutes_les" },
+              { "kind": "label", "text": "Chronomètre", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "reset_chrono" },
               { "kind": "block", "type": "valeur_chrono" }
             ]
@@ -4295,12 +4458,12 @@ try {
           {
             "kind": "category", "name": "IA", "colour": "330",
             "contents": [
-              { "kind": "label", "text": "Résultat envoyé par le panneau IA" },
+              { "kind": "label", "text": "Résultat envoyé par le panneau IA", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "ia_lorsque_reconnu" },
               { "kind": "block", "type": "ia_classe_est" },
               { "kind": "block", "type": "ia_derniere_classe" },
               { "kind": "block", "type": "ia_confiance" },
-              { "kind": "label", "text": "QR codes et codes-barres (panneau IA)" },
+              { "kind": "label", "text": "QR codes et codes-barres (panneau IA)", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "ia_qr_lorsque_lu" },
               { "kind": "block", "type": "ia_qr_visible" },
               { "kind": "block", "type": "ia_qr_texte" }
@@ -4309,14 +4472,14 @@ try {
           {
             "kind": "category", "name": "Servos", "colour": String(COULEUR_SERVO),
             "contents": [
-              { "kind": "label", "text": "Positionnel" },
+              { "kind": "label", "text": "Positionnel", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "servo_angle", "inputs": { "ANGLE": { "shadow": { "type": "math_number", "fields": { "NUM": "90" } } } } },
 
-              { "kind": "label", "text": "En continu" },
+              { "kind": "label", "text": "En continu", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "servo_continu", "inputs": { "VITESSE": { "shadow": { "type": "math_number", "fields": { "NUM": "50" } } } } },
               { "kind": "block", "type": "servo_arreter" },
 
-              { "kind": "label", "text": "Configuration" },
+              { "kind": "label", "text": "Configuration", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "servo_arret_neutre" },
               { "kind": "block", "type": "servo_intervalle", "inputs": { "MINI": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "MAXI": { "shadow": { "type": "math_number", "fields": { "NUM": "180" } } } } },
               { "kind": "block", "type": "servo_impulsion", "inputs": { "MICROS": { "shadow": { "type": "math_number", "fields": { "NUM": "1500" } } } } }
@@ -4358,7 +4521,7 @@ try {
             // LED, barre de LED et ruban RGB reunis : un titre par module, un trait fin entre deux modules (comme « Affichage »).
             "kind": "category", "name": "LED", "colour": String(COULEUR_GROVE),
             "contents": [
-              { "kind": "label", "text": "LED" },
+              { "kind": "label", "text": "LED", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "grove_led_etat" },
               { "kind": "block", "type": "grove_led_luminosite", "inputs": { "NIVEAU": { "shadow": { "type": "math_number", "fields": { "NUM": "1023" } } } } },
               { "kind": "label", "text": "Barre de LED", "web-class": "groupe-flyout" },
@@ -4386,7 +4549,7 @@ try {
             // Relais, pilote moteur et pilote 16 servos reunis : un titre par module, un trait fin entre deux modules.
             "kind": "category", "name": "Moteurs et relais", "colour": String(COULEUR_GROVE),
             "contents": [
-              { "kind": "label", "text": "Relais" },
+              { "kind": "label", "text": "Relais", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "grove_relais" },
               { "kind": "label", "text": "Pilote moteur", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "grove_moteur_vitesse", "inputs": { "VITESSE": { "shadow": { "type": "math_number", "fields": { "NUM": "30" } } } } },
@@ -4403,7 +4566,7 @@ try {
             // entre deux modules (classe groupe-flyout, trait dessine par decorerGroupesFlyout plus bas).
             "kind": "category", "name": "Affichage", "colour": String(COULEUR_GROVE),
             "contents": [
-              { "kind": "label", "text": "Afficheur 4 digits" },
+              { "kind": "label", "text": "Afficheur 4 digits", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "grove_4d_definir" },
               { "kind": "block", "type": "grove_4d_nombre", "inputs": { "VALEUR": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
               { "kind": "block", "type": "grove_4d_chiffre", "inputs": { "VALEUR": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "POSITION": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
@@ -4486,7 +4649,7 @@ try {
             // un titre par module, un trait fin entre deux modules (comme « Affichage »).
             "kind": "category", "name": "Environnement", "colour": String(COULEUR_GROVE),
             "contents": [
-              { "kind": "label", "text": "Température & humidité (capteur I²C)" },
+              { "kind": "label", "text": "Température & humidité (capteur I²C)", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "grove_th_init" },
               { "kind": "block", "type": "grove_th_mesure" },
               { "kind": "label", "text": "DHT11", "web-class": "groupe-flyout" },
@@ -4528,8 +4691,10 @@ try {
           {
             "kind": "category", "name": "Boucles", "colour": "120",
             "contents": [
+              { "kind": "label", "text": "Début du programme", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "au_demarrage" },
               { "kind": "block", "type": "boucle_infinie" },
+              { "kind": "label", "text": "Répéter", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "controls_repeat_ext", "inputs": { "TIMES": { "shadow": { "type": "math_number", "fields": { "NUM": "10" } } } } },
               { "kind": "block", "type": "controls_whileUntil" },
               { "kind": "block", "type": "controls_for", "inputs": { "FROM": { "shadow": { "type": "math_number", "fields": { "NUM": "1" } } }, "TO": { "shadow": { "type": "math_number", "fields": { "NUM": "10" } } }, "BY": { "shadow": { "type": "math_number", "fields": { "NUM": "1" } } } } }
@@ -4538,13 +4703,16 @@ try {
           {
             "kind": "category", "name": "Logique", "colour": "210",
             "contents": [
+              { "kind": "label", "text": "Conditions", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "controls_if" },
+              { "kind": "block", "type": "logic_ternary" },
+              { "kind": "label", "text": "Comparer et combiner", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "logic_compare" },
               { "kind": "block", "type": "logic_operation" },
               { "kind": "block", "type": "logic_negate" },
+              { "kind": "label", "text": "Valeurs", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "logic_boolean" },
-              { "kind": "block", "type": "logic_null" },
-              { "kind": "block", "type": "logic_ternary" }
+              { "kind": "block", "type": "logic_null" }
             ]
           },
           {
@@ -4560,7 +4728,9 @@ try {
           {
             "kind": "category", "name": "Maths", "colour": "280",
             "contents": [
+              { "kind": "label", "text": "Nombres et calculs", "web-class": "groupe-flyout" },
               { "kind": "block", "type": "math_number", "fields": { "NUM": "0" } },
+              { "kind": "block", "type": "math_constant", "fields": { "CONSTANT": "PI" } },
               { "kind": "block", "type": "math_arithmetic", "fields": { "OP": "ADD" } },
               { "kind": "block", "type": "math_arithmetic", "fields": { "OP": "MINUS" } },
               { "kind": "block", "type": "math_arithmetic", "fields": { "OP": "MULTIPLY" } },
@@ -4570,12 +4740,13 @@ try {
               { "kind": "block", "type": "math_absolue", "inputs": { "NUM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
               { "kind": "block", "type": "math_racine", "inputs": { "NUM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
               { "kind": "block", "type": "math_arrondi_custom", "inputs": { "NUM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
-              { "kind": "block", "type": "math_random_int", "inputs": { "FROM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "TO": { "shadow": { "type": "math_number", "fields": { "NUM": "10" } } } } },
               { "kind": "block", "type": "math_constrain", "inputs": { "VALUE": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "LOW": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "HIGH": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
-              { "kind": "block", "type": "math_map", "inputs": { "VAL": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "FROMLOW": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "FROMHIGH": { "shadow": { "type": "math_number", "fields": { "NUM": "1023" } } }, "TOLOW": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "TOHIGH": { "shadow": { "type": "math_number", "fields": { "NUM": "4" } } } } },
+              { "kind": "label", "text": "Hasard", "web-class": "groupe-flyout" },
+              { "kind": "block", "type": "math_random_int", "inputs": { "FROM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "TO": { "shadow": { "type": "math_number", "fields": { "NUM": "10" } } } } },
               { "kind": "block", "type": "math_random_bool" },
-              { "kind": "block", "type": "math_convert", "inputs": { "NUM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } },
-              { "kind": "block", "type": "math_constant", "fields": { "CONSTANT": "PI" } }
+              { "kind": "label", "text": "Conversions", "web-class": "groupe-flyout" },
+              { "kind": "block", "type": "math_map", "inputs": { "VAL": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "FROMLOW": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "FROMHIGH": { "shadow": { "type": "math_number", "fields": { "NUM": "1023" } } }, "TOLOW": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } }, "TOHIGH": { "shadow": { "type": "math_number", "fields": { "NUM": "4" } } } } },
+              { "kind": "block", "type": "math_convert", "inputs": { "NUM": { "shadow": { "type": "math_number", "fields": { "NUM": "0" } } } } }
             ]
           },
           {
@@ -4614,6 +4785,12 @@ try {
             { type: 'au_demarrage', x: 40, y: 40,
               next: { block: { type: 'boucle_infinie' } } }
         ]}}, window.workspace);
+    }
+    // Changement de langue (langue.js) : le programme affiche avant le rechargement revient tel quel.
+    const repriseLangue = typeof window.repriseLangue === 'function' ? window.repriseLangue() : null;
+    if (repriseLangue) {
+        try { Blockly.serialization.workspaces.load(repriseLangue.blocs, window.workspace); }
+        catch (erreur) { console.error('Programme non repris apres le changement de langue :', erreur); }
     }
     if (!window.workspace.getTopBlocks(false).length) {
         chargerEspaceDeDepart();
@@ -4796,7 +4973,8 @@ try {
         const btnMasquer = document.createElement('button');
         btnMasquer.className = 'icone-admin';
         btnMasquer.title = estMasque ? 'Afficher aux élèves' : 'Masquer aux élèves';
-        btnMasquer.textContent = estMasque ? '🚫' : '👁';
+        btnMasquer.innerHTML = window.icone(estMasque ? 'oeilBarre' : 'oeil');
+        btnMasquer.setAttribute('aria-label', btnMasquer.title);
         btnMasquer.addEventListener('click', e => { e.stopPropagation(); onBasculerMasque(); });
         ligne.appendChild(btnMasquer);
 
@@ -5064,7 +5242,8 @@ try {
                 const btnSuppr = document.createElement('button');
                 btnSuppr.className = 'icone-admin';
                 btnSuppr.title = 'Supprimer ce sous-menu (les blocs reviennent au niveau supérieur)';
-                btnSuppr.textContent = '🗑';
+                btnSuppr.innerHTML = window.icone('corbeille');
+                btnSuppr.setAttribute('aria-label', btnSuppr.title);
                 btnSuppr.addEventListener('click', () => {
                     configAdmin.sousMenus = configAdmin.sousMenus.filter(s => s !== sm);
                     sauvegarderConfigAdmin(); appliquerToolbox(); remplirZoneSousMenus(nomParent);
@@ -5380,19 +5559,25 @@ try {
     // translation du canevas est recalee directement.
     const boiteAOutils = window.workspace.getToolbox();
 
-    // Trait fin et continu au-dessus des titres de groupe de la colonne de blocs (titres « web-class »: groupe-flyout,
-    // par exemple Grove > Affichage) : Blockly ne sait faire que des espaces, le trait est ajoute a chaque ouverture.
+    // Trait au-dessus de chaque titre de groupe de la colonne de blocs (titres « web-class »: groupe-flyout), sauf le
+    // premier en haut de la colonne, sur toute sa largeur a 8 px des bords, comme la version Arduino R4 (nov. 2026) :
+    // Blockly ne sait faire que des espaces, le trait est ajoute a chaque ouverture.
     const tiroir = boiteAOutils && boiteAOutils.getFlyout && boiteAOutils.getFlyout();
     if (tiroir && typeof tiroir.show === 'function') {
         const afficherTiroir = tiroir.show.bind(tiroir);
         tiroir.show = function (contenu) {
             afficherTiroir(contenu);
             const largeur = tiroir.getWidth ? tiroir.getWidth() : 0;
+            // Haut du premier bloc : un titre place plus haut est le premier de la colonne (l'ordre des elements SVG
+            // n'est pas l'ordre d'affichage, Blockly pose les blocs avant les titres).
+            const hautBlocs = Math.min(Infinity, ...tiroir.getWorkspace().getTopBlocks(false).map(b => b.getRelativeToSurfaceXY().y));
             tiroir.getWorkspace().getCanvas().querySelectorAll('.groupe-flyout').forEach(titre => {
                 if (titre.querySelector('.trait-groupe-flyout')) return;
-                const x = titre.transform.baseVal.consolidate() ? titre.transform.baseVal.consolidate().matrix.e : 0;
+                const m = titre.transform.baseVal.consolidate();
+                if (m && m.matrix.f < hautBlocs) return;   // premier titre en haut de la colonne : pas de trait
+                const x = m ? m.matrix.e : 0;
                 const trait = Blockly.utils.dom.createSvgElement('line', {
-                    class: 'trait-groupe-flyout', x1: 0, y1: -12, x2: Math.max(40, largeur - 2 * x), y2: -12,
+                    class: 'trait-groupe-flyout', x1: -x + 8, y1: -12, x2: Math.max(40, largeur - x - 8), y2: -12,
                 }, null);
                 titre.insertBefore(trait, titre.firstChild);
             });
@@ -5481,17 +5666,17 @@ try {
     // elles représentent quelque chose de réel, comme les couleurs des
     // boutons d'action — la carte ne devient pas "plus accessible" en
     // changeant de couleur, ce n'est pas du texte à lire.
-    // Police du texte des blocs : celle par defaut de Blockly, comme la version Arduino R4 (reglee dans le theme, pas en CSS :
-    // Blockly mesure le texte avec cette police pour dimensionner les blocs ; jamais de gras).
-    const POLICE_BLOCS = { family: 'sans-serif', weight: 'normal', size: 11 };   // police par defaut de Blockly (alignement sur la version Arduino R4)
+    // Police du texte des blocs : Inter (lib/polices), comme la version Arduino R4 v1.2.9 (reglee dans le theme, pas en CSS :
+    // Blockly mesure le texte avec cette police pour dimensionner les blocs). Taille : celle par defaut de Blockly, comme le modele.
+    const POLICE_BLOCS = { family: "Inter, 'Segoe UI', Arial, sans-serif", weight: '500' };
     const THEME_SOMBRE_NORMAL = Blockly.Theme.defineTheme('sombreMicrobitV2', {
         base: Blockly.Themes.Classic,
         fontStyle: POLICE_BLOCS,
         componentStyles: {
-            workspaceBackgroundColour: '#1e1f23',
-            toolboxBackgroundColour: '#141517',
+            workspaceBackgroundColour: '#2a2c30',   // fonds de la version Arduino R4 v1.2.9 (nov. 2026)
+            toolboxBackgroundColour: '#1a1b1c',
             toolboxForegroundColour: '#dddddd',
-            flyoutBackgroundColour: '#2a2c31',
+            flyoutBackgroundColour: '#35373c',
             flyoutForegroundColour: '#b5b8bf',
             flyoutOpacity: 1,
             scrollbarColour: '#5a5e66',
@@ -5538,10 +5723,10 @@ try {
         base: Blockly.Themes.Classic,
         fontStyle: POLICE_BLOCS,
         componentStyles: {
-            workspaceBackgroundColour: '#f2f2ef',   // gris doux plutot que blanc (essai B, 31 oct. 2026)
-            toolboxBackgroundColour: '#2e2e2e',     // colonne de categories sombre meme en clair (version Arduino R4)
+            workspaceBackgroundColour: '#f9f9f9',   // fonds de la version Arduino R4 v1.2.9 (nov. 2026)
+            toolboxBackgroundColour: '#1a1b1c',     // colonne de categories sombre meme en clair (version Arduino R4)
             toolboxForegroundColour: '#dddddd',
-            flyoutBackgroundColour: '#dcdcd7',
+            flyoutBackgroundColour: '#d9d9d9',
             flyoutForegroundColour: '#555555',
             flyoutOpacity: 1
         }
@@ -5591,11 +5776,31 @@ try {
         const saison = { halloween: THEME_HALLOWEEN, noel: THEME_NOEL, salon: THEME_SALON }[document.documentElement.dataset.saison];
         const theme = clair
             ? (eleve ? THEME_CLAIR_ELEVE : THEME_CLAIR_NORMAL)
-            // Sombre sans theme de saison : charte Educatech (demande de l'utilisateur, 31 oct. 2026), comme le salon.
-            : (eleve ? THEME_SOMBRE_ELEVE : (saison || THEME_SALON));
+            // Sombre sans theme de saison : fonds de la version Arduino R4 (nov. 2026) ; la charte Educatech reste le theme « Salon ».
+            : (eleve ? THEME_SOMBRE_ELEVE : (saison || THEME_SOMBRE_NORMAL));
         if (window.workspace.getTheme() !== theme) window.workspace.setTheme(theme);
     }
     new MutationObserver(appliquerThemeBlockly).observe(document.documentElement, { attributes: true, attributeFilter: ['data-saison'] });
+    // Police Inter (lib/polices) : les blocs poses avant son chargement ont ete mesures avec la police de secours, plus
+    // etroite (texte qui deborde du bloc). Une fois Inter chargee, chaque texte est remesure (Blockly garde sinon l'ancienne
+    // largeur, et dans constants_ la police du theme de sa creation) et les blocs sont redessines.
+    // Deux passages : au chargement de la police, puis 1,5 s apres (les blocs du programme restaure peuvent etre poses
+    // entre-temps avec l'ancienne mesure).
+    function remesurerTextesBlocs() {
+        const ws = window.workspace;
+        if (!ws) return;
+        ws.getAllBlocks(false).forEach(b => b.inputList.forEach(i => i.fieldRow.forEach(f => {
+            f.constants_ = null;
+            if (f.forceRerender) f.forceRerender();
+        })));
+        ws.refreshTheme();
+    }
+    if (document.fonts && document.fonts.load) {
+        document.fonts.load("500 12px Inter").then(() => {
+            remesurerTextesBlocs();
+            setTimeout(remesurerTextesBlocs, 1500);
+        }).catch(() => {});
+    }
 
     const btnTheme = document.getElementById('btn-theme');
     function appliquerTheme(clair) {
@@ -5731,7 +5936,7 @@ try {
             // La signature n'est ajoutee qu'au fichier ECRIT, jamais a
             // window.currentPythonCode (transcription affichee, simulateur) :
             // voir la section "RECONSTRUCTION DE BLOCS..." plus bas.
-            const finalHex = await genererFichierHexFinal(SIGNATURE_EXPORT + codePython);
+            const finalHex = await genererFichierHexFinal(SIGNATURE_EXPORT + commentaireMontage() + codePython);
             const blob = new Blob([finalHex], { type: 'application/octet-stream' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -5786,29 +5991,78 @@ try {
     // Fenetre modale de progression (markup : #voile-envoi, index.html). Au
     // premier plan et bloquante : rien d'autre ne doit etre clique pendant
     // que le lecteur de la carte est en cours d'ecriture.
+    // Comme la version Arduino R4 (nov. 2026) : etapes Generation / Lecteur MICROBIT / Ecriture (faite en vert, en cours
+    // en gras), bouton « Annuler le televersement » pendant l'envoi, puis disparition seule (3 s si tout va bien, 6 s en
+    // cas d'erreur) ; une fois fini, un clic sur le fond la ferme tout de suite.
     const fenetreEnvoi = {
         voile: document.getElementById('voile-envoi'),
+        boite: document.getElementById('fenetre-envoi'),
         phase: document.getElementById('envoi-phase'),
         barre: document.getElementById('envoi-barre'),
         remplissage: document.getElementById('envoi-remplissage'),
         pourcent: document.getElementById('envoi-pourcent'),
+        boutonAnnuler: document.getElementById('envoi-annuler'),
+        annulationDemandee: false,
+        surAnnulation: null,     // fonction posee par l'envoi en cours (interrompt l'ecriture)
+        minuterie: null,
         ouvrir(texte) {
+            clearTimeout(this.minuterie);
+            this.annulationDemandee = false;
+            if (this.boite) this.boite.classList.remove('ok', 'erreur', 'annule');
+            if (this.voile) this.voile.classList.remove('fini', 'disparait');
+            if (this.boutonAnnuler) this.boutonAnnuler.disabled = false;
             this.progression(0);
+            this.etapeActive(null);
             this.etape(texte);
             if (this.voile) this.voile.classList.add('ouvert');
         },
         etape(texte) { if (this.phase) this.phase.textContent = texte; },
+        // nom : 'generation', 'lecteur' ou 'ecriture' ; les etapes d'avant sont marquees faites
+        etapeActive(nom) {
+            if (!this.boite) return;
+            let avant = true;
+            this.boite.querySelectorAll('.etapes span').forEach(s => {
+                const ici = s.dataset.etape === nom;
+                if (ici) avant = false;
+                s.classList.toggle('active', ici);
+                s.classList.toggle('faite', !!nom && avant && !ici);
+            });
+        },
         progression(pct) {
             const p = Math.max(0, Math.min(100, Math.round(pct)));
             if (this.remplissage) this.remplissage.style.width = p + '%';
             if (this.pourcent) this.pourcent.textContent = p + ' %';
             if (this.barre) this.barre.setAttribute('aria-valuenow', String(p));
         },
-        fermer(delaiMs) {
-            const f = () => { if (this.voile) this.voile.classList.remove('ouvert'); };
-            if (delaiMs) setTimeout(f, delaiMs); else f();
+        // Fin de l'envoi : ok (vert), erreur (rouge, message dans la fenetre) ou annule (gris)
+        finir(issue, texte) {
+            if (this.boite) this.boite.classList.add(issue);
+            if (issue === 'ok') { this.etapeActive('fin'); this.progression(100); }
+            this.etape(texte);
+            if (this.voile) this.voile.classList.add('fini');
+            clearTimeout(this.minuterie);
+            this.minuterie = setTimeout(() => this.fermer(), issue === 'erreur' ? 6000 : 3000);
+        },
+        fermer() {
+            clearTimeout(this.minuterie);
+            if (!this.voile || !this.voile.classList.contains('ouvert')) return;
+            this.voile.classList.add('disparait');
+            setTimeout(() => { this.voile.classList.remove('ouvert', 'disparait', 'fini'); }, 400);
         }
     };
+    if (fenetreEnvoi.voile) {
+        fenetreEnvoi.voile.addEventListener('click', e => {
+            if (e.target === fenetreEnvoi.voile && fenetreEnvoi.voile.classList.contains('fini')) fenetreEnvoi.fermer();
+        });
+    }
+    if (fenetreEnvoi.boutonAnnuler) {
+        fenetreEnvoi.boutonAnnuler.addEventListener('click', () => {
+            fenetreEnvoi.annulationDemandee = true;
+            fenetreEnvoi.boutonAnnuler.disabled = true;
+            fenetreEnvoi.etape('Annulation…');
+            if (fenetreEnvoi.surAnnulation) fenetreEnvoi.surAnnulation();
+        });
+    }
     window.fenetreEnvoiTest = fenetreEnvoi;
 
     // ------------------------------------------
@@ -5952,7 +6206,7 @@ try {
         const d = new Date(ms), p = (n, l = 2) => String(n).padStart(l, '0');
         return p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds()) + '.' + p(d.getMilliseconds(), 3);
     };
-    const NOMS_SOURCES = { sim: 'Simulateur', carte: 'Carte', info: 'Information' };
+    const NOMS_SOURCES = { sim: window.tr('Simulateur'), carte: window.tr('Carte'), info: window.tr('Information') };
 
     /** Lignes actuellement affichees dans la console, avec heure, source et valeur numerique eventuelle. */
     function lignesPourExport() {
@@ -5968,7 +6222,7 @@ try {
 
     function creerXlsxConsole(lignes) {
         const texteCell = t => '<c t="inlineStr"><is><t xml:space="preserve">' + echapperXml(t) + '</t></is></c>';
-        const lignesXml = ['<row r="1">' + ['N°', 'Heure', 'Source', 'Texte', 'Valeur numérique'].map(texteCell).join('') + '</row>'];
+        const lignesXml = ['<row r="1">' + ['N°', 'Heure', 'Source', 'Texte', 'Valeur numérique'].map(e => texteCell(window.tr(e))).join('') + '</row>'];
         lignes.forEach((l, i) => {
             lignesXml.push('<row r="' + (i + 2) + '"><c><v>' + l.n + '</v></c>' + texteCell(l.heure) + texteCell(l.source) +
                            texteCell(l.texte) + (l.nombre === null ? '' : '<c><v>' + l.nombre + '</v></c>') + '</row>');
@@ -6041,11 +6295,11 @@ try {
     function extraireMesures(texte) {
         const t = texte.trim();
         if (!t) return [];
-        if (RE_UN_NOMBRE.test(t)) return [['Valeur', Number(t.replace(',', '.'))]];
+        if (RE_UN_NOMBRE.test(t)) return [[window.tr('Valeur'), Number(t.replace(',', '.'))]];
         const entre = /^\(.*\)$/.test(t) ? t.slice(1, -1).trim() : t;
         const morceaux = entre.split(/\s*[;,]\s*|\s+/).filter(m => m !== '');
         if (morceaux.length > 1 && morceaux.every(m => RE_VALEUR.test(m))) {
-            return morceaux.map((m, i) => ['Série ' + (i + 1), Number(m)]);
+            return morceaux.map((m, i) => [window.tr('Série {n}', { n: i + 1 }), Number(m)]);
         }
         const paires = [];
         let trouve;
@@ -6320,7 +6574,7 @@ try {
     function majBoutonsConsole() {
         const connecte = !!portSerie;
         if (btnConsoleCarte) {
-            btnConsoleCarte.textContent = connecte ? '🔌 Déconnecter' : '🔌 Connecter';
+            btnConsoleCarte.innerHTML = window.icone('prise') + (connecte ? 'Déconnecter' : 'Connecter');
             btnConsoleCarte.classList.toggle('connecte', connecte);
         }
         if (champConsole) champConsole.disabled = !connecte;
@@ -6491,8 +6745,8 @@ try {
             "remplace le précédent.",
         valeur_chrono: "Temps écoulé depuis le dernier « remettre le chronomètre à 0 », en secondes ou en " +
             "millisecondes. Si ce bloc n'a jamais été posé, le temps est compté depuis le démarrage de la carte.",
-        attendre_jusqua: "Bloque le programme tant que la condition n'est pas vraie. Dans « Au démarrage », le " +
-            "programme attend vraiment, simulateur compris. Dans « Répéter indéfiniment », le simulateur laisse " +
+        attendre_jusqua: "Bloque le programme tant que la condition n'est pas vraie. Dans « au démarrage », le " +
+            "programme attend vraiment, simulateur compris. Dans « répéter indéfiniment », le simulateur laisse " +
             "passer le tour tant que la condition est fausse et réessaie au tour suivant.",
         nombre_clics_bouton: "Nombre total de clics sur le bouton depuis le démarrage. Le compteur est cumulatif : " +
             "il ne se remet jamais à 0 tout seul, ce qui permet de tester « = 10 » même si les clics sont espacés.",
@@ -6942,7 +7196,7 @@ try {
     // ---- Complements : blocs deja decrits par une infobulle (servos, radio avancee,
     // modules Grove secondaires) ----
     exemple(['au_demarrage'], 'Une fois au démarrage, puis en boucle',
-        "« Au démarrage » s'exécute une seule fois ; ensuite la boucle tourne sans fin.",
+        "« au démarrage » s'exécute une seule fois ; ensuite la boucle tourne sans fin.",
         [exStart(exB('faire_defiler', null, { VALEUR: exT('Prêt') })), exLoop(exIcone('HAPPY'))]);
 
     exemple(['radio_groupe'], 'Choisir un groupe radio',
@@ -7163,6 +7417,7 @@ try {
         try {
             if (!espaceExemple) {
                 espaceExemple = Blockly.inject(conteneur, {
+                    renderer: 'thrasos',   // meme dessin que la zone de programmation (formeDesBlocs)
                     media: 'lib/blockly/media/',
                     readOnly: true, sounds: false, trashcan: false,
                     zoom: { controls: false, wheel: false, pinch: false, startScale: 1 },
@@ -7218,10 +7473,10 @@ try {
         }
     }
 
-    // « Au démarrage » (unique : maxInstances) et « Répéter indéfiniment » : si l'espace de travail en a déjà un, le
+    // « au démarrage » (unique : maxInstances) et « répéter indéfiniment » : si l'espace de travail en a déjà un, le
     // contenu de celui de l'exemple s'ajoute à la fin du sien au lieu de créer un doublon.
     const BLOCS_A_FUSIONNER = ['au_demarrage', 'boucle_infinie'];
-    /** Bloc de ce type déjà présent : celui de la pile « Au démarrage » d'abord, sinon le premier posé seul en haut. */
+    /** Bloc de ce type déjà présent : celui de la pile « au démarrage » d'abord, sinon le premier posé seul en haut. */
     function blocAFusionner(espace, type) {
         const candidats = espace.getBlocksByType(type, true).filter(b => !b.isInsertionMarker() && !b.isShadow());
         if (type !== 'boucle_infinie') return candidats[0] || null;
@@ -7257,7 +7512,7 @@ try {
                 const def = aPoser.shift();
                 const cible = BLOCS_A_FUSIONNER.includes(def.type) ? blocAFusionner(espace, def.type) : null;
                 if (cible) {
-                    // Ce qui suivait le bloc dans l'exemple (une boucle accrochée sous « Au démarrage ») est traité ensuite.
+                    // Ce qui suivait le bloc dans l'exemple (une boucle accrochée sous « au démarrage ») est traité ensuite.
                     if (def.next && def.next.block) aPoser.unshift(def.next.block);
                     const contenu = def.inputs && def.inputs.DO && def.inputs.DO.block;
                     if (contenu) {
@@ -7335,17 +7590,17 @@ try {
         "des valeurs, leurs courbes sont séparées. Les 600 derniers points de chaque courbe sont tracés.\n" +
         "• Pour tracer une mesure, écrivez-la avec « afficher dans la console » dans une boucle avec une pause.\n\n" +
         "EXPORTER VERS EXCEL\n" +
-        "• Le bouton 📊 enregistre toutes les lignes affichées dans un fichier Excel (.xlsx).\n" +
+        "• Le bouton d'export (icône de tableur) enregistre toutes les lignes affichées dans un fichier Excel (.xlsx).\n" +
         "• Colonnes : numéro, heure, source (Simulateur, Carte ou Information), texte, et une colonne « Valeur " +
         "numérique » remplie quand la ligne est un nombre : pratique pour tracer une courbe de mesures.\n\n" +
         "AUTRES BOUTONS\n" +
-        "• 🗑 efface toute la console, y compris les lignes de la carte.";
+        "• La corbeille efface toute la console, y compris les lignes de la carte.";
 
     function ouvrirAideConsole() {
         if (!voileAide) return;
         document.getElementById('aide-titre').textContent = 'Aide sur la console';
         document.getElementById('aide-bloc-nom').textContent = 'Utiliser la console';
-        document.getElementById('aide-bloc-texte').textContent = TEXTE_AIDE_CONSOLE;
+        document.getElementById('aide-bloc-texte').textContent = window.tr(TEXTE_AIDE_CONSOLE);
         document.getElementById('aide-bloc-code-titre').style.display = 'none';
         document.getElementById('aide-bloc-code').style.display = 'none';
         document.getElementById('aide-exemple').style.display = 'none';
@@ -7362,22 +7617,22 @@ try {
         "sons (micro) et des QR codes. « Terminé » la ferme : une reconnaissance en cours continue (bouton IA souligné en vert). " +
         "Le résultat pilote le programme par les blocs de la catégorie « IA », au choix dans le simulateur ou sur la " +
         "vraie carte. L'image et le son restent dans le navigateur : seul le nom de la classe est transmis.\n\n" +
-        "1. APPRENDRE SES CLASSES : onglet « ⚡ Apprentissage immédiat » (sans entraînement, sans Internet)\n" +
-        "• Choisissez ce que l'IA doit reconnaître : des objets ou des images, des gestes de la main, des positions des bras " +
+        "1. APPRENDRE SES CLASSES : onglet « IA » (sans entraînement, sans Internet)\n" +
+        "• Choisissez ce que l'IA doit reconnaître : des objets ou des images, des signes de la main, des positions des bras " +
         "(caméra), ou des sons ou des mots (micro).\n" +
-        "• La caméra s'allume à l'ouverture de la fenêtre. Sur la carte d'une classe : « 📸 Une photo » ajoute un exemple à " +
-        "chaque clic, « 🎞 Plusieurs photos » en ajoute en rafale jusqu'à « ■ Arrêter », « 📁 Ajouter des images » prend des " +
-        "fichiers .png ou .jpg. Pour les sons : « 🎤 Enregistrer », faites le son (ou dites le mot) plusieurs fois avec un court " +
-        "silence entre deux, puis « ■ Arrêter » : chaque son détecté devient un exemple.\n" +
+        "• La caméra ne s'allume que si vous cliquez « Allumer la caméra ». Sur la carte d'une classe : « Une photo » ajoute un exemple à " +
+        "chaque clic, « Plusieurs photos » en ajoute en rafale jusqu'à « Arrêter », « Ajouter des images » prend des " +
+        "fichiers .png ou .jpg. Pour les sons : « Enregistrer », faites le son (ou dites le mot) plusieurs fois avec un court " +
+        "silence entre deux, puis « Arrêter » : chaque son détecté devient un exemple.\n" +
         "• Chaque exemple a sa vignette sur la carte de sa classe (photo pour les objets, squelette pour les gestes et positions, " +
-        "dessin du timbre pour les sons). Cliquer sur une vignette supprime cet exemple seulement ; 🧹 efface tous les " +
+        "dessin du timbre pour les sons). Cliquer sur une vignette supprime cet exemple seulement ; le balai efface tous les " +
         "exemples de la classe ; ✕ supprime la classe ; « Tout effacer » (en bas) repart de deux classes vides.\n" +
         "• Chaque exemple compte aussitôt : « ▶ Démarrer » dès que 2 classes ont des exemples. Renommer une classe met à " +
         "jour les blocs qui l'utilisent.\n" +
         "• Images, gestes et positions pilotent les blocs « vision » ; les sons pilotent les blocs « son ». Un son reconnu " +
         "le reste 1 seconde.\n" +
         "• L'apprentissage (des nombres, jamais d'images ni de sons) est rangé dans le .py téléchargé et relu à son " +
-        "ouverture ; « 💾 Exporter » le met dans un fichier .json à part. Il n'est pas dans le .hex. Les photos des " +
+        "ouverture ; « Exporter le modèle » le met dans un fichier .json à part. Il n'est pas dans le .hex. Les photos des " +
         "vignettes ne sont pas enregistrées (▣ après réouverture) ; squelettes et timbres se redessinent.\n\n" +
         "2. OU CHARGER UN MODÈLE TEACHABLE MACHINE (onglets « Modèle Teachable Machine », caméra et micro)\n" +
         "• Sur teachablemachine.withgoogle.com : « Exporter le modèle », onglet Tensorflow.js. Collez l'adresse puis " +
@@ -7399,7 +7654,7 @@ try {
         "• Le résultat est renvoyé deux fois par seconde ; la carte oublie un résultat de plus de 1,5 s " +
         "(navigateur fermé, câble débranché).\n\n" +
         "5. QR CODES ET CODES-BARRES\n" +
-        "• Onglet « 🔳 QR codes et codes-barres » : « ▶ Lire les codes », puis les blocs « lorsqu'un code QR est lu », " +
+        "• Onglet « QR code » : « ▶ Lire les codes », puis les blocs « lorsqu'un code QR est lu », " +
         "« un code QR est visible », « texte du dernier code QR lu ». « Créer un QR code » en fabrique un à imprimer.\n\n" +
         "LIMITES\n" +
         "• Chrome ou Edge conseillé. La caméra et le micro demandent une page en localhost ou en HTTPS.\n" +
@@ -7411,7 +7666,7 @@ try {
         if (!voileAide) return;
         document.getElementById('aide-titre').textContent = 'Aide sur l\'IA';
         document.getElementById('aide-bloc-nom').textContent = 'Reconnaissance d\'images et de sons';
-        document.getElementById('aide-bloc-texte').textContent = TEXTE_AIDE_IA;
+        document.getElementById('aide-bloc-texte').textContent = window.tr(TEXTE_AIDE_IA);
         document.getElementById('aide-bloc-code-titre').style.display = 'none';
         document.getElementById('aide-bloc-code').style.display = 'none';
         document.getElementById('aide-exemple').style.display = 'none';
@@ -7422,12 +7677,77 @@ try {
     const btnIAAide = document.getElementById('btn-ia-aide');
     if (btnIAAide) btnIAAide.addEventListener('click', ouvrirAideIA);
 
+    // ---------- Fiches d'aide (etape 10, comme le modele R4) ----------
+    // Clic droit > « Expliquer ce bloc » : la fiche aide/<type>.html (aide/en/ en anglais) s'affiche DANS EasyBloc, dans
+    // une fenetre integree (jamais une page web, RGPD). Tant qu'un bloc n'a pas encore sa fiche, l'aide d'avant s'ouvre.
+    const voileFiche = document.getElementById('voile-fiche');
+    function fermerFiche() {
+        if (!voileFiche) return;
+        voileFiche.classList.remove('ouvert');
+        document.getElementById('fiche-corps').textContent = '';
+    }
+    async function ouvrirFicheBloc(bloc) {
+        const chemin = 'aide/' + (window.LANGUE === 'en' ? 'en/' : '') + encodeURIComponent(bloc.type) + '.html';
+        let existe = false;
+        try {
+            const r = await fetch(chemin, { cache: 'no-store' });
+            existe = r.ok && (r.headers.get('content-type') || '').includes('html');
+        } catch (erreur) { existe = false; }
+        if (!existe || !voileFiche) { ouvrirAideBloc(bloc); return; }
+        let nom = '';
+        try { nom = bloc.toString(60, '…'); } catch (erreur) { nom = bloc.type; }
+        document.getElementById('fiche-titre').textContent = (window.tr ? window.tr('Expliquer ce bloc') : 'Expliquer ce bloc')
+            + (window.LANGUE === 'en' ? ': ' : ' : ') + nom;
+        const cadre = document.createElement('iframe');
+        // Titre de la fenetre = titre de la fiche une fois chargee (le texte du bloc contient aussi la valeur des cases a
+        // cocher : « afficher l'image false false… »)
+        cadre.addEventListener('load', () => {
+            try {
+                const h1 = cadre.contentDocument && cadre.contentDocument.querySelector('h1');
+                if (h1 && h1.textContent.trim()) document.getElementById('fiche-titre').textContent =
+                    (window.tr ? window.tr('Expliquer ce bloc') : 'Expliquer ce bloc') + (window.LANGUE === 'en' ? ': ' : ' : ') + h1.textContent.trim();
+            } catch (erreur) { /* fiche illisible : on garde le texte du bloc */ }
+        });
+        cadre.src = chemin;
+        cadre.title = window.tr ? window.tr('Fiche d\'aide du bloc') : 'Fiche d\'aide du bloc';
+        const corps = document.getElementById('fiche-corps');
+        corps.textContent = '';
+        corps.appendChild(cadre);
+        voileFiche.classList.add('ouvert');
+        document.getElementById('fiche-fermer').focus();
+    }
+    if (voileFiche) {
+        document.getElementById('fiche-fermer').addEventListener('click', fermerFiche);
+        voileFiche.addEventListener('click', e => { if (e.target === voileFiche) fermerFiche(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && voileFiche.classList.contains('ouvert')) fermerFiche(); });
+    }
+    // Bouton « Essayer ce programme » d'une fiche : remplace le programme par l'exemple de la fiche (apres accord si
+    // l'espace de travail contient deja autre chose que le programme de depart).
+    window.essayerExemple = function (blocs) {
+        const espace = window.workspace;
+        const depart = espace.getAllBlocks(false).every(b => b.type === 'au_demarrage' || b.type === 'boucle_infinie')
+                       && espace.getAllBlocks(false).length <= 2;
+        const question = window.tr ? window.tr('Remplacer votre programme par le programme d\'exemple ?') : 'Remplacer votre programme par le programme d\'exemple ?';
+        if (!depart && !confirm(question)) return false;
+        fermerFiche();
+        if (editionManuelleActive) sortirEditionManuelle();
+        Blockly.Events.setGroup(true);
+        try {
+            espace.clear();
+            JSON.parse(JSON.stringify(blocs)).forEach(def => Blockly.serialization.blocks.append(def, espace, { recordUndo: true }));
+            espace.cleanUp();
+        } finally { Blockly.Events.setGroup(false); }
+        afficherEtat(window.tr ? window.tr('Programme d\'exemple chargé.') : 'Programme d\'exemple chargé.', false);
+        return true;
+    };
+
     Blockly.ContextMenuRegistry.registry.register({
         id: 'aide_sur_ce_bloc',
         scopeType: Blockly.ContextMenuRegistry.ScopeType.BLOCK,
-        displayText: () => 'Aide sur ce bloc',
+        // Comme le modele : « Expliquer ce bloc » (fiche d'aide ; sinon l'aide d'avant)
+        displayText: () => (window.tr ? window.tr('Expliquer ce bloc') : 'Expliquer ce bloc'),
         preconditionFn: () => 'enabled',
-        callback: scope => ouvrirAideBloc(scope.block),
+        callback: scope => ouvrirFicheBloc(scope.block),
         weight: 1,
     });
     window.aideBlocTest = { ouvrir: ouvrirAideBloc, fermer: fermerAideBloc, AIDE_BLOCS,
@@ -7442,8 +7762,13 @@ try {
         }
 
         boutonEnvoyer.disabled = true;
-        let envoiReussi = false;
         fenetreEnvoi.ouvrir('Génération du programme…');
+        // Annulation (bouton de la fenetre) : verifiee entre deux etapes, et l'ecriture en cours est interrompue
+        // (flux.abort) ; le fichier partiel n'est pas valide sur le lecteur.
+        const ANNULE = { name: 'AbortError', message: 'Envoi annulé.' };
+        const verifierAnnulation = () => { if (fenetreEnvoi.annulationDemandee) throw ANNULE; };
+        let flux = null;
+        fenetreEnvoi.surAnnulation = () => { if (flux) flux.abort().catch(() => {}); };
         // On distingue les deux moitiés de l'opération : un firmware invalide
         // n'a rien à voir avec le lecteur, et proposer d'en redésigner un
         // envoyait sur une fausse piste.
@@ -7452,9 +7777,14 @@ try {
             // Générer d'abord : inutile de faire choisir un lecteur si le
             // programme ne peut de toute façon pas être produit.
             afficherEtat('Génération du programme…', false);
-            const contenuHex = await genererFichierHexFinal(SIGNATURE_EXPORT + codePython);
+            fenetreEnvoi.etapeActive('generation');
+            fenetreEnvoi.progression(5);
+            const contenuHex = await genererFichierHexFinal(SIGNATURE_EXPORT + commentaireMontage() + codePython);
+            verifierAnnulation();
 
             etape = 'lecteur';
+            fenetreEnvoi.etapeActive('lecteur');
+            fenetreEnvoi.progression(15);
             if (!dossierCarte) {
                 afficherEtat('Choisissez le lecteur MICROBIT…', false);
                 fenetreEnvoi.etape('Choisissez le lecteur MICROBIT…');
@@ -7469,45 +7799,49 @@ try {
             if (!await autorisationEcriture(dossierCarte)) {
                 throw new Error("Autorisation d'écriture refusée sur le lecteur.");
             }
+            verifierAnnulation();
 
             afficherEtat('Écriture sur la carte…', false);
+            fenetreEnvoi.etapeActive('ecriture');
             fenetreEnvoi.etape('Écriture sur la carte…');
-            fenetreEnvoi.progression(0);
+            fenetreEnvoi.progression(25);
             const fichier = await dossierCarte.getFileHandle('programme-microbit.hex', { create: true });
-            const flux = await fichier.createWritable();
+            flux = await fichier.createWritable();
             // Par morceaux : le pourcentage affiche compte de vrais octets
-            // ecrits. Plafonne a 99 % tant que close() n'est pas revenu — c'est
+            // ecrits (de 25 a 99 %). Plafonne a 99 % tant que close() n'est pas revenu — c'est
             // lui qui valide reellement l'ecriture sur le lecteur.
             const blob = new Blob([contenuHex], { type: 'application/octet-stream' });
             const TAILLE_MORCEAU = 32 * 1024;
             for (let debut = 0; debut < blob.size; debut += TAILLE_MORCEAU) {
+                verifierAnnulation();
                 await flux.write(blob.slice(debut, debut + TAILLE_MORCEAU));
-                fenetreEnvoi.progression(Math.min(99, (Math.min(debut + TAILLE_MORCEAU, blob.size) / blob.size) * 100));
+                fenetreEnvoi.progression(Math.min(99, 25 + (Math.min(debut + TAILLE_MORCEAU, blob.size) / blob.size) * 74));
             }
+            verifierAnnulation();
             fenetreEnvoi.etape('Finalisation…');
+            if (fenetreEnvoi.boutonAnnuler) fenetreEnvoi.boutonAnnuler.disabled = true;   // close() valide l'ecriture : trop tard pour annuler
             await flux.close();
-            fenetreEnvoi.progression(100);
-            fenetreEnvoi.etape('Programme envoyé. La carte clignote puis redémarre.');
-            envoiReussi = true;
-
+            fenetreEnvoi.finir('ok', 'Programme envoyé. La carte clignote puis redémarre.');
             afficherEtat('Programme envoyé. La carte clignote puis redémarre.', false);
         } catch (erreur) {
             console.error('Envoi sur la carte :', erreur);
             if (erreur && erreur.name === 'AbortError') {
+                // Bouton « Annuler le televersement », ou fenetre de choix du lecteur fermee
+                if (flux) flux.abort().catch(() => {});
+                fenetreEnvoi.finir('annule', 'Envoi annulé.');
                 afficherEtat('Envoi annulé.', false);
             } else if (etape === 'generation') {
+                fenetreEnvoi.finir('erreur', erreur.message);
                 afficherEtat(erreur.message, true);
             } else {
                 // Apres un transfert, le lecteur se demonte et se remonte : la
                 // reference gardee ne vaut plus rien, il faut le redesigner.
                 dossierCarte = null;
+                fenetreEnvoi.finir('erreur', erreur.message + ' — recliquez pour redésigner le lecteur.');
                 afficherEtat(erreur.message + ' — recliquez pour redésigner le lecteur.', true);
             }
         } finally {
-            // Succes : on laisse "100 %" lisible un instant. Echec ou
-            // annulation : le message d'erreur est dans la barre d'etat, la
-            // fenetre n'a plus de raison de rester.
-            fenetreEnvoi.fermer(envoiReussi ? 1200 : 0);
+            fenetreEnvoi.surAnnulation = null;
             boutonEnvoyer.disabled = false;
         }
     }
@@ -7527,7 +7861,7 @@ try {
         if (!codePython || codePython.trim() === "") {
             codePython = "# Aucun bloc n'a été ajouté.\nfrom microbit import *\n";
         } else {
-            codePython = SIGNATURE_EXPORT + codePython;
+            codePython = SIGNATURE_EXPORT + commentaireMontage() + codePython;
         }
         // Apprentissage immediat du panneau IA (ia-immediat.js) : commentaires a la fin, ignores par la carte.
         if (window.iaImmediat) codePython += window.iaImmediat.annexePy();
@@ -7918,7 +8252,7 @@ try {
     // NOUVEAU PROJET — menu "Fichier"
     // ------------------------------------------
     // Demande de l'utilisateur. Efface les blocs actuels et recharge l'espace
-    // de depart (« Au démarrage » + « Répéter indéfiniment »), comme au tout
+    // de depart (« au démarrage » + « répéter indéfiniment »), comme au tout
     // premier chargement de la page — confirmation prealable car rien n'est
     // jamais sauvegarde automatiquement (voir aussi la confirmation de
     // fermeture juste apres, meme raison).
@@ -7934,8 +8268,15 @@ try {
             window.workspace.clear();
             window.workspace.clearUndo();
             chargerEspaceDeDepart();
+            if (typeof window.montageRestaurer === 'function') window.montageRestaurer(null);   // modules a nouveau ranges seuls
             definirNomFichier('');
             afficherEtat('Nouveau projet créé.', false);
+            // L'eleve nomme tout de suite son projet (fenetre de bandeau.js), comme la version Arduino R4 ; Annuler le
+            // laisse sans nom (le nom sera demande au premier bloc pose).
+            if (window.demanderNomProgramme) {
+                window.demanderNomProgramme('Nouveau projet', 'Comment s\'appelle votre nouveau projet ?', '', true)
+                    .then(nom => { if (nom) definirNomFichier(nom); });
+            }
         });
     }
 
@@ -7953,6 +8294,7 @@ try {
     // par l'utilisateur ne peut pas s'afficher tel quel, seul le PRINCIPE
     // d'une confirmation est reglable ici.
     window.addEventListener('beforeunload', (evenement) => {
+        if (window.CHANGEMENT_LANGUE) return;   // changement de langue : le programme est garde (langue.js)
         evenement.preventDefault();
         evenement.returnValue = '';
     });
@@ -7993,6 +8335,10 @@ try {
     const SIGNATURE_MARQUEUR = '# --BLOCKLY-MICROBIT-V2--';
     const SIGNATURE_EXPORT = SIGNATURE_MARQUEUR +
         ' genere par cette appli : reconstruction automatique possible a l\'import\n';
+    // Place des modules deplaces dans la simulation (montage.js, nov. 2026) : une ligne de commentaire juste apres la
+    // signature, ignoree par la carte, relue a l'import (importerCodeTexte).
+    const MOTIF_MONTAGE = /^# montage : (\{.*\})\s*$/m;
+    const commentaireMontage = () => (typeof window.montageCommentaire === 'function' ? window.montageCommentaire() : '');
 
     // ------------------------------------------
     // Bloc de repli : "code personnalisé" (instruction) et son équivalent
@@ -8266,7 +8612,7 @@ try {
         const appel = n.value;
 
         // ---- _ia_traiter(), _radio_traiter(), _ir_traiter() : scrutation injectee
-        // automatiquement en tete de « Répéter indéfiniment » (voir GESTIONNAIRES),
+        // automatiquement en tete de « répéter indéfiniment » (voir GESTIONNAIRES),
         // jamais posee par l'utilisateur : sautee, comme les imports. ----
         if (appel._type === 'Call' && appel.func._type === 'Name' && appel.args.length === 0 &&
             ['_ia_traiter', '_radio_traiter', '_ir_traiter'].includes(appel.func.id)) {
@@ -8774,6 +9120,14 @@ try {
     // avec la même bibliothèque microbit-fs que la génération, pour en
     // ressortir `main.py`.
     function importerCodeTexte(texte, origine) {
+        // Place des modules (ligne « # montage : {...} ») : relue, puis retiree du code (elle n'est pas un bloc).
+        let montage = null;
+        const ligneMontage = texte.match(MOTIF_MONTAGE);
+        if (ligneMontage) {
+            try { montage = JSON.parse(ligneMontage[1]); } catch (erreur) { montage = null; }
+            texte = texte.replace(/^# montage : \{.*\}[ \t]*\r?\n?/m, '');
+        }
+        if (typeof window.montageRestaurer === 'function') window.montageRestaurer(montage);
         if (texte.trimStart().startsWith(SIGNATURE_MARQUEUR)) {
             try {
                 const workspaceJson = reconstruireDepuisCode(texte);
@@ -8846,17 +9200,38 @@ try {
     // rendu vient des feuilles de style qu'il injecte dans <head>, jamais dans le
     // <svg> lui-même. Un SVG autonome exporté sans ces règles affiche donc des
     // blocs sans aucun texte : il faut les recopier dans un <style> embarqué.
+    // Les @font-face de la page (police Inter, lib/polices/inter.css) sont omis : une image SVG ne peut charger aucun
+    // fichier ; la police est ajoutee a part, rangee DANS l'image (policeInterCss).
     function collecterCssBlockly() {
         let css = '';
         for (const feuille of document.styleSheets) {
             try {
-                for (const regle of feuille.cssRules) css += regle.cssText + '\n';
+                for (const regle of feuille.cssRules) if (!(regle instanceof CSSFontFaceRule)) css += regle.cssText + '\n';
             } catch (erreur) {
                 // Feuille d'une autre origine (CDN) : illisible depuis JS, ignorée.
             }
         }
         return css;
     }
+    window.collecterCssCapture = collecterCssBlockly;
+
+    // Police Inter rangee DANS l'image capturee, comme la version Arduino R4 (stylePoliceInter, nov. 2026) : une image
+    // lue par <img> ne charge aucune police externe, et les textes sortaient dans une autre police. Fichier lu une fois.
+    let policeInterBase64 = null;
+    async function policeInterCss() {
+        if (policeInterBase64 === null) {
+            try {
+                const octets = new Uint8Array(await (await fetch('lib/polices/InterVariable.woff2')).arrayBuffer());
+                let binaire = '';
+                for (let i = 0; i < octets.length; i += 0x8000) binaire += String.fromCharCode.apply(null, octets.subarray(i, i + 0x8000));
+                policeInterBase64 = btoa(binaire);
+            } catch (erreur) { policeInterBase64 = ''; }   // sans police : la capture se fait quand meme
+        }
+        return policeInterBase64
+            ? "@font-face{font-family:'Inter';font-style:normal;font-weight:100 900;src:url(data:font/woff2;base64," + policeInterBase64 + ") format('woff2');}\n"
+            : '';
+    }
+    window.policeInterCss = policeInterCss;
 
     async function exporterCaptureBlocs() {
         const blocs = window.workspace.getAllBlocks(false);
@@ -8887,12 +9262,17 @@ try {
             // contraste élevé, par exemple, exporte les couleurs du thème normal.
             svgExport.setAttribute('data-theme', document.documentElement.dataset.theme || '');
             svgExport.setAttribute('data-contrast', document.documentElement.dataset.contrast || '');
+            // Classes du dessin de Blockly (« thrasos-renderer », « clairmicrobitv2-theme »...) : les regles de Blockly sur
+            // la police des blocs et le fond des cases de saisie en dependent ; sans elles, texte en police serif et cases noires.
+            // (classes posees par Blockly sur le cadre .injectionDiv qui entoure le dessin)
+            const cadreBlockly = document.querySelector('#blocklyDiv .injectionDiv');
+            if (cadreBlockly) svgExport.setAttribute('class', cadreBlockly.className);
             svgExport.setAttribute('width', String(largeur));
             svgExport.setAttribute('height', String(hauteur));
             svgExport.setAttribute('viewBox', `0 0 ${largeur} ${hauteur}`);
 
             const style = document.createElementNS(NS_SVG, 'style');
-            style.textContent = collecterCssBlockly();
+            style.textContent = (await policeInterCss()) + collecterCssBlockly();
             svgExport.appendChild(style);
 
             const fond = document.createElementNS(NS_SVG, 'rect');
@@ -8948,8 +9328,14 @@ try {
         }
     }
 
+    // Simulation agrandie : le bouton « Capture » enregistre la simulation telle qu'on la voit (montage.js), comme la
+    // version Arduino R4 ; sinon il capture le programme.
     const btnCaptureEcran = document.getElementById('capture-ecran-btn');
-    if (btnCaptureEcran) btnCaptureEcran.addEventListener('click', exporterCaptureBlocs);
+    if (btnCaptureEcran) btnCaptureEcran.addEventListener('click', () => {
+        if (typeof window.simulationAgrandie === 'function' && window.simulationAgrandie() && typeof window.capturerSimulation === 'function') {
+            window.capturerSimulation().then(ok => afficherEtat(ok ? 'Capture de la simulation téléchargée.' : 'Capture de la simulation échouée.', !ok));
+        } else exporterCaptureBlocs();
+    });
 
     // ==========================================
     // 5. FONCTIONS GRAPHIQUES POUR LE SIMULATEUR (AVEC ANIMATION TEXTE)
@@ -9255,18 +9641,20 @@ try {
         if (!fondLcdRgb) {
             zoneLcd.style.background = '';
             zoneLcd.style.removeProperty('--lcd-texte');
+            zoneLcd.style.removeProperty('--lcd-ombre');
             return;
         }
-        const [r, v, b] = retroLcdAllume ? fondLcdRgb : [38, 42, 41];
+        // Comme le vrai ecran et le modele R4 (choix du professeur, nov. 2026) : retroeclairage eteint = vitre
+        // vert-gris ; les caracteres restent fonces, seul le fond prend la couleur du retroeclairage.
+        const [r, v, b] = retroLcdAllume ? fondLcdRgb : [91, 118, 80];
         const haut = 'rgb(' + Math.min(255, Math.round(r * 1.08)) + ',' + Math.min(255, Math.round(v * 1.08)) + ',' + Math.min(255, Math.round(b * 1.08)) + ')';
         const bas = 'rgb(' + Math.round(r * 0.85) + ',' + Math.round(v * 0.85) + ',' + Math.round(b * 0.85) + ')';
         zoneLcd.style.background = 'linear-gradient(180deg, ' + haut + ' 0%, ' + bas + ' 100%)';
-        // Caracteres sombres sur un fond clair, clairs sur un fond sombre :
-        // sinon un fond blanc (couleur d'initialisation) rendrait le texte
-        // invisible.
-        const luminance = 0.299 * r + 0.587 * v + 0.114 * b;
-        zoneLcd.style.setProperty('--lcd-texte', retroLcdAllume && luminance > 140 ? '#0d1b2a' : '#f4f8ff');
+        zoneLcd.style.setProperty('--lcd-texte', '#1a1a1a');
+        zoneLcd.style.setProperty('--lcd-ombre', 'none');
     }
+    // Etat du retroeclairage RGB, lu par le montage (montage.js) pour dessiner l'ecran comme le tableau.
+    window.etatLcdRgb = () => ({ rgb: fondLcdRgb, retro: retroLcdAllume });
     let etatMoteurs = { 1: 'arrêt', 2: 'arrêt' };
     const zoneServos = document.getElementById('grove-servos');
     let etatServos = {};
@@ -9516,7 +9904,7 @@ try {
             // La luminosité perçue ne suit pas le rapport cyclique : une racine
             // rapproche l'affichage de ce que voit l'œil.
             const eclat = niveau ? 0.15 + 0.85 * Math.sqrt(f) : 0;
-            return '<div class="led-broche">' +
+            return '<div class="led-broche" data-broche="' + broche + '">' +   // data-broche : couleur choisie dans le montage (montage.js)
                    '<span class="led-socle"><span class="led-pastille" style="opacity:' +
                    eclat.toFixed(3) + '"></span></span>' +
                    '<span class="led-nom">P' + broche + '</span>' +
@@ -9762,7 +10150,7 @@ try {
         const r = reglagesRadio();
         if (!busRadio || !r.allumee) return;
         busRadio.postMessage({ id: ID_RADIO, groupe: r.groupe, canal: r.canal, message: String(message) });
-        if (typeof window.consoleAjouterLigne === 'function') window.consoleAjouterLigne('📡 envoyé : ' + message, 'info');
+        if (typeof window.consoleAjouterLigne === 'function') window.consoleAjouterLigne('Radio, envoyé : ' + message, 'info');
     };
     // Messages recus en file, un seul par declenchement (comme « Simuler la reception », qui poursuit la simulation
     // en cours ou la lance) ; 60 ms entre deux messages pour que chacun soit traite par le programme.
@@ -9770,7 +10158,7 @@ try {
     function distribuerRadio() {
         if (!fileRadio.length) return;
         messageRadioEnAttente = fileRadio.shift();
-        if (typeof window.consoleAjouterLigne === 'function') window.consoleAjouterLigne('📡 reçu : ' + messageRadioEnAttente, 'info');
+        if (typeof window.consoleAjouterLigne === 'function') window.consoleAjouterLigne('Radio, reçu : ' + messageRadioEnAttente, 'info');
         window.simu_continuerOuLancer();
         messageRadioEnAttente = '';
         if (fileRadio.length) setTimeout(distribuerRadio, 60);
@@ -9846,9 +10234,10 @@ try {
     function dessinerBarreLed(leds) {
         if (!zoneBarreLed) return;
         const etats = String(leds || '').split(',').map(Number);
-        // Couleurs du module : LED 1 rouge, 2 orange, 3 a 10 vertes.
+        // Couleurs du module, comme le modele R4 (essai sur la vraie barre, choix du professeur nov. 2026) :
+        // LED 1 a 8 vertes, 9 orange, 10 rouge.
         zoneBarreLed.innerHTML = Array.from({ length: 10 }, (_, i) =>
-            '<span class="barre-led' + (i === 0 ? ' rouge' : i === 1 ? ' orange' : '') + (etats[i] ? ' on' : '') + '"></span>').join('');
+            '<span class="barre-led' + (i === 9 ? ' rouge' : i === 8 ? ' orange' : '') + (etats[i] ? ' on' : '') + '"></span>').join('');
     }
 
     /** Premier lot Grove : entrees lues a l'instant ou le programme les demande. */
@@ -10469,7 +10858,7 @@ try {
                 // Un passage (5 tours, voir simu_lancerTours) est déjà en
                 // cours : le drapeau qu'on vient de poser sera vu par ses
                 // prochains tours tout seul. Relancer ici redémarrerait tout
-                // le programme depuis « Au démarrage » —
+                // le programme depuis « au démarrage » —
                 // musique de lancement, etc. — pour un simple appui de
                 // bouton pendant que ça tourne déjà.
                 const codeUtiliseCeCapteur = motifIdentifiant.test(window.currentPythonCode || '');

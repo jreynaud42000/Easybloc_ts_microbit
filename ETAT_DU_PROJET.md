@@ -8,6 +8,8 @@ Lancement : double-clic sur `lancer_projet.bat`, puis <http://localhost:8000> �
 Hébergement : dossier `site_web` (site statique, voir `PROMPT_RECREATION.md` §26)
 Fichiers ajoutés depuis la V2.0C : `bandeau.js`, `montage.js`, `exercices.js`, `exercices.json`, `ia-immediat.js`, `ia-son-immediat.js`, `lib/mediapipe`, `lib/zxing`, `site_web/` (voir la section « Évolutions de la copie »)
 
+Mise à jour du 08/11/2026 : reprise de tous les travaux faits depuis le 03/11 dans TS_Easybloc (`Easybloc_ts_adacraft_minimal`, commits 3a270ed à 526b3db) par une fusion à trois voies : alignement sur EasyBloc R4 (bandeau, catégories, fenêtres, couleurs), anglais (`langue.js`, `langue-en.js`, `lib/blockly/msg/en.js`), fiches d'aide (`aide/`, `aide/en/`, générateur `outils/fiches/`), visites guidées réécrites, dessins détaillés des modules Grove et Hub I2C (`modules-dessins.js`), icônes au trait (`icones.js`), police Inter (`lib/polices`). Retirés de nouveau : tout ce qui touche aux séances et aux robots (y compris les 63 fiches d'aide des blocs robots, dans chaque langue). Conservé de la variante : « Exercices pas à pas » dans le menu Fichier, sans mode évaluation. Vérifié dans le navigateur (FR et EN) : aucune erreur JavaScript, catégories sans Robots, simulation, montage avec Hub I2C, fiche d'aide, visites guidées. Pas vérifié : l'exe, le site hébergé (avant envoi), une vraie carte.
+
 Ce fichier dit **où on en est** : ce qui a été vérifié, ce qui ne peut l'être
 sans matériel, et ce qui a été écarté. Les deux autres documents complètent :
 

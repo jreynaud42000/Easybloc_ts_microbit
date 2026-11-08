@@ -3,10 +3,9 @@
 // les modules du programme
 // disposes autour et relies par leurs cables.
 //
-// Ou s'affiche le montage : dans la colonne du simulateur, a la place de la carte seule, des qu'un bloc
-// d'extension est pose et que la colonne fait au moins 480 px (en dessous, modules et etiquettes seraient
-// illisibles : la carte seule reste, avec le bouton « Voir le montage ») ; « Agrandir » ouvre la meme scene
-// par-dessus la zone de blocs. Une seule scene, deplacee d'un endroit a l'autre.
+// Ou s'affiche le montage : toujours dans la colonne du simulateur (micro:bit seule sans bloc d'extension), dans une
+// vue qu'on zoome et deplace comme la zone des blocs (echelle fixe, molette, Recentrer / + / −, nov. 2026) ;
+// « Agrandir » ouvre la meme scene par-dessus la zone de blocs. Une seule scene, deplacee d'un endroit a l'autre.
 //
 // Le montage montre OU chaque module est branche, d'apres les blocs poses, et ce que font les
 // actionneurs pendant la simulation (moteurs, servos, LED, buzzer, relais, ecrans) : il recopie ce
@@ -18,6 +17,8 @@
 // (72 mm x 72 mm) en fait 388. La Grove Shield v2.0 suit les photos du fabricant (ports, pastilles,
 // connecteur), la BitMaker V2 (57 x 70 mm) la photo de dessus du fabricant, la DFR0548 le schema « Board
 // Overview » de DFRobot, tournee d'un demi-tour pour que la micro:bit reste a l'endroit.
+
+import { K_MODULE, DESSINS_MODULES, HUB_PRISES, HUB_BAS_PRISE, COULEURS_LED, defsModules, allumerLed, allumerRelais, allumerBouton, allumerLumiere, allumerPir, allumerPotentiometre, allumerJoystick, allumerBarreLed, allumerQuatreDigits, allumerRuban, allumerLcdRgb, allumerGestes, allumerServo } from './modules-dessins.js';
 
 const $ = id => document.getElementById(id);
 const NS = 'http://www.w3.org/2000/svg';
@@ -46,23 +47,23 @@ const MODULES = [
     { motif: /^grove_pir$/,                   nom: 'Détecteur de mouvement', champs: ['BROCHE'], picto: 'pir' },
     { motif: /^grove_buzzer_/,                nom: 'Buzzer',                champs: ['BROCHE'], picto: 'buzzer' },
     { motif: /^grove_relais$/,                nom: 'Relais',                champs: ['BROCHE'], picto: 'relais' },
-    { motif: /^grove_dht11_definir$/,         nom: 'DHT11',                 champs: ['BROCHE'], picto: 'dht' },
-    { motif: /^grove_dht22_definir$/,         nom: 'DHT22',                 champs: ['BROCHE'], picto: 'dht' },
+    { motif: /^grove_dht11_definir$/,         nom: 'DHT11',                 champs: ['BROCHE'], picto: 'dht11' },
+    { motif: /^grove_dht22_definir$/,         nom: 'DHT22',                 champs: ['BROCHE'], picto: 'dht22' },
     { motif: /^grove_barre_/,                 nom: 'Barre de LED',          champs: ['PORT'], picto: 'barre', large: true },
     { motif: /^servo_/,                       nom: 'Servomoteur',           champs: ['BROCHE'], picto: 'servo', servo: true },
     { motif: /^grove_oled_/,                  nom: 'Écran OLED',            i2c: true, picto: 'oled', large: true },
     { motif: /^grove_lcd_/,                   nom: 'Écran LCD 16×2',        i2c: true, picto: 'lcd', large: true },
     { motif: /^grove_lcdrgb_/,                nom: 'Écran LCD RGB',         i2c: true, picto: 'lcdrgb', large: true },
-    { motif: /^grove_bmp280$/,                nom: 'Capteur de pression',   i2c: true, picto: 'puce' },
-    { motif: /^grove_sgp30$/,                 nom: 'Capteur COV',           i2c: true, picto: 'puce' },
+    { motif: /^grove_bmp280$/,                nom: 'Capteur de pression',   i2c: true, picto: 'bmp280' },
+    { motif: /^grove_sgp30$/,                 nom: 'Capteur COV',           i2c: true, picto: 'sgp30' },
     { motif: /^grove_rtc_/,                   nom: 'Horloge RTC',           i2c: true, picto: 'rtc' },
-    { motif: /^grove_pca_/,                   nom: 'Carte servos PCA9685',  i2c: true, picto: 'pca', large: true },
-    { motif: /^grove_gestes_/,                nom: 'Capteur de gestes',     i2c: true, picto: 'puce' },
-    { motif: /^grove_th_/,                    nom: 'Température, humidité', i2c: true, picto: 'puce' },
+    { motif: /^grove_pca_/,                   nom: 'Carte servos PCA9685',  i2c: true, picto: 'servo16', large: true },
+    { motif: /^grove_gestes_/,                nom: 'Capteur de gestes',     i2c: true, picto: 'paj7620' },
+    { motif: /^grove_th_/,                    nom: 'Température, humidité', i2c: true, picto: 'dht20' },
     { motif: /^grove_couleur_/,               nom: 'Capteur de couleur',    i2c: true, picto: 'couleur' },
     { motif: /^grove_moteur_/,                nom: 'Pilote de moteurs I2C', i2c: true, picto: 'pilote' },
-    { motif: /^grove_scd30_/,                 nom: 'Capteur CO₂ SCD30',     i2c: true, picto: 'puce', large: true },
-    { motif: /^grove_scd41_/,                 nom: 'Capteur CO₂ SCD41',     i2c: true, picto: 'puce' },
+    { motif: /^grove_scd30_/,                 nom: 'Capteur CO₂ SCD30',     i2c: true, picto: 'scd30', large: true },
+    { motif: /^grove_scd41_/,                 nom: 'Capteur CO₂ SCD41',     i2c: true, picto: 'scd41' },
 ];
 const BLOC_EXTENSION = /^(grove_|servo_|dfr_|motorbit_)/;
 // Lecteur de l'etat en direct (majVivant) quand il differe du dessin : plusieurs capteurs partagent le dessin « puce ».
@@ -70,7 +71,7 @@ const VIVANT = {
     'Capteur de pression': 'pression', 'Capteur COV': 'cov', 'Capteur de gestes': 'gestes', 'Température, humidité': 'th',
     'DHT11': 'th', 'DHT22': 'th', 'Capteur CO₂ SCD30': 'co2', 'Capteur CO₂ SCD41': 'co2', 'Horloge RTC': 'rtc',
     'Capteur de couleur': 'couleur', 'Capteur de lumière': 'lumiere', 'Ultrason': 'ultrason', 'Potentiomètre': 'pot',
-    'Détecteur de mouvement': 'pir', 'Bouton poussoir': 'bouton', 'Joystick': 'joystick',
+    'Détecteur de mouvement': 'pir', 'Bouton poussoir': 'bouton', 'Joystick': 'joystick', 'Carte servos PCA9685': 'servo16',
 };
 
 // ---------- Cartes d'extension ----------
@@ -132,8 +133,8 @@ function branchementBitmaker(pins) {
     const res = { fils: ports.flatMap(filsPortBitmaker), etiquette: ports.concat(sans).join(' + '),
                   // Port et broches : sur cette carte, P1 et P2 sortent chacune sur deux ports.
                   occupe: ports.map(n => 'port ' + n).concat(pins) };
-    if (sans.includes('P13')) res.alerte = '⚠ P13 réservée aux LED de la carte';
-    else if (sans.length) res.alerte = '⚠ ' + sans.join(', ') + ' sans port sur cette carte';
+    if (sans.includes('P13')) res.alerte = 'P13 réservée aux LED de la carte';
+    else if (sans.length) res.alerte = sans.join(', ') + ' sans port sur cette carte';
     return res;
 }
 
@@ -193,9 +194,9 @@ function branchementMotorbit(pins, servo) {
     let alerte = '';
     pins.forEach((p, i) => {
         const n = Number(p.slice(3));
-        if (RESERVEES_MOTORBIT[n]) { alerte = '⚠ P' + n + ' : moteur ' + RESERVEES_MOTORBIT[n]; return; }
-        if (n === 0) { alerte = '⚠ P0 : buzzer de la carte'; return; }
-        if (!GAUCHE_MOTORBIT.includes(n) && !DROITE_MOTORBIT.includes(n)) { alerte = '⚠ P' + n + ' absente de la carte'; return; }
+        if (RESERVEES_MOTORBIT[n]) { alerte = 'P' + n + ' : moteur ' + RESERVEES_MOTORBIT[n]; return; }
+        if (n === 0) { alerte = 'P0 : buzzer de la carte'; return; }
+        if (!GAUCHE_MOTORBIT.includes(n) && !DROITE_MOTORBIT.includes(n)) { alerte = 'P' + n + ' absente de la carte'; return; }
         const rang = filsBrocheMotorbit(n, [servo ? F.orange : (fils.length ? F.blanc : F.jaune), F.rouge, servo ? F.marron : F.noir]);
         fils.push(...(fils.length ? rang.slice(0, 1) : rang));
     });
@@ -223,7 +224,7 @@ function lireMontage() {
     const bitmaker = !dfr && !motorbit && choixCarte() === 'bitmaker';
     const utile = types.some(t => BLOC_EXTENSION.test(t));
     const modules = new Map();
-    const ajouter = (cle, m) => { if (!modules.has(cle)) modules.set(cle, m); };
+    const ajouter = (cle, m) => { if (!modules.has(cle)) { m.id = cle; modules.set(cle, m); } };
 
     for (const b of blocs) {
         if (dfr && /^dfr_(moteur|moteur_arreter)$/.test(b.type)) {
@@ -263,6 +264,17 @@ function lireMontage() {
         if (def.i2c) {
             ajouter(def.nom, { nom: def.nom, picto: def.picto, large: def.large, etiquette: 'I2C', i2c: true,
                 fils: dfr ? filsI2cDfr() : motorbit ? filsI2cMotorbit() : bitmaker ? filsPortBitmaker('I2C') : filsPort(PORTS_GROVE.I2C) });
+            // Pilote 16 servos : servomoteur dessine sur chaque voie ecrite en nombre (voie 0 = P1 ... 15 = P16)
+            if (def.picto === 'servo16' && /^grove_pca_(angle|continu)$/.test(b.type)) {
+                const cible = b.getInputTargetBlock('VOIE'), voie = cible && cible.type === 'math_number' ? Number(cible.getFieldValue('NUM')) : NaN;
+                const m = modules.get(def.nom);
+                m.sorties = m.sorties || [];
+                if (Number.isInteger(voie) && voie >= 0 && voie <= 15) {
+                    const o = m.sorties.find(s => s.n === voie + 1);
+                    if (o) o.continu = o.continu || b.type === 'grove_pca_continu';
+                    else m.sorties.push({ n: voie + 1, continu: b.type === 'grove_pca_continu' });
+                }
+            }
             continue;
         }
         const pins = broches(b, def.champs);
@@ -274,8 +286,11 @@ function lireMontage() {
             continue;
         }
         const cle = def.nom + '|' + pins.join(',');
-        if (modules.has(cle)) continue;
-        ajouter(cle, Object.assign({ nom: def.nom, picto: def.picto, large: def.large, pins, cle: 'P' + pins[0].slice(3) },
+        // Servomoteur a rotation continue (bloc « servo continu ») : dessine avec sa roue (modele R4)
+        const continu = !!def.servo && b.type === 'servo_continu';
+        if (modules.has(cle)) { if (continu) modules.get(cle).continu = true; continue; }
+        ajouter(cle, Object.assign({ nom: def.nom, picto: def.picto, large: def.large, pins, cle: 'P' + pins[0].slice(3), continu,
+            nb: def.picto === 'ruban' ? Number(b.getFieldValue('NB')) || 16 : undefined },
             dfr ? branchementDfr(pins, def.servo) : motorbit ? branchementMotorbit(pins, def.servo) :
             bitmaker ? branchementBitmaker(pins) : branchementGrove(pins)));
     }
@@ -283,11 +298,57 @@ function lireMontage() {
     // Deux modules sur le meme port (ou la meme broche) : possible dans le programme, pas sur la table.
     const parPort = {};
     for (const m of modules.values()) for (const k of new Set(m.occupe || [])) (parPort[k] = parPort[k] || []).push(m);
-    for (const liste of Object.values(parPort)) if (liste.length > 1) liste.forEach(m => { m.alerte = m.alerte || '⚠ port partagé'; });
+    for (const liste of Object.values(parPort)) if (liste.length > 1) liste.forEach(m => { m.alerte = m.alerte || 'port partagé'; });
     const i2c = [...modules.values()].filter(m => m.i2c);
-    if (i2c.length > 1) i2c.forEach(m => { m.note = 'bus I2C partagé'; });
+    let liste = [...modules.values()];
+    if (i2c.length > 1 && !dfr && !motorbit) liste = avecHubs(liste, i2c);
+    else if (i2c.length > 1) i2c.forEach(m => { m.note = 'bus I2C partagé'; });
 
-    return { utile, imposee, carte: dfr ? 'dfr' : motorbit ? 'motorbit' : bitmaker ? 'bitmaker' : 'grove', modules: [...modules.values()] };
+    // Sans bloc d'extension : la micro:bit seule dans la scene (carte « aucune »), comme la simulation du modele.
+    const carte = !utile ? 'aucune' : dfr ? 'dfr' : motorbit ? 'motorbit' : bitmaker ? 'bitmaker' : 'grove';
+    return { utile, imposee, carte, modules: liste };
+}
+
+/** Plusieurs modules I2C sur une carte a prises Grove (Grove Shield, BitMaker) : une prise ne prend qu'un cable, on
+    intercale un Hub I2C Grove (choix de l'utilisateur, nov. 2026). Cable de la carte sur J1 du premier hub, un module
+    par prise J2, J3, J4 ; au-dela de 3 modules, hubs chaines (J4 d'un hub vers J1 du suivant, « Chainable » chez
+    Seeed). m.source : hub et prise d'ou part le cable du module (relierHubs, une fois les places connues) ;
+    m.niveau : rangee du module (le hub avant ses modules, disposer). */
+function avecHubs(liste, i2c) {
+    const nbHubs = Math.max(1, Math.ceil((i2c.length - 3) / 2) + 1);
+    const hubs = [];
+    for (let h = 1; h <= nbHubs; h++) {
+        hubs.push({ id: 'hub' + h, nom: 'Hub I2C', picto: 'hub', hub: h, niveau: h - 1,
+            etiquette: h === 1 ? 'I2C' : 'J4 du hub ' + (h - 1),
+            fils: i2c[0].fils.map(f => Object.assign({}, f)),
+            source: h > 1 ? { hub: 'hub' + (h - 1), prise: 4 } : null });
+    }
+    let i = 0;
+    hubs.forEach((hub, h) => {
+        for (const prise of h < nbHubs - 1 ? [2, 3] : [2, 3, 4]) {
+            const m = i2c[i++];
+            if (!m) break;
+            m.source = { hub: hub.id, prise };
+            m.niveau = h + 1;
+            m.note = 'hub I2C' + (nbHubs > 1 ? ' ' + (h + 1) : '') + ', J' + prise;
+        }
+    });
+    // Ordre : les autres modules, puis chaque hub suivi de ses modules
+    const autres = liste.filter(m => !m.i2c);
+    const ordonnes = [];
+    hubs.forEach(hub => ordonnes.push(hub, ...i2c.filter(m => m.source.hub === hub.id)));
+    return autres.concat(ordonnes);
+}
+/** Cables des modules branches sur un hub : ils partent de la prise (J2 a J4) du hub, une fois celui-ci place. */
+function relierHubs(modules) {
+    for (const m of modules) {
+        if (!m.source) continue;
+        const hub = modules.find(x => x.id === m.source.hub), geo = hub && geometrie(hub);
+        if (!geo) continue;
+        const a = geo.rot * Math.PI / 180, d = [Math.round(-Math.sin(a)), Math.round(Math.cos(a))];
+        const cx = HUB_PRISES[m.source.prise - 1];
+        m.fils = GROVE.map((c, i) => { const p = geo.point(cx + (i - 1.5) * 1.3, HUB_BAS_PRISE); return { x: p.x, y: p.y, d, c }; });
+    }
 }
 
 function filsPort(p) {
@@ -341,6 +402,13 @@ function disposer(modules, basCarte) {
     const cotes = { g: [], d: [], b: [] };
     for (const m of modules) {
         if (m.surCarte) continue;
+        if (dimensions(m) && dimensions(m).fixe) {
+            // Ruban de LED (modele R4) : fixe, au-dessus de la carte, centre ; son cable descend jusqu'au port.
+            m.fixe = true;
+            m.x = LARGEUR / 2 - MODULE.l / 2;
+            m.y = CARTE.y - 50 - hauteurModule(m);
+            continue;
+        }
         if (!m.fils.length) { m.cote = 'b'; m.ancre = [LARGEUR / 2, basCarte]; cotes.b.push(m); continue; }
         const [dx] = m.fils[0].d;
         m.cote = dx < 0 ? 'g' : dx > 0 ? 'd' : 'b';
@@ -350,33 +418,103 @@ function disposer(modules, basCarte) {
     let bas = basCarte;
     for (const c of ['g', 'd']) {
         let y = 16;
-        cotes[c].sort((a, b) => a.ancre[1] - b.ancre[1]).forEach(m => {
+        cotes[c].sort((a, b) => (a.niveau || 0) - (b.niveau || 0) || a.ancre[1] - b.ancre[1]).forEach(m => {
             m.y = Math.max(y, m.ancre[1] - 60);
             m.x = c === 'g' ? 30 : LARGEUR - 30 - MODULE.l;
-            y = m.y + MODULE.h + 96;
+            y = m.y + hauteurModule(m, c === 'g' ? 'droite' : 'gauche') + 96;
             bas = Math.max(bas, y);
         });
     }
     // Rangee du bas (les ports Grove v2.0 sont tous en bas) : chaque module sous son port, a la ligne si elle deborde.
     // Chaque ligne est centree sous ses ports, sans sortir de la scene.
-    const [xMin, xMax, pas] = [30, LARGEUR - 30, MODULE.l + 20];
-    const parLigne = Math.floor((xMax - xMin + 20) / pas);
-    const tries = cotes.b.sort((a, b) => a.ancre[0] - b.ancre[0]);
-    for (let i = 0; i < tries.length; i += parLigne) {
-        const ligne = tries.slice(i, i + parLigne), largeur = ligne.length * pas - 20;
+    // Chaque module prend sa largeur reelle (au moins une case) : l'ecran LCD RGB (80 mm) ne chevauche pas ses voisins.
+    const [xMin, xMax, ecart] = [30, LARGEUR - 30, 20];
+    // Hub I2C : chaque niveau (hub, puis ses modules) commence une nouvelle ligne
+    const tries = cotes.b.sort((a, b) => (a.niveau || 0) - (b.niveau || 0) || a.ancre[0] - b.ancre[0]);
+    const lignes = [];
+    for (const m of tries) {
+        const l = largeurModule(m, 'haut'), ligne = lignes[lignes.length - 1];
+        if (ligne && ligne.niveau === (m.niveau || 0) && ligne.largeur + ecart + l <= xMax - xMin) { ligne.modules.push(m); ligne.largeur += ecart + l; }
+        else lignes.push({ modules: [m], largeur: l, niveau: m.niveau || 0 });
+    }
+    let yLigne = basCarte + 90;
+    for (const { modules: ligne, largeur } of lignes) {
         const centre = ligne.reduce((s, m) => s + m.ancre[0], 0) / ligne.length;
-        const x0 = Math.max(xMin, Math.min(centre - largeur / 2, xMax - largeur));
-        ligne.forEach((m, k) => {
-            m.x = x0 + k * pas;
-            m.y = basCarte + 90 + (i / parLigne) * (MODULE.h + 110);
-            bas = Math.max(bas, m.y + MODULE.h + 96);
+        let x = Math.max(xMin, Math.min(centre - largeur / 2, xMax - largeur));
+        const hLigne = Math.max(...ligne.map(m => hauteurModule(m, 'haut')));   // le module le plus haut de la ligne
+        ligne.forEach(m => {
+            const l = largeurModule(m, 'haut');
+            m.x = x + (l - MODULE.l) / 2;   // m.x : bord gauche de la case, le dessin est centre dessus
+            m.y = yLigne;
+            x += l + ecart;
+            bas = Math.max(bas, m.y + hLigne + 96);
         });
+        yLigne += hLigne + 110;
     }
     return bas + 10;
 }
 
+// Modules dessines d'apres le modele (modules-dessins.js) : comme le modele (rotationVers, r4-board-svg.js), chaque module
+// est tourne par quart de tour pour que sa prise regarde le port d'ou part son cable (afficheurs : jamais tournes). Sa
+// taille reelle (une fois tourne) compte pour le rangement et la place des libelles.
+const COTES = ['haut', 'droite', 'bas', 'gauche'];   // dans le sens des aiguilles d'une montre
+const ARRIVEE = { haut: [0, 1], droite: [-1, 0], bas: [0, -1], gauche: [1, 0] };   // sens du cable qui arrive sur une prise
+function rotationVers(def, cote) {
+    if (def.afficheur) return 0;
+    return ((COTES.indexOf(cote) - COTES.indexOf(def.connecteur.sens)) * 90 + 360) % 360;
+}
+/** Cote ou doit se trouver la prise : vers le port de la carte d'extension (depart des fils), ou celui du rangement. */
+function coteVoulu(m) {
+    if (m.x !== undefined && m.fils && m.fils.length) {
+        const px = m.fils.reduce((s, f) => s + f.x, 0) / m.fils.length, py = m.fils.reduce((s, f) => s + f.y, 0) / m.fils.length;
+        const dx = px - (m.x + MODULE.l / 2), dy = py - (m.y + MODULE.h / 2);
+        return Math.abs(dy) >= Math.abs(dx) ? (dy > 0 ? 'bas' : 'haut') : (dx > 0 ? 'droite' : 'gauche');
+    }
+    return { g: 'droite', d: 'gauche', b: 'haut' }[m.cote] || 'haut';
+}
+/** Dessin d'un module avec sa taille du moment (le ruban depend de son nombre de LED : def.taille). */
+function dimensions(m) {
+    const def = DESSINS_MODULES[m.picto];
+    return def && def.taille ? Object.assign({}, def, def.taille(m)) : def;
+}
+/** Hauteur occupee par un module (au moins la case MODULE.h), pour le rangement et les libelles. */
+function hauteurModule(m, cote) {
+    const def = dimensions(m);
+    if (!def) return MODULE.h;
+    const rot = rotationVers(def, cote || coteVoulu(m));
+    // deborde : ce qui depasse du circuit (oreilles, lentille du PIR), en mm de chaque cote, pour ne pas toucher les libelles
+    return Math.max(MODULE.h, ((rot % 180 ? def.largeur : def.hauteur) + 2 * (def.deborde || 0)) * K_MODULE);
+}
+/** Largeur occupee par un module (au moins la case MODULE.l), pour le rangement. */
+function largeurModule(m, cote) {
+    const def = dimensions(m);
+    if (!def) return MODULE.l;
+    const rot = rotationVers(def, cote || coteVoulu(m));
+    return Math.max(MODULE.l, ((rot % 180 ? def.hauteur : def.largeur) + 2 * (def.deborde || 0)) * K_MODULE);
+}
+/** Geometrie d'un module dessine : rotation, centre, et passage d'un point du dessin (mm) a la scene. */
+function geometrie(m) {
+    const def = dimensions(m);
+    if (!def || m.x === undefined) return null;
+    const rot = rotationVers(def, coteVoulu(m));
+    const w0 = def.largeur * K_MODULE, h0 = def.hauteur * K_MODULE, haut = hauteurModule(m);
+    const cx = m.x + MODULE.l / 2, cy = m.y + haut / 2, a = rot * Math.PI / 180;
+    const point = (px, py) => {
+        const x = px * K_MODULE - w0 / 2, y = py * K_MODULE - h0 / 2;
+        return { x: cx + x * Math.cos(a) - y * Math.sin(a), y: cy + x * Math.sin(a) + y * Math.cos(a) };
+    };
+    const cote = COTES[(COTES.indexOf(def.connecteur.sens) + rot / 90) % 4];
+    return { def, rot, cx, cy, w0, h0, haut, point, cote };
+}
+
 /** Point d'arrivee du cable sur le module (cote tourne vers la carte) et direction d'arrivee. */
 function arrivee(m) {
+    const geo = geometrie(m);
+    if (geo) {
+        // Module dessine (modele R4) : sur sa prise (tournee vers le port), le cable y arrive en sens inverse de sa sortie.
+        const p = geo.point(geo.def.connecteur.x, geo.def.connecteur.y);
+        return { x: p.x, y: p.y, d: ARRIVEE[geo.cote] };
+    }
     if (m.cote === 'g') return { x: m.x + MODULE.l / 2 + largeurPcb(m) / 2 + 8, y: m.y + MODULE.h / 2, d: [-1, 0] };
     if (m.cote === 'd') return { x: m.x + MODULE.l / 2 - largeurPcb(m) / 2 - 8, y: m.y + MODULE.h / 2, d: [1, 0] };
     return { x: m.x + MODULE.l / 2, y: m.y - 6, d: [0, 1] };
@@ -387,6 +525,7 @@ const largeurPcb = m => (m.large ? 150 : 74);
 const r = (x, y, l, h, att) => `<rect x="${x}" y="${y}" width="${l}" height="${h}" ${att || ''}/>`;
 const cercle = (x, y, rayon, att) => `<circle cx="${x}" cy="${y}" r="${rayon}" ${att || ''}/>`;
 const texte = (x, y, t, att) => `<text x="${x}" y="${y}" ${att || ''}>${t}</text>`;
+const trTexte = t => (window.trTexte ? window.trTexte(String(t)) : String(t));
 const echap = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function trou(x, y) { return cercle(x, y, 9, 'fill="#c9a54a"') + cercle(x, y, 5, 'fill="#0b0b0b"'); }
@@ -569,6 +708,11 @@ function dessinCarteDfr() {
 
 /** Dessin d'un module, centre sur (cx, cy), connecteur tourne vers la carte. */
 function dessinModule(m, cx, cy) {
+    const geo = geometrie(m);
+    if (geo) {
+        const dessin = geo.def.dessin(geo.cx - geo.w0 / 2, geo.cy - geo.h0 / 2, m);
+        return geo.rot ? `<g transform="rotate(${geo.rot} ${geo.cx} ${geo.cy})">${dessin}</g>` : dessin;
+    }
     const dessins = window.dessinsMoteursDfr;
     const imbrique = (svg, l, h) => svg.replace('<svg ', `<svg x="${cx - l / 2}" y="${cy - h / 2}" width="${l}" height="${h}" `);
     if (m.picto === 'moteur' && dessins) return imbrique(dessins.tt, 150, 80);
@@ -629,6 +773,17 @@ function dessinModule(m, cx, cy) {
     return s;
 }
 
+/** Cable du ruban (fixe au-dessus de la carte) : il sort du port, contourne la carte par la gauche puis monte jusqu'a
+    la prise du ruban (un fil par contact, ecartes pour ne pas se croiser). */
+function routeRuban(f, i, p, basCarte) {
+    const ecart = i * 7, xMontee = p.x;
+    if (f.d[1] > 0) return Object.assign({}, f, { passage: [[f.x, basCarte + 24 + ecart], [xMontee, basCarte + 24 + ecart]] });
+    if (f.d[0] < 0) return Object.assign({}, f, { passage: [[Math.min(f.x - 20 - ecart, xMontee + 40), f.y], [xMontee, f.y]] });
+    // Port tourne vers la droite : on monte par la droite, puis on passe au-dessus de la carte
+    const xDroite = LARGEUR - 200 + ecart, yHaut = CARTE.y - 20 + ecart;
+    return Object.assign({}, f, { passage: [[xDroite, f.y], [xDroite, yHaut], [xMontee + 30, yHaut]] });
+}
+
 function dessinFil(f, fin, o) {
     // Courbe de Bezier : chaque extremite part dans sa direction de sortie, decalee le long du connecteur.
     // Un fil peut d'abord suivre des points de passage (le 3V3 de la Grove contourne la carte par le bas).
@@ -653,34 +808,78 @@ function dessinFil(f, fin, o) {
 }
 
 function dessinerScene(etat) {
+    if (etat.carte === 'aucune') return { bas: '', hauteur: CARTE.y + CARTE.h + 20 };   // micro:bit seule
     const basCarte = etat.carte === 'dfr' ? DFR_BAS + 18 : etat.carte === 'motorbit' ? MB_BAS : etat.carte === 'bitmaker' ? BM_BAS : GROVE_PCB.y + GROVE_PCB.l;
     let hauteur = disposer(etat.modules, basCarte);
-    let bas = { dfr: dessinCarteDfr, motorbit: dessinCarteMotorbit, bitmaker: dessinCarteBitmaker, grove: dessinCarteGrove }[etat.carte]();
+    for (const m of etat.modules) m.couleur = COULEURS_MODULES[m.id] || 'rouge';
+    // Modules deplaces par l'eleve (PLACES) : a leur place ; le cable arrive par le cote tourne vers la carte.
+    for (const m of etat.modules) {
+        const p = !m.surCarte && !m.fixe && PLACES[m.id];
+        if (!p) continue;
+        [m.x, m.y] = p;
+        m.cote = m.y + MODULE.h / 2 > basCarte ? 'b' : m.x + MODULE.l / 2 < LARGEUR / 2 ? 'g' : 'd';
+        hauteur = Math.max(hauteur, m.y + hauteurModule(m) + 96);
+    }
+    relierHubs(etat.modules);
+    // Effets communs des modules dessines (halo des LED), en tete de la scene
+    let bas = defsModules() + { dfr: dessinCarteDfr, motorbit: dessinCarteMotorbit, bitmaker: dessinCarteBitmaker, grove: dessinCarteGrove }[etat.carte]();
     // Ruban sur les LED de la BitMaker : legende sous la carte, a la place du module et de son cable.
     const surCarte = etat.modules.find(m => m.surCarte);
     if (surCarte) hauteur = Math.max(hauteur, basCarte + 50);
     if (surCarte) bas += texte(LARGEUR / 2, basCarte + 30, echap(surCarte.nom + ' · ' + surCarte.etiquette +
                                (surCarte.note ? ' · ' + surCarte.note : '')), 'class="montage-note" text-anchor="middle"');
+    let filsDessus = '';
     for (const m of etat.modules) {
         if (m.x === undefined) continue;
         const fin = arrivee(m), n = m.fils.length;
+        // Module dessine (modele R4) : chaque fil arrive sur son contact de la prise (SIG, NC, VCC, GND), d'apres la serigraphie.
+        const geo = geometrie(m), contacts = geo && geo.def.connecteur.contacts;
+        if (contacts && contacts.length === n) {
+            const conn = geo.def.connecteur, vertical = conn.sens === 'haut' || conn.sens === 'bas';
+            m.fils.forEach((f, i) => {
+                const p = vertical ? geo.point(contacts[i], conn.y) : geo.point(conn.x, contacts[i]);
+                // Prise au milieu du circuit (ecran LCD RGB) : le cable contourne l'ecran par la gauche, puis passe
+                // par-dessus le bord du circuit jusqu'a elle (le fil du contact le plus bas a l'exterieur)
+                const xc = geo.cx - geo.w0 / 2 - 24 - (n - 1 - i) * 7;
+                const yDessus = geo.cy - geo.h0 / 2 - 28 - (n - 1 - i) * 7;   // au-dessus du module, avant de descendre
+                const contour = geo.def.filsDessus && Object.assign({}, f, { passage: [[f.x, yDessus], [xc, yDessus], [xc, p.y - 14], [xc + 14, p.y]] });
+                const fil = dessinFil(m.fixe ? routeRuban(f, i, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
+                if (geo.def.filsDessus) filsDessus += fil; else bas += fil;
+            });
+            continue;
+        }
         m.fils.forEach((f, i) => { bas += dessinFil(f, fin, (i - (n - 1) / 2) * 6); });
     }
     for (const m of etat.modules) {
         if (m.x === undefined) continue;
-        const cx = m.x + MODULE.l / 2, cy = m.y + MODULE.h / 2;
+        const hMod = hauteurModule(m), cx = m.x + MODULE.l / 2, cy = m.y + MODULE.h / 2;
         const vivant = VIVANT[m.nom] || m.picto;
         // Bouton poussoir et joystick : on appuie directement dessus (meme effet que dans « Peripheriques »).
-        const appui = vivant === 'bouton' || vivant === 'joystick'
-            ? ` role="button" tabindex="0" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : maintenir pour appuyer"` : '';
-        bas += `<g class="montage-module${appui ? ' montage-appui' : ''}" data-vivant="${vivant}" data-cle="${echap(m.cle || '')}" data-zone="${m.zone || ''}"${appui}>${dessinModule(m, cx, cy)}` +
-               texte(cx, m.y + MODULE.h + 22, echap(m.nom), 'class="montage-libelle" text-anchor="middle"') +
-               texte(cx, m.y + MODULE.h + 42, echap(m.etiquette), 'class="montage-note" text-anchor="middle"');
-        bas += texte(cx, m.y + MODULE.h + 62, '', 'class="montage-valeur" text-anchor="middle"');
+        // Detecteur PIR dessine : un clic sur la lentille bascule le mouvement (comme le modele).
+        const pirDessine = vivant === 'pir' && DESSINS_MODULES[m.picto];
+        const appui = vivant === 'joystick' && DESSINS_MODULES[m.picto]
+            ? ` role="button" tabindex="0" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : glisser ou flèches pour pousser le manche, Espace pour appuyer"`
+            : vivant === 'bouton' || vivant === 'joystick'
+            ? ` role="button" tabindex="0" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : maintenir pour appuyer"`
+            : pirDessine ? ` role="button" tabindex="0" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : cliquer pour simuler un mouvement (un autre clic l'arrête)"` : '';
+        // Potentiometre dessine : bouton noir tourne a la souris, fleches du clavier (role slider)
+        const reglable = vivant === 'pot' && DESSINS_MODULES[m.picto]
+            ? ` role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="1023" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : tourner le bouton (flèches du clavier)"` : '';
+        // Ruban fixe au-dessus de la carte : ses libelles au-dessus de lui (sous lui, il y a la carte)
+        const yLib = m.fixe ? m.y - 92 : m.y + hMod;
+        // Hub I2C : ses libelles a droite, les cables de ses modules partent par le bas
+        const geoHub = m.hub && geometrie(m);
+        const xLib = geoHub ? geoHub.cx + (geoHub.rot % 180 ? geoHub.h0 : geoHub.w0) / 2 + 14 : cx;
+        const ancreLib = geoHub ? 'start' : 'middle', yLibH = geoHub ? geoHub.cy - 30 : yLib;
+        bas += `<g class="montage-module${appui ? ' montage-appui' : ''}" data-id="${echap(m.id || '')}" data-vivant="${vivant}" data-cle="${echap(m.cle || '')}" data-zone="${m.zone || ''}"${m.fixe ? ' data-fixe="1"' : ''}${appui}${reglable}>${dessinModule(m, cx, cy)}` +
+               texte(xLib, yLibH + 22, echap(m.nom), `class="montage-libelle" text-anchor="${ancreLib}"`) +
+               texte(xLib, yLibH + 42, echap(m.etiquette), `class="montage-note" text-anchor="${ancreLib}"`);
+        bas += texte(cx, yLib + 62, '', 'class="montage-valeur" text-anchor="middle"');
         const note = [m.alerte, m.note].filter(Boolean).join(' · ');
-        if (note) bas += texte(cx, m.y + MODULE.h + 82, echap(note), `class="montage-note${m.alerte ? ' alerte' : ''}" text-anchor="middle"`);
+        if (note) bas += texte(cx, yLib + 82, echap(note), `class="montage-note${m.alerte ? ' alerte' : ''}" text-anchor="middle"`);
         bas += '</g>';
     }
+    bas += filsDessus;
     return { bas, hauteur };
 }
 
@@ -688,16 +887,21 @@ function dessinerScene(etat) {
 const panneau = $('montage-panneau'), scene = $('montage-scene'), bouton = $('btn-montage');
 const svgBas = $('montage-svg-bas'), svgHaut = $('montage-svg-haut'), place = $('montage-carte');
 const titre = $('montage-sous-titre'), resume = $('montage-resume'), fermer = $('montage-fermer');
-const choix = $('montage-choix'), choixAuto = $('montage-choix-auto');
-const colonne = $('montage-colonne'), zoneColonne = $('montage-colonne-zone'), outilsColonne = $('montage-colonne-outils');
-// « Agrandir » : case a cocher dans son etiquette ; l'etiquette sert de repere pour ranger le choix de la carte.
-const caseAgrandir = $('montage-agrandir'), agrandir = caseAgrandir ? caseAgrandir.closest('label') || caseAgrandir : null;
+// Barre de la simulation (index.html, nov. 2026) : menu « Carte d'extension » et bouton « Agrandir » / « Fermer ».
+const choix = $('sim-carte'), choixAuto = $('montage-choix-auto'), nomCarteMenu = $('sim-carte-nom');
+const colonne = $('montage-colonne'), zoneColonne = $('montage-colonne-zone');
+const boutonAgrandir = $('sim-agrandir');
+const NOMS_CARTES = { grove: 'Grove Shield v2.0', bitmaker: 'BitMaker V2', motorbit: 'Motor:bit V1.6', dfr: 'DFR0548' };
+const ICONE_AGRANDIR = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+    + 'stroke-linejoin="round" aria-hidden="true"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/>'
+    + '<line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>';
+const ICONE_FERMER = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" '
+    + 'aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>';
 const console_ = $('simulateur-console'), conteneur = $('simulator-container');
 const zoneGrand = panneau ? panneau.querySelector('.montage-zone') : null;
 const enteteGrand = panneau ? panneau.querySelector('.montage-entete') : null;
 // mode : 'carte' (carte seule), 'colonne' (montage dans la colonne) ou 'grand' (par-dessus les blocs).
 let mode = 'carte', grandDemande = false, utile = false, hauteurScene = 600, emplacement = null, attente = null;
-const LARGEUR_COLONNE = 480, MARGE_COLONNE = 24;   // hysteresis : la barre de defilement ne fait pas osciller l'affichage
 
 // Carte Grove ou BitMaker, memorisee dans le navigateur (Grove par defaut, ou si le stockage est indisponible).
 const CLE_CARTE = 'montageCarte';
@@ -705,107 +909,197 @@ function choixCarte() {
     try { const c = localStorage.getItem(CLE_CARTE); return c === 'bitmaker' || c === 'motorbit' ? c : 'grove'; } catch (erreur) { return 'grove'; }
 }
 
-// Zoom de la simulation (demande de l'utilisateur) : Ctrl + molette sur la carte ou le montage, comme la molette dans
-// la zone de blocs ; la molette seule fait toujours defiler la colonne. Le bouton « 100 % » remet l'echelle d'origine.
-// Dans la barre du montage (colonne), une pastille a cote d'« Agrandir » (demande de l'utilisateur, nov. 2026) : a 100 %
-// elle indique « Ctrl + molette pour zoomer », une fois zoome elle devient le bouton de retour. Ailleurs (carte seule,
-// montage agrandi), le bouton n'apparait qu'une fois zoome, en haut de la colonne, comme avant.
-const ZOOM_MIN = 0.5, ZOOM_MAX = 3;
-let zoomSim = 1, boutonZoom = null, texteZoom = null;
-function placerZoom() {
-    if (!boutonZoom) return;
-    // Deplacer un element lui fait perdre le focus clavier : seulement s'il n'est pas deja a sa place.
-    if (mode === 'colonne') { if (boutonZoom.nextSibling !== agrandir) outilsColonne.insertBefore(boutonZoom, agrandir); }
-    else if (boutonZoom.parentNode !== console_ || console_.firstChild !== boutonZoom) console_.insertBefore(boutonZoom, console_.firstChild);
-    const indication = zoomSim === 1;
-    boutonZoom.hidden = indication && mode !== 'colonne';
-    boutonZoom.classList.toggle('indication', indication);
-    // A 100 % la pastille n'est qu'une aide : hors de l'ordre de tabulation, et annoncee comme inactive.
-    boutonZoom.tabIndex = indication ? -1 : 0;
-    boutonZoom.setAttribute('aria-disabled', String(indication));
-    texteZoom.textContent = indication ? 'Ctrl + molette pour zoomer' : 'Zoom ' + Math.round(zoomSim * 100) + ' % · revenir à 100 %';
-}
-function appliquerZoom() {
-    const cadreCarte = $('carte-cadre');
-    if (cadreCarte) cadreCarte.style.zoom = zoomSim === 1 ? '' : String(zoomSim);
-    // Montage agrandi au-dela de la place : on le fait defiler depuis son bord gauche.
-    for (const zone of [zoneColonne, zoneGrand]) if (zone) {
-        zone.style.overflow = zoomSim > 1 ? 'auto' : '';
-        zone.style.justifyContent = zoomSim > 1 ? 'flex-start' : '';
-    }
-    placerZoom();
-    ajusterEchelle();
-}
-function installerZoom() {
-    boutonZoom = document.createElement('button');
-    boutonZoom.type = 'button';
-    boutonZoom.className = 'sim-zoom';
-    boutonZoom.title = 'Ctrl + molette pour zoomer sur la simulation';
-    // Loupe dessinee (pas d'emoji) ; le texte vit dans son propre span pour ne pas effacer l'icone.
-    boutonZoom.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor"'
-        + ' stroke-width="2" stroke-linecap="round"><circle cx="10" cy="10" r="6"/><path d="M14.5 14.5L20 20M10 7.5v5M7.5 10h5"/></svg><span></span>';
-    texteZoom = boutonZoom.lastChild;
-    boutonZoom.addEventListener('click', () => { if (zoomSim !== 1) { zoomSim = 1; appliquerZoom(); } });
-    placerZoom();
-    const molette = e => {
-        if (!e.ctrlKey || !e.deltaY) return;   // molette seule : defilement normal ; Ctrl : zoom (et pas celui du navigateur)
-        e.preventDefault();
-        zoomSim = Math.round(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoomSim * (e.deltaY < 0 ? 1.1 : 1 / 1.1))) * 100) / 100;
-        if (Math.abs(zoomSim - 1) < 0.05) zoomSim = 1;
-        appliquerZoom();
-    };
-    console_.addEventListener('wheel', molette, { passive: false });
-    if (zoneGrand) zoneGrand.addEventListener('wheel', molette, { passive: false });
+// ---------- Vue de la simulation : un espace de travail, comme la zone des blocs ----------
+// Comme la version Arduino R4 (VUE, zoomer, recentrerVue de r4-board-svg.js, nov. 2026) : ECHELLE FIXE (elargir la
+// colonne donne de la place autour, la carte ne grossit pas) ; molette = zoom autour du pointeur (x 1,2 par cran, de
+// 0,3 a 3 fois la taille normale) ; glisser le fond = se deplacer ; boutons Recentrer / + / − en bas a droite. Tant que
+// l'eleve n'a ni zoome ni deplace la vue, elle se recentre seule (nouveau module, autre zone, autre taille).
+// (VUE.cx, VUE.cy) = point de la scene (en unites, 1000 de large) affiche au centre du cadre ; VUE.s = pixels par unite.
+const ECHELLE_NORMALE = 0.75;   // la micro:bit (280 unites) a la taille de l'ancienne carte seule (210 px)
+const ZOOM_MINI = 0.3, ZOOM_MAXI = 3, PAS_ZOOM = 1.2;
+const VUE = { s: ECHELLE_NORMALE, cx: LARGEUR / 2, cy: 300, touchee: false };
+function cadreVue() { return scene.parentElement; }
+
+function appliquerVue() {
+    const cadre = cadreVue();
+    if (!cadre) return;
+    const l = cadre.clientWidth, h = cadre.clientHeight;
+    scene.style.transform = `translate(${l / 2 - VUE.cx * VUE.s}px, ${h / 2 - VUE.cy * VUE.s}px) scale(${VUE.s})`;
 }
 
-function ajusterEchelle() {
-    if (mode === 'carte') return;
-    // La scene garde ses unites (1000 de large) ; le cadre porte la place reellement occupee.
-    const cadre = scene.parentElement, zone = cadre.parentElement;
-    // Ajuste a la largeur (defilement vertical si besoin) : ajuster aussi a la hauteur rendait tout illisible.
-    // Le zoom de l'utilisateur s'applique ensuite (Ctrl + molette).
-    const k = Math.max(0.35, Math.min(1.1, (zone.clientWidth - 24) / LARGEUR)) * zoomSim;
-    scene.style.transform = 'scale(' + k + ')';
-    cadre.style.width = Math.round(LARGEUR * k) + 'px';
-    cadre.style.height = Math.round(hauteurScene * k) + 'px';
+/** Zoome d'un facteur f autour du point (px, py) du cadre, en pixels (le point sous le pointeur y reste). */
+function zoomer(f, px, py) {
+    const cadre = cadreVue();
+    if (!cadre) return;
+    if (px === undefined) { px = cadre.clientWidth / 2; py = cadre.clientHeight / 2; }
+    const s0 = VUE.s, s1 = Math.max(ECHELLE_NORMALE * ZOOM_MINI, Math.min(ECHELLE_NORMALE * ZOOM_MAXI, s0 * f));
+    const dx = px - cadre.clientWidth / 2, dy = py - cadre.clientHeight / 2;
+    VUE.cx += dx / s0 - dx / s1;
+    VUE.cy += dy / s0 - dy / s1;
+    VUE.s = s1;
+    VUE.touchee = true;
+    appliquerVue();
+}
+
+/** Bornes du contenu de la scene (carte d'extension, modules, cables, etiquettes, micro:bit), en unites. */
+function bornesContenu() {
+    let x0 = CARTE.x, y0 = CARTE.y, x1 = CARTE.x + CARTE.l, y1 = CARTE.y + CARTE.h;
+    try {
+        const b = svgBas.getBBox();
+        if (b && b.width) { x0 = Math.min(x0, b.x); y0 = Math.min(y0, b.y); x1 = Math.max(x1, b.x + b.width); y1 = Math.max(y1, b.y + b.height); }
+    } catch (erreur) { /* scene pas encore affichee */ }
+    return { x0, y0, x1, y1 };
+}
+
+/** Recentrer : toute la simulation dans le cadre, sans depasser la taille normale. */
+function recentrerVue() {
+    const cadre = cadreVue();
+    // Cadre pas encore affiche (taille nulle) : on ne calcule rien, sinon le zoom tomberait au minimum
+    if (!cadre || cadre.clientWidth < 50 || cadre.clientHeight < 50) return;
+    const b = bornesContenu(), marge = 20;
+    const s = Math.min((cadre.clientWidth - 2 * marge) / (b.x1 - b.x0), (cadre.clientHeight - 2 * marge) / (b.y1 - b.y0));
+    VUE.s = Math.max(ECHELLE_NORMALE * ZOOM_MINI, Math.min(ECHELLE_NORMALE, s));
+    VUE.cx = (b.x0 + b.x1) / 2;
+    VUE.cy = (b.y0 + b.y1) / 2;
+    VUE.touchee = false;
+    appliquerVue();
+}
+
+// Taille du cadre changee (colonne elargie, fenetre, vue agrandie) : meme echelle, recentrage si la vue n'a pas ete touchee.
+function cadreRedimensionne() { if (!VUE.touchee) recentrerVue(); else appliquerVue(); }
+
+const ICONES_VUE = {
+    recentrer: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">'
+        + '<circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>',
+    plus: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    moins: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
+};
+function installerVue() {
+    const cadre = cadreVue();
+    // Boutons Recentrer / + / − : dans le cadre, ils le suivent (colonne ou vue agrandie).
+    const boutons = document.createElement('div');
+    boutons.className = 'vue-boutons';
+    [['recentrer', 'Recentrer la simulation', recentrerVue], ['plus', 'Zoomer', () => zoomer(PAS_ZOOM)],
+     ['moins', 'Dézoomer', () => zoomer(1 / PAS_ZOOM)]].forEach(([nom, titreBouton, action]) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.title = titreBouton;
+        b.setAttribute('aria-label', titreBouton);
+        b.innerHTML = ICONES_VUE[nom];
+        b.addEventListener('click', action);
+        boutons.appendChild(b);
+    });
+    cadre.appendChild(boutons);
+    // Molette = zoom (pas le defilement de la colonne), autour du pointeur.
+    cadre.addEventListener('wheel', e => {
+        if (!e.deltaY) return;
+        e.preventDefault();
+        const r = cadre.getBoundingClientRect();
+        zoomer(e.deltaY < 0 ? PAS_ZOOM : 1 / PAS_ZOOM, e.clientX - r.left, e.clientY - r.top);
+    }, { passive: false });
+    // Glisser le fond = se deplacer. La carte (boutons, logo, broches), les modules qu'on appuie et les boutons gardent
+    // leur propre geste.
+    cadre.addEventListener('pointerdown', e => {
+        if (e.button !== 0 || e.target.closest('#microbit-board, .montage-module, .vue-boutons, button, input, select')) return;
+        const x0 = e.clientX, y0 = e.clientY, cx0 = VUE.cx, cy0 = VUE.cy;
+        let bouge = false;
+        const bouger = ev => {
+            if (!bouge && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 4) return;   // simple clic tremble
+            if (!bouge) { bouge = true; cadre.classList.add('vue-deplacee'); }
+            VUE.cx = cx0 - (ev.clientX - x0) / VUE.s;
+            VUE.cy = cy0 - (ev.clientY - y0) / VUE.s;
+            VUE.touchee = true;
+            appliquerVue();
+        };
+        const finir = () => {
+            cadre.classList.remove('vue-deplacee');
+            cadre.removeEventListener('pointermove', bouger);
+            cadre.removeEventListener('pointerup', finir);
+            cadre.removeEventListener('pointercancel', finir);
+        };
+        cadre.setPointerCapture(e.pointerId);
+        cadre.addEventListener('pointermove', bouger);
+        cadre.addEventListener('pointerup', finir);
+        cadre.addEventListener('pointercancel', finir);
+    });
+    new ResizeObserver(cadreRedimensionne).observe(cadre);
 }
 
 function redessiner() {
     const etat = lireMontage();
     utile = etat.utile;
-    if (!utile) grandDemande = false;
     appliquerMode();
     if (mode === 'carte') return;
+    dessinerSvg(etat);
+    titre.textContent = { dfr: 'Carte moteurs DFRobot DFR0548', motorbit: 'Carte moteurs ELECFREAKS Motor:bit V1.6',
+                          bitmaker: 'Carte BitMaker V2 (Seeed)', grove: 'Carte Grove Shield for micro:bit v2.0 (Seeed)',
+                          aucune: 'Carte micro:bit V2' }[etat.carte];
+    finirRedessin(etat);
+}
+
+/** Dessine la scene (carte d'extension, modules, cables) ; sert aussi pendant le deplacement d'un module. */
+let dernierEtat = null;
+// Tableau synchronise avec le montage : la pastille de « LED sur broche » prend la couleur de sa LED (rouge par defaut,
+// comme le dessin). Regle de style par broche (data-broche, un.js) : elle survit a la reconstruction de la liste.
+function couleursLedsTableau(etat) {
+    let feuille = document.getElementById('couleurs-leds-tableau');
+    if (!feuille) { feuille = document.createElement('style'); feuille.id = 'couleurs-leds-tableau'; document.head.appendChild(feuille); }
+    feuille.textContent = etat.modules.filter(m => m.picto === 'led' && m.pins).map(m => {
+        const c = COULEURS_LED[COULEURS_MODULES[m.id]] || COULEURS_LED.rouge;
+        return `#grove-leds .led-broche[data-broche="${m.pins[0].replace('pin', '')}"] .led-pastille { ` +
+               `background: radial-gradient(circle at 35% 30%, #ffffff, ${c.allumee} 45%, ${c.eteinte}); box-shadow: 0 0 7px ${c.halo}; }`;
+    }).join('\n');
+}
+
+function dessinerSvg(etat) {
+    dernierEtat = etat;
+    couleursLedsTableau(etat);
     const { bas, hauteur } = dessinerScene(etat);
     hauteurScene = hauteur;
     scene.style.height = hauteur + 'px';
     for (const svg of [svgBas, svgHaut]) svg.setAttribute('viewBox', `0 0 ${LARGEUR} ${hauteur}`);
     svgBas.innerHTML = bas;
     const fente = { dfr: FENTE, motorbit: FENTE_MOTORBIT, bitmaker: FENTE_BITMAKER, grove: FENTE_GROVE }[etat.carte];
-    // Connecteur en plastique gris fonce sur la BitMaker et la Motor:bit, noir sur les deux autres cartes.
-    const plastique = etat.carte === 'bitmaker' || etat.carte === 'motorbit' ? 'fill="#3a3c42" stroke="#55585f"' : 'fill="#0b0b0b" stroke="#2b2b2b"';
-    svgHaut.innerHTML = r(fente.x, fente.y, fente.l, fente.h, `rx="4" ${plastique} stroke-width="2"`) +
-                        r(fente.x + 6, fente.y + 4, fente.l - 12, 3, 'fill="#2a2a2a"') +
-                        // Pattes cuivrees du connecteur, visibles sous le boitier sur la Grove v2.0.
-                        (etat.carte === 'dfr' ? '' : Array.from({ length: 40 }, (_, i) =>
-                            r(fente.x + 10 + i * 7.3, fente.y + fente.h - 2, 3, 7, 'fill="#b87333"')).join(''));
-    titre.textContent = { dfr: 'Carte moteurs DFRobot DFR0548', motorbit: 'Carte moteurs ELECFREAKS Motor:bit V1.6',
-                          bitmaker: 'Carte BitMaker V2 (Seeed)', grove: 'Carte Grove Shield for micro:bit v2.0 (Seeed)' }[etat.carte];
-    // Choix de la carte : sans objet quand les blocs du programme imposent la DFR0548 ou la Motor:bit.
-    if (choix) choix.hidden = !!etat.imposee;
+    if (!fente) {
+        svgHaut.innerHTML = '';   // micro:bit seule : pas de connecteur
+    } else {
+        // Connecteur en plastique gris fonce sur la BitMaker et la Motor:bit, noir sur les deux autres cartes.
+        const plastique = etat.carte === 'bitmaker' || etat.carte === 'motorbit' ? 'fill="#3a3c42" stroke="#55585f"' : 'fill="#0b0b0b" stroke="#2b2b2b"';
+        svgHaut.innerHTML = r(fente.x, fente.y, fente.l, fente.h, `rx="4" ${plastique} stroke-width="2"`) +
+                            r(fente.x + 6, fente.y + 4, fente.l - 12, 3, 'fill="#2a2a2a"') +
+                            // Pattes cuivrees du connecteur, visibles sous le boitier sur la Grove v2.0.
+                            (etat.carte === 'dfr' ? '' : Array.from({ length: 40 }, (_, i) =>
+                                r(fente.x + 10 + i * 7.3, fente.y + fente.h - 2, 3, 7, 'fill="#b87333"')).join(''));
+    }
+}
+
+function finirRedessin(etat) {
+    // Menu « Carte d'extension » : seulement avec un montage ; carte imposee par les blocs (DFR0548, Motor:bit) :
+    // les autres choix sont grises et une phrase dit pourquoi.
+    if (choix) {
+        choix.hidden = !etat.utile;
+        if (nomCarteMenu) nomCarteMenu.textContent = NOMS_CARTES[etat.carte] || 'Carte';
+        choix.querySelectorAll('[data-carte]').forEach(b => {
+            b.classList.toggle('choisi', b.dataset.carte === etat.carte);
+            b.disabled = !!etat.imposee && b.dataset.carte !== etat.carte;
+        });
+    }
     if (choixAuto) {
         choixAuto.hidden = !etat.imposee;
         choixAuto.textContent = (etat.imposee === 'motorbit' ? 'Carte Motor:bit' : 'Carte DFR0548') + ' : choisie car le programme utilise ses blocs.';
     }
     resume.innerHTML = etat.modules.length
-        ? etat.modules.map(m => '<li>' + echap(m.nom) + ' : ' + echap(m.etiquette) + (m.note ? ' (' + echap(m.note) + ')' : '') +
-                                (m.alerte ? ' — ' + echap(m.alerte.replace('⚠ ', '')) : '') + '</li>').join('')
+        // Chaque morceau traduit a part (en anglais) : la ligne entiere ne correspond a aucune cle du dictionnaire
+        ? etat.modules.map(m => '<li>' + echap(trTexte(m.nom)) + (window.LANGUE === 'en' ? ': ' : ' : ') + echap(trTexte(m.etiquette)) + (m.note ? ' (' + echap(trTexte(m.note)) + ')' : '') +
+                                (m.alerte ? ' — ' + echap(trTexte(m.alerte)) : '') + '</li>').join('')
         : '<li>Aucun module branché pour l\'instant.</li>';
     majReglages();
     rubanSurCarte = !!etat.modules.find(m => m.surCarte);
     copierLedsCarte();
     majVivant();
-    ajusterEchelle();
+    // Echelle fixe : la vue garde son zoom et sa position ; tant que l'eleve n'y a pas touche, elle se recentre sur le
+    // nouveau contenu (modules ajoutes ou retires).
+    if (!VUE.touchee) recentrerVue(); else appliquerVue();
 }
 
 // LED de la BitMaker : elles reprennent les couleurs que « Peripheriques » donne au ruban (#grove-ruban, un.js),
@@ -850,9 +1144,16 @@ const LECTEURS = {
     servo(g, cle) {
         const el = $$('#grove-servos .servo').find(x => x.querySelector('.servo-nom').textContent === cle);
         const bras = g.querySelector('.mv-palonnier');
-        if (!el) { bras.classList.remove('mv-tourne', 'inverse'); return ''; }
+        if (!el) { if (bras) bras.classList.remove('mv-tourne', 'inverse'); else allumerServo(g, { angle: 90, tourne: false }); return ''; }
         const cadran = el.querySelector('.servo-cadran'), rotor = el.querySelector('.servo-rotor');
         const continu = cadran.classList.contains('continu');
+        if (!bras) {
+            // Dessin du modele : angle du cadran de « Peripheriques » (bras vers le haut a 90 degres : rotate(angle - 90))
+            const a = /rotate\((-?[\d.]+)deg\)/.exec(rotor.style.transform || '');
+            allumerServo(g, { angle: a ? Number(a[1]) + 90 : undefined, tourne: continu, inverse: cadran.classList.contains('inverse'),
+                              duree: rotor.style.getPropertyValue('--duree') || '2s' });
+            return el.querySelector('.servo-etat').textContent;
+        }
         bras.classList.toggle('mv-tourne', continu);
         bras.classList.toggle('inverse', cadran.classList.contains('inverse'));
         bras.style.setProperty('--duree', rotor.style.getPropertyValue('--duree') || '2s');
@@ -862,14 +1163,14 @@ const LECTEURS = {
     led(g, cle) {
         const el = $$('#grove-leds .led-broche').find(x => x.querySelector('.led-nom').textContent === cle);
         const eclat = el ? Number(el.querySelector('.led-pastille').style.opacity) || 0 : 0;
-        g.querySelector('.mv-led').setAttribute('fill', eclat ? '#ff3b30' : '#8e2f2c');
-        g.querySelector('.mv-halo').setAttribute('opacity', (eclat * 0.45).toFixed(2));
+        allumerLed(g, eclat);
         if (!el) return '';
         const niveau = Number(el.querySelector('.led-val').textContent);
         return niveau === 0 ? 'éteinte' : niveau >= 1023 ? 'allumée' : 'luminosité ' + niveau;
     },
     ruban(g) {
         const leds = $$('#grove-ruban .grove-led');
+        if (g.querySelector('.mv-ruban-led')) allumerRuban(g, leds.map(l => l.style.background && !/42, 42, 42/.test(l.style.background) ? l.style.background : ''));
         $$('.mv-ruban', g).forEach(c => {
             const fond = leds[Number(c.dataset.i)] ? leds[Number(c.dataset.i)].style.background : '';
             c.style.fill = fond && !/42, 42, 42/.test(fond) ? fond : '';
@@ -880,6 +1181,7 @@ const LECTEURS = {
     },
     barre(g) {
         const leds = $$('#grove-barreled .barre-led');
+        if (g.querySelector('.mv-segment')) allumerBarreLed(g, leds.map(l => l.classList.contains('on')));   // dessin du modele
         $$('.mv-barre', g).forEach(c => {
             const on = leds[Number(c.dataset.i)] && leds[Number(c.dataset.i)].classList.contains('on');
             c.setAttribute('fill', on ? c.dataset.couleur : '#2e3a2e');
@@ -896,7 +1198,8 @@ const LECTEURS = {
         // Le texte du dessin (« RELAY ») precede celui de l'etat : seule l'etiquette compte.
         const el = $$('#grove-relais .relais-module').find(x => (x.querySelector('span') || x).textContent.startsWith(cle + ' :'));
         const ferme = !!el && el.classList.contains('actif');
-        g.querySelector('.mv-voyant').setAttribute('fill', ferme ? '#ff3b30' : '#5a1d1d');
+        if (g.querySelector('.mv-lame')) allumerRelais(g, ferme);   // dessin du modele : contact, voyant D3 et halo
+        else g.querySelector('.mv-voyant').setAttribute('fill', ferme ? '#ff3b30' : '#5a1d1d');
         return el ? (ferme ? 'fermé (marche)' : 'ouvert (arrêt)') : '';
     },
     oled(g) {
@@ -922,9 +1225,23 @@ const LECTEURS = {
         });
         return '';
     },
-    lcdrgb: g => LECTEURS.lcd(g),
+    lcdrgb(g) {
+        if (!g.querySelector('.mv-lcd-vitre')) return LECTEURS.lcd(g);
+        // Dessin du modele : meme texte et meme retroeclairage que le tableau de « Peripheriques » (un.js)
+        const etat = window.etatLcdRgb ? window.etatLcdRgb() : null, ecran = $('grove-lcd');
+        const lignes = [0, 1].map(l => { const z = $('grove-lcd-l' + l); return z ? $$('.lcd-cell', z).map(c => c.textContent || ' ').join('') : ''; });
+        allumerLcdRgb(g, etat && etat.retro && etat.rgb ? etat.rgb : null, lignes, !(ecran && ecran.classList.contains('eteint')));
+        return '';
+    },
     '4d'(g) {
         const ecran = $('grove-4digit-ecran'), cible = g.querySelector('.mv-4d');
+        if (ecran && g.querySelector('.mv-seg')) {
+            // Dessin du modele : memes segments que le tableau de « Peripheriques » (a a g = bits 0 a 6)
+            const codes = $$('svg.digit7', ecran).map(c => $$('.seg', c).reduce((v, p, bit) => v | (p.classList.contains('on') ? 1 << bit : 0), 0));
+            const points = !!ecran.querySelector('.digit7-points.on');
+            allumerQuatreDigits(g, codes, points, ecran.style.opacity === '' ? 1 : Number(ecran.style.opacity));
+            return '';
+        }
         if (!ecran || !cible) return '';
         const allume = !!ecran.querySelector('svg');
         g.querySelector('.mv-4d-repos').style.display = allume ? 'none' : '';
@@ -935,19 +1252,38 @@ const LECTEURS = {
         }
         return '';
     },
+    servo16(g) {
+        // Chaque servomoteur dessine suit son cadran « S0 » ... « S15 » de « Peripheriques » (simulateur : voie -> S + voie)
+        const textes = [];
+        $$('.mv-servo16', g).forEach(sg => {
+            const nom = 'S' + sg.dataset.voie, el = $$('#grove-servos .servo').find(x => x.querySelector('.servo-nom').textContent === nom);
+            if (!el) { allumerServo(sg, { angle: 90, tourne: false }); return; }
+            const cadran = el.querySelector('.servo-cadran'), rotor = el.querySelector('.servo-rotor');
+            const a = /rotate\((-?[\d.]+)deg\)/.exec(rotor.style.transform || '');
+            allumerServo(sg, { angle: a ? Number(a[1]) + 90 : undefined, tourne: cadran.classList.contains('continu'),
+                               inverse: cadran.classList.contains('inverse'), duree: rotor.style.getPropertyValue('--duree') || '2s' });
+            textes.push(nom + ' : ' + el.querySelector('.servo-etat').textContent);
+        });
+        return textes.join(' · ');
+    },
     pilote() { const z = $('grove-moteurs'); return z ? z.textContent.trim() : ''; },
 
     // Capteurs : la valeur reglee dans « Peripheriques » (curseurs, cases), avec son unite.
     ultrason: () => texteDe('grove-distance-val') + ' cm',
-    lumiere: () => texteDe('grove-lumiere-val'),
+    lumiere(g) {
+        if (g.querySelector('.mv-lentille')) allumerLumiere(g, Number(($('grove-lumiere') || {}).value || 0));   // halo de la lentille
+        return texteDe('grove-lumiere-val');
+    },
     pot(g) {
         const v = Number(($('grove-pot') || {}).value || 512), repere = g.querySelector('.mv-pot');
+        if (g.querySelector('.mv-repere')) { allumerPotentiometre(g, v); g.setAttribute('aria-valuenow', v); }   // dessin du modele
         if (repere) repere.style.transform = `rotate(${(v / 1023 * 300 - 150).toFixed(1)}deg)`;
         return texteDe('grove-pot-val');
     },
     pir(g) {
         const vu = !!($('grove-pir') || {}).checked;
-        g.querySelector('.mv-pir').setAttribute('fill', vu ? '#ffe08a' : '#f4f4f4');
+        if (g.querySelector('.mv-appui')) allumerPir(g, vu);   // dessin du modele : cercle vert autour de la lentille
+        else g.querySelector('.mv-pir').setAttribute('fill', vu ? '#ffe08a' : '#f4f4f4');
         return vu ? 'mouvement détecté' : 'rien ne bouge';
     },
     th: () => texteDe('grove-temp-val') + ' °C · ' + texteDe('grove-humi-val') + ' %',
@@ -960,17 +1296,25 @@ const LECTEURS = {
         if (cadre) cadre.setAttribute('stroke', c || 'none');
         return c ? 'couleur ' + c.toUpperCase() : '';
     },
-    gestes() { const l = $('grove-geste'); return l && l.selectedOptions[0] ? l.selectedOptions[0].textContent.trim() : ''; },
+    gestes(g) {
+        allumerGestes(g, Date.now() < gesteEclaire);   // dessin du modele : fenetre eclairee juste apres un geste
+        const l = $('grove-geste');
+        return l && l.selectedOptions[0] ? l.selectedOptions[0].textContent.trim() : '';
+    },
     rtc() { const z = $('grove-rtc'); return z ? z.textContent.trim().replace(/(\d{2}:\d{2}:\d{2})(?=\d)/, '$1 · ') : ''; },
     bouton(g) {
         const enfonce = boutonEnfonce || !!($('grove-bouton-maintenu') || {}).checked;
-        g.querySelector('.mv-capuchon').setAttribute('fill', enfonce ? '#1a1a1a' : '#3a3a3a');
-        g.querySelector('.mv-capuchon').setAttribute('r', enfonce ? 9 : 11);
+        if (g.querySelector('.mv-appui')) allumerBouton(g, enfonce);   // dessin du modele : touche et anneau vert
+        else {
+            g.querySelector('.mv-capuchon').setAttribute('fill', enfonce ? '#1a1a1a' : '#3a3a3a');
+            g.querySelector('.mv-capuchon').setAttribute('r', enfonce ? 9 : 11);
+        }
         return enfonce ? 'appuyé' : 'relâché';
     },
     joystick(g) {
         const x = Number(($('grove-jx') || {}).value || 512), y = Number(($('grove-jy') || {}).value || 512);
         const enfonce = !!($('grove-jbtn') || {}).checked, manette = g.querySelector('.mv-manette');
+        if (!manette) { allumerJoystick(g, x, y, enfonce); return 'X ' + x + ' · Y ' + y + (enfonce ? ' · appuyé' : ''); }   // dessin du modele
         manette.style.transform = `translate(${((x - 512) / 512 * 9).toFixed(1)}px, ${((512 - y) / 512 * 9).toFixed(1)}px)`;
         manette.setAttribute('fill', enfonce ? '#2a2a2a' : '#4a4a4a');
         return 'X ' + x + ' · Y ' + y + (enfonce ? ' · appuyé' : '');
@@ -986,6 +1330,12 @@ function appuyerModule(g, enfonce) {
         if (!source || boutonEnfonce === enfonce) return;
         boutonEnfonce = enfonce;
         source.dispatchEvent(new PointerEvent(enfonce ? 'pointerdown' : 'pointerup', { bubbles: true }));
+    } else if (g.dataset.vivant === 'pir') {
+        // Bascule : un appui change l'etat, le relachement ne fait rien (comme le modele)
+        const casePir = $('grove-pir');
+        if (!casePir || !enfonce) return;
+        casePir.checked = !casePir.checked;
+        casePir.dispatchEvent(new Event('change', { bubbles: true }));
     } else if (g.dataset.vivant === 'joystick') {
         const caseBouton = $('grove-jbtn');
         if (!caseBouton || caseBouton.checked === enfonce) return;
@@ -994,10 +1344,245 @@ function appuyerModule(g, enfonce) {
     }
     majVivant();
 }
+// ---------- Modules deplacables (comme la version Arduino R4, glisserModule, nov. 2026) ----------
+// On deplace un module a la souris, son cable suit. Au premier deplacement, les autres modules restent a la place ou
+// ils sont affiches (sinon le rangement automatique les reorganiserait). Les places sont enregistrees dans le programme
+// .py / .hex (ligne « # montage : ... », un.js) et relues a l'import ; sans place, rangement automatique.
+// Bouton et joystick : on appuie sur leur dessin, on les deplace par leurs libelles.
+const PLACES = {};   // id du module -> [x, y] dans la scene
+function figerLesAutres(id) {
+    if (!dernierEtat) return;
+    for (const m of dernierEtat.modules) {
+        if (m.id === id || m.surCarte || PLACES[m.id] || m.x === undefined) continue;
+        PLACES[m.id] = [Math.round(m.x), Math.round(m.y)];
+    }
+}
+// Couleur d'un module (LED) : un clic sur le module, sans le deplacer, ouvre la liste des couleurs (comme le modele).
+// Choix retenu par module et enregistre avec les places (ligne « # montage »).
+const COULEURS_MODULES = {};   // id du module -> nom de couleur (COULEURS_LED)
+function choisirCouleur(id, x, y) {
+    const ancien = document.getElementById('menu-couleur-module');
+    if (ancien) ancien.remove();
+    const menu = document.createElement('div');
+    menu.id = 'menu-couleur-module';
+    menu.className = 'tb-dropdown-menu visible';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = '<div class="menu-titre">Couleur de la LED</div>' + Object.values(COULEURS_LED).map(c =>
+        `<button type="button" role="menuitemradio" data-couleur="${c.nom}" class="${(COULEURS_MODULES[id] || 'rouge') === c.nom ? 'choisi' : ''}">` +
+        `<span class="menu-pastille" style="background:${c.allumee}"></span>${c.nom}</button>`).join('');
+    menu.style.cssText = `position:fixed;left:${Math.min(x, window.innerWidth - 180)}px;top:${Math.min(y, window.innerHeight - 220)}px;z-index:200200;`;
+    document.body.appendChild(menu);
+    const fermer = () => { menu.remove(); document.removeEventListener('pointerdown', dehors, true); document.removeEventListener('keydown', clavier, true); };
+    const dehors = e => { if (!menu.contains(e.target)) fermer(); };
+    const clavier = e => { if (e.key === 'Escape') { e.stopPropagation(); fermer(); } };
+    menu.addEventListener('click', e => {
+        const b = e.target.closest('[data-couleur]');
+        if (!b) return;
+        COULEURS_MODULES[id] = b.dataset.couleur;
+        fermer();
+        if (dernierEtat) { dessinerSvg(dernierEtat); majVivant(); }
+    });
+    setTimeout(() => { document.addEventListener('pointerdown', dehors, true); document.addEventListener('keydown', clavier, true); }, 0);
+    const premier = menu.querySelector('button.choisi') || menu.querySelector('button');
+    if (premier) premier.focus();
+}
+// Capteur de gestes (comme le modele, choisirGeste) : un clic sur le module, sans le deplacer, ouvre la liste des gestes ;
+// en choisir un le declenche, comme « Declencher le geste » de « Peripheriques » (meme liste, meme bouton). La fenetre
+// du capteur s'eclaire un instant.
+let gesteEclaire = 0;
+function choisirGeste(x, y) {
+    const liste = $('grove-geste'), declencher = $('grove-geste-btn');
+    if (!liste || !declencher) return;
+    const ancien = document.getElementById('menu-couleur-module');
+    if (ancien) ancien.remove();
+    const menu = document.createElement('div');
+    menu.id = 'menu-couleur-module';
+    menu.className = 'tb-dropdown-menu visible';
+    menu.setAttribute('role', 'menu');
+    menu.innerHTML = '<div class="menu-titre">Geste devant le capteur</div>' + [...liste.options].map(o =>
+        `<button type="button" role="menuitem" data-geste="${echap(o.value)}" class="${o.selected ? 'choisi' : ''}">${echap(o.textContent.trim())}</button>`).join('');
+    menu.style.cssText = `position:fixed;left:${Math.min(x, window.innerWidth - 200)}px;top:${Math.min(y, window.innerHeight - 330)}px;z-index:200200;`;
+    document.body.appendChild(menu);
+    const fermer = () => { menu.remove(); document.removeEventListener('pointerdown', dehors, true); document.removeEventListener('keydown', clavier, true); };
+    const dehors = e => { if (!menu.contains(e.target)) fermer(); };
+    const clavier = e => { if (e.key === 'Escape') { e.stopPropagation(); fermer(); } };
+    menu.addEventListener('click', e => {
+        const b = e.target.closest('[data-geste]');
+        if (!b) return;
+        liste.value = b.dataset.geste;
+        liste.dispatchEvent(new Event('change', { bubbles: true }));
+        fermer();
+        declencher.click();
+        gesteEclaire = Date.now() + 700;
+        majVivant();
+        setTimeout(majVivant, 750);
+    });
+    setTimeout(() => { document.addEventListener('pointerdown', dehors, true); document.addEventListener('keydown', clavier, true); }, 0);
+    const premier = menu.querySelector('button.choisi') || menu.querySelector('button');
+    if (premier) premier.focus();
+}
+
+function installerDeplacement() {
+    svgBas.addEventListener('pointerdown', e => {
+        const g = e.target.closest('.montage-module');
+        if (!g || e.button !== 0 || !g.dataset.id) return;
+        if (g.classList.contains('montage-appui') && zoneAppui(g, e.target)) return;   // appui (installerAppuis)
+        if (e.target.closest('.mv-tourner')) return;   // bouton du potentiometre : on le tourne (installerAppuis)
+        const id = g.dataset.id, m = dernierEtat && dernierEtat.modules.find(x => x.id === id);
+        if (!m || m.x === undefined || m.fixe) return;   // ruban : fixe au-dessus de la carte
+        e.preventDefault();
+        e.stopPropagation();
+        const x0 = e.clientX, y0 = e.clientY, depart = [m.x, m.y];
+        let bouge = false;
+        const bouger = ev => {
+            // 5 px a l'ecran : un clic un peu tremble n'est pas un deplacement
+            if (!bouge && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 5) return;
+            if (!bouge) { bouge = true; figerLesAutres(id); cadreVue().classList.add('module-deplace'); }
+            VUE.touchee = true;   // pas de recentrage pendant qu'on deplace un module
+            PLACES[id] = [Math.round(depart[0] + (ev.clientX - x0) / VUE.s), Math.round(depart[1] + (ev.clientY - y0) / VUE.s)];
+            dessinerSvg(dernierEtat);
+            majVivant();
+        };
+        const finir = ev => {
+            cadreVue().classList.remove('module-deplace');
+            const def = DESSINS_MODULES[m.picto];
+            if (!bouge && ev.type === 'pointerup' && def && def.couleurs) choisirCouleur(id, ev.clientX, ev.clientY);
+            if (!bouge && ev.type === 'pointerup' && def && def.gestes) choisirGeste(ev.clientX, ev.clientY);
+            document.removeEventListener('pointermove', bouger);
+            document.removeEventListener('pointerup', finir);
+            document.removeEventListener('pointercancel', finir);
+        };
+        document.addEventListener('pointermove', bouger);
+        document.addEventListener('pointerup', finir);
+        document.addEventListener('pointercancel', finir);
+    });
+}
+// Ligne ajoutee au programme exporte (.py, .hex) quand des modules ont ete deplaces ; la carte choisie voyage avec.
+window.montageCommentaire = () => (Object.keys(PLACES).length || Object.keys(COULEURS_MODULES).length)
+    ? '# montage : ' + JSON.stringify({ carte: choixCarte(), places: PLACES, couleurs: COULEURS_MODULES }) + '\n' : '';
+// Import d'un programme (ou nouveau projet) : places relues dans la ligne « # montage », ou effacees (null).
+window.montageRestaurer = donnees => {
+    for (const k of Object.keys(PLACES)) delete PLACES[k];
+    for (const k of Object.keys(COULEURS_MODULES)) delete COULEURS_MODULES[k];
+    if (donnees && donnees.couleurs && typeof donnees.couleurs === 'object') {
+        for (const [k, c] of Object.entries(donnees.couleurs)) if (COULEURS_LED[c]) COULEURS_MODULES[k] = c;
+    }
+    if (donnees && donnees.places && typeof donnees.places === 'object') {
+        for (const [k, p] of Object.entries(donnees.places)) {
+            if (Array.isArray(p) && p.length >= 2 && p.every(Number.isFinite)) PLACES[k] = [Math.round(p[0]), Math.round(p[1])];
+        }
+    }
+    if (donnees && ['grove', 'bitmaker', 'motorbit'].includes(donnees.carte)) {
+        try { localStorage.setItem(CLE_CARTE, donnees.carte); } catch (erreur) { /* choix oublie au rechargement */ }
+    }
+    VUE.touchee = false;
+    clearTimeout(attente);
+    attente = setTimeout(redessiner, 150);
+};
+
+/** Zone ou l'on appuie : la touche dessinee (mv-appui) comme le modele, sinon tout le pictogramme sauf ses libelles.
+    Ailleurs, on deplace le module (installerDeplacement). */
+function zoneAppui(g, cible) {
+    if (g.querySelector('.mv-manche')) return !!cible.closest('.mv-manche');   // joystick dessine : le dome
+    return g.querySelector('.mv-appui') ? !!cible.closest('.mv-appui') : !cible.closest('text');
+}
+
+/** Regle le potentiometre (0 a 1023) : meme effet que le curseur de « Peripheriques ». */
+function reglerPotentiometre(valeur) {
+    const curseur = $('grove-pot');
+    if (!curseur) return;
+    curseur.value = Math.max(0, Math.min(1023, Math.round(valeur)));
+    curseur.dispatchEvent(new Event('input', { bubbles: true }));
+    majVivant();
+}
+/** Bouton du potentiometre tourne a la souris, comme le modele (tournerBouton) : l'angle autour de son centre, dans
+    le repere du module (qui peut etre tourne), de -150 a +150 degres, donne 0 a 1023 ; au-dela, il reste en butee. */
+function tournerPotentiometre(g, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const bouton = g.querySelector('.mv-tourner circle'), r = bouton.getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+    const m = dernierEtat && dernierEtat.modules.find(x => x.id === g.dataset.id), geo = m && geometrie(m);
+    const rotModule = geo ? geo.rot : 0;
+    let dernier = Number(($('grove-pot') || {}).value) || 0;
+    const bouger = ev => {
+        let a = Math.atan2(ev.clientX - cx, cy - ev.clientY) * 180 / Math.PI - rotModule;   // 0 = haut du module
+        a = ((a + 540) % 360) - 180;
+        if (a > 150 || a < -150) a = dernier > 511 ? 150 : -150;
+        dernier = Math.round((a + 150) / 300 * 1023);
+        reglerPotentiometre(dernier);
+    };
+    const finir = () => {
+        cadreVue().classList.remove('module-tourne');
+        document.removeEventListener('pointermove', bouger);
+        document.removeEventListener('pointerup', finir);
+        document.removeEventListener('pointercancel', finir);
+    };
+    cadreVue().classList.add('module-tourne');
+    document.addEventListener('pointermove', bouger);
+    document.addEventListener('pointerup', finir);
+    document.addEventListener('pointercancel', finir);
+    bouger(e);
+}
+
+/** Regle les axes du joystick (0 a 1023) : meme effet que les curseurs X et Y de « Peripheriques ». */
+function reglerJoystick(vx, vy) {
+    [['grove-jx', vx], ['grove-jy', vy]].forEach(([id, v]) => {
+        const c = $(id);
+        if (!c) return;
+        c.value = Math.max(0, Math.min(1023, Math.round(v)));
+        c.dispatchEvent(new Event('input', { bubbles: true }));
+    });
+    majVivant();
+}
+/** Pousse le manche dans une direction de l'ecran (nx, ny de -1 a 1, course circulaire) : ramenee dans le repere du
+    module (qui peut etre tourne), dans le sens du vrai module (X baisse vers la prise, Y vers la droite du dessin). */
+function pousserVers(g, nx, ny) {
+    const m = dernierEtat && dernierEtat.modules.find(x => x.id === g.dataset.id), geo = m && geometrie(m);
+    const a = (geo ? geo.rot : 0) * Math.PI / 180;
+    const mx = Math.cos(a) * nx + Math.sin(a) * ny, my = -Math.sin(a) * nx + Math.cos(a) * ny;
+    reglerJoystick(512 - my * 511.5, 512 - mx * 511.5);
+}
+/** Joystick manipule a la souris, comme le modele (pousserJoystick) : glisser le dome pousse le manche (au bout de la
+    course a mi-rayon de la jupe, sur un cercle), il revient au centre au relachement (ressort) ; un clic rapide sans
+    glisser appuie sur le bouton pendant une demi-seconde. Plage 0 a 1023 (choix du professeur, nov. 2026). */
+function pousserJoystick(g, e) {
+    e.preventDefault();
+    e.stopPropagation();
+    const r = g.querySelector('.mv-manche circle').getBoundingClientRect();
+    const cx = r.left + r.width / 2, cy = r.top + r.height / 2, course = r.width / 4;
+    const x0 = e.clientX, y0 = e.clientY, t0 = Date.now();
+    let bouge = false;
+    const bouger = ev => {
+        if (!bouge && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 4) return;
+        bouge = true;
+        const dx = (ev.clientX - cx) / course, dy = (ev.clientY - cy) / course, d = Math.hypot(dx, dy), f = d > 1 ? 1 / d : 1;
+        pousserVers(g, dx * f, dy * f);
+    };
+    const finir = () => {
+        cadreVue().classList.remove('module-tourne');
+        document.removeEventListener('pointermove', bouger);
+        document.removeEventListener('pointerup', finir);
+        document.removeEventListener('pointercancel', finir);
+        if (bouge) { reglerJoystick(512, 512); return; }        // le ressort ramene le manche au centre
+        if (Date.now() - t0 > 600) return;                      // appui long sans bouger : rien
+        appuyerModule(g, true);
+        setTimeout(() => appuyerModule(g, false), 500);
+    };
+    cadreVue().classList.add('module-tourne');
+    document.addEventListener('pointermove', bouger);
+    document.addEventListener('pointerup', finir);
+    document.addEventListener('pointercancel', finir);
+}
+
 function installerAppuis() {
     svgBas.addEventListener('pointerdown', e => {
+        const manche = e.button === 0 && e.target.closest('.mv-manche');
+        if (manche) { pousserJoystick(manche.closest('.montage-module'), e); return; }
+        const potentiometre = e.button === 0 && e.target.closest('.mv-tourner');
+        if (potentiometre) { tournerPotentiometre(potentiometre.closest('.montage-module'), e); return; }
         const g = e.target.closest('.montage-appui');
-        if (!g) return;
+        if (!g || !zoneAppui(g, e.target)) return;
         e.preventDefault();
         appuyerModule(g, true);
         const relacher = () => { appuyerModule(g, false); document.removeEventListener('pointerup', relacher); document.removeEventListener('pointercancel', relacher); };
@@ -1006,11 +1591,24 @@ function installerAppuis() {
     });
     // Clavier : Espace ou Entree maintenus, comme un vrai bouton.
     svgBas.addEventListener('keydown', e => {
+        const reglable = e.target.closest && e.target.closest('.montage-module[role="slider"]');
+        if (reglable) {
+            const pas = { ArrowUp: 32, ArrowRight: 32, ArrowDown: -32, ArrowLeft: -32, PageUp: 128, PageDown: -128 }[e.key];
+            const v = Number(($('grove-pot') || {}).value) || 0;
+            if (pas) { e.preventDefault(); reglerPotentiometre(v + pas); }
+            else if (e.key === 'Home') { e.preventDefault(); reglerPotentiometre(0); }
+            else if (e.key === 'End') { e.preventDefault(); reglerPotentiometre(1023); }
+            return;
+        }
         const g = e.target.closest && e.target.closest('.montage-appui');
+        // Joystick dessine : les fleches poussent le manche dans leur direction a l'ecran (relache : retour au centre)
+        const fleche = g && g.querySelector('.mv-manche') && { ArrowUp: [0, -1], ArrowDown: [0, 1], ArrowLeft: [-1, 0], ArrowRight: [1, 0] }[e.key];
+        if (fleche) { e.preventDefault(); pousserVers(g, fleche[0], fleche[1]); return; }
         if (g && (e.key === ' ' || e.key === 'Enter') && !e.repeat) { e.preventDefault(); appuyerModule(g, true); }
     });
     svgBas.addEventListener('keyup', e => {
         const g = e.target.closest && e.target.closest('.montage-appui');
+        if (g && g.querySelector('.mv-manche') && /^Arrow/.test(e.key)) { e.preventDefault(); reglerJoystick(512, 512); return; }
         if (g && (e.key === ' ' || e.key === 'Enter')) { e.preventDefault(); appuyerModule(g, false); }
     });
 }
@@ -1064,19 +1662,148 @@ function majReglages() {
     basculeReglages.textContent = (replie ? '▸ ' : '▾ ') + 'Réglages des capteurs';
 }
 
-function colonneAssezLarge() {
-    if (!conteneur) return false;
-    const st = getComputedStyle(conteneur);
-    const largeur = conteneur.clientWidth - parseFloat(st.paddingLeft) - parseFloat(st.paddingRight);
-    return largeur >= LARGEUR_COLONNE - (mode === 'colonne' ? MARGE_COLONNE : 0);
+// ---------- Capture de la simulation agrandie (comme la version Arduino R4, capturerSimulation, nov. 2026) ----------
+// Le bouton « Capture » du bandeau (un.js), simulation agrandie : image de la simulation TELLE QU'ON LA VOIT (zoom et
+// position du moment ; carte, carte d'extension, modules, cables, etiquettes, dans leur etat du moment), sans le tableau
+// ni les boutons poses dessus. La micro:bit etant dessinee en HTML, la scene est recopiee dans un <foreignObject>, avec
+// les styles de la page et la police Inter rangee dans l'image. Fichier « <nom du programme> - simulation.png ».
+window.simulationAgrandie = () => mode === 'grand';
+window.capturerSimulation = async function () {
+    const cadre = cadreVue();
+    if (!cadre || cadre.clientWidth < 2 || cadre.clientHeight < 2) return false;
+    try {
+        const largeur = cadre.clientWidth, hauteur = cadre.clientHeight, finesse = 2;
+        let fond = 'rgb(247, 247, 247)';
+        for (let e = cadre; e; e = e.parentElement) {
+            const c = getComputedStyle(e).backgroundColor;
+            if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { fond = c; break; }
+        }
+        const copie = scene.cloneNode(true);   // garde ses id : les regles de la page (#montage-scene, #microbit-board...) s'appliquent
+        // Les toiles (ecran OLED...) ne se recopient pas : leur image du moment les remplace.
+        const toiles = scene.querySelectorAll('canvas'), copies = copie.querySelectorAll('canvas');
+        toiles.forEach((t, i) => {
+            try {
+                const img = document.createElement('img');
+                img.src = t.toDataURL();
+                img.style.cssText = getComputedStyle(t).cssText || '';
+                img.width = t.width; img.height = t.height;
+                img.className = t.className;
+                copies[i].replaceWith(img);
+            } catch (erreur) { /* toile illisible : laissee vide */ }
+        });
+        const racineHtml = document.documentElement;
+        const html = new XMLSerializer().serializeToString(copie);
+        // Masque de la carte (trous du connecteur, image data: dans le CSS) : il ne se charge pas dans une image SVG et
+        // rendait la micro:bit invisible ; sur la capture, la carte est donc pleine (trous non decoupes).
+        const css = (typeof window.policeInterCss === 'function' ? await window.policeInterCss() : '') +
+                    (typeof window.collecterCssCapture === 'function' ? window.collecterCssCapture() : '') +
+                    '#microbit-board { -webkit-mask-image: none !important; mask-image: none !important; }\n';
+        const svg = '<svg xmlns="http://www.w3.org/2000/svg" width="' + largeur + '" height="' + hauteur + '"' +
+            ' data-theme="' + (racineHtml.dataset.theme || '') + '" data-contrast="' + (racineHtml.dataset.contrast || '') + '"' +
+            (racineHtml.dataset.saison ? ' data-saison="' + racineHtml.dataset.saison + '"' : '') + '>' +
+            '<style>' + css.replace(/<\/style/gi, '<\\/style') + '</style>' +
+            '<rect width="100%" height="100%" fill="' + fond + '"/>' +
+            '<foreignObject x="0" y="0" width="' + largeur + '" height="' + hauteur + '">' +
+            '<div xmlns="http://www.w3.org/1999/xhtml" class="montage-cadre-echelle" style="position:relative;width:' + largeur +
+            'px;height:' + hauteur + 'px;overflow:hidden;font-family:var(--font);">' + html + '</div></foreignObject></svg>';
+        // Adresse data: et non blob: : Chrome considere une image SVG a <foreignObject> chargee depuis un blob comme non sure
+        // (toile « teintee », export PNG refuse).
+        const source = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+        const image = new Image();
+        await new Promise((ok, ko) => { image.onload = ok; image.onerror = () => ko(new Error('image SVG illisible')); image.src = source; });
+        const toile = document.createElement('canvas');
+        toile.width = Math.ceil(largeur * finesse);
+        toile.height = Math.ceil(hauteur * finesse);
+        const ctx = toile.getContext('2d');
+        ctx.fillStyle = fond;
+        ctx.fillRect(0, 0, toile.width, toile.height);
+        ctx.drawImage(image, 0, 0, toile.width, toile.height);
+        const png = await new Promise(ok => toile.toBlob(ok, 'image/png'));
+        if (!png) throw new Error('conversion en PNG impossible');
+        const base = (typeof window.nomFichierPour === 'function' ? window.nomFichierPour('programme.png') : 'programme.png').replace(/\.png$/i, '');
+        const lien = document.createElement('a');
+        lien.href = URL.createObjectURL(png);
+        lien.download = base + ' - simulation.png';
+        document.body.appendChild(lien);
+        lien.click();
+        lien.remove();
+        setTimeout(() => URL.revokeObjectURL(lien.href), 1000);
+        return true;
+    } catch (erreur) {
+        console.error('Capture de la simulation :', erreur);
+        return false;
+    }
+};
+
+// ---------- Tableau range en colonnes (comme la version Arduino R4, r4RangerTableau, nov. 2026) ----------
+// Autant de colonnes (190 px au moins) que la largeur du panneau le permet ; les panneaux visibles, du plus haut au plus
+// petit, vont chacun dans la colonne la moins haute ; chaque colonne garde l'ordre habituel des panneaux, et la colonne
+// du premier est a gauche. Rien ne bouge tant que la liste des panneaux visibles et le nombre de colonnes restent les
+// memes, ni pendant que l'eleve modifie un champ (curseur tenu, texte en cours de saisie) : on range des qu'il a fini.
+const LARGEUR_PANNEAU = 190, ECART_PANNEAUX = 18;
+let ordrePanneaux = null, signatureTableau = '';
+function enSaisie(liste) {
+    const champ = document.activeElement;
+    return !!champ && liste.contains(champ) && /^(INPUT|SELECT|TEXTAREA)$/.test(champ.tagName) && champ.type !== 'checkbox' && champ.type !== 'radio';
+}
+function rangerTableau() {
+    const liste = $('grove-panneau');
+    if (!liste) return;
+    if (!ordrePanneaux) ordrePanneaux = [...liste.querySelectorAll('.grove-bloc')];
+    const largeur = liste.clientWidth;
+    const visible = p => getComputedStyle(p).display !== 'none';
+    if (!largeur) { signatureTableau = ''; return; }   // tableau cache : rien a mesurer
+    const n = Math.max(1, Math.floor((largeur + ECART_PANNEAUX) / (LARGEUR_PANNEAU + ECART_PANNEAUX)));
+    const pleins = ordrePanneaux.filter(visible);
+    const signature = n + '|' + pleins.map(p => p.id).join(',');
+    if (signature === signatureTableau && liste.querySelector(':scope > .tab-colonnes')) return;
+    if (enSaisie(liste)) return;   // champ en cours de modification : on rangera quand il sera quitte (focusout)
+    signatureTableau = signature;
+    const hauteur = new Map(pleins.map(p => [p, p.offsetHeight]));   // mesurees avant de deplacer quoi que ce soit
+    const cols = Array.from({ length: n }, () => ({ h: 0, panneaux: [] }));
+    pleins.slice().sort((a, b) => hauteur.get(b) - hauteur.get(a)).forEach(p => {
+        const c = cols.reduce((m, x) => (x.h < m.h ? x : m), cols[0]);
+        c.panneaux.push(p);
+        c.h += hauteur.get(p) + 12;
+    });
+    const rang = p => ordrePanneaux.indexOf(p);
+    cols.forEach(c => c.panneaux.sort((a, b) => rang(a) - rang(b)));
+    cols.sort((a, b) => (a.panneaux.length ? rang(a.panneaux[0]) : 1e6) - (b.panneaux.length ? rang(b.panneaux[0]) : 1e6));
+    ordrePanneaux.filter(p => !visible(p)).forEach(p => cols[0].panneaux.push(p));   // panneaux caches : premiere colonne
+    const bloc = document.createElement('div');
+    bloc.className = 'tab-colonnes';
+    cols.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'tab-col';
+        c.panneaux.forEach(p => d.appendChild(p));
+        bloc.appendChild(d);
+    });
+    const ancien = liste.querySelector(':scope > .tab-colonnes');
+    if (ancien) ancien.remove();
+    liste.appendChild(bloc);
+}
+// Minuterie courte (comme le modele) plutot que requestAnimationFrame, suspendu quand l'onglet n'est pas affiche.
+let minuterieTableau = null;
+function rangerBientot() { clearTimeout(minuterieTableau); minuterieTableau = setTimeout(rangerTableau, 30); }
+function installerTableau() {
+    const liste = $('grove-panneau');
+    if (!liste) return;
+    rangerTableau();
+    new ResizeObserver(rangerBientot).observe(liste);
+    window.addEventListener('resize', rangerBientot);
+    liste.addEventListener('focusout', rangerBientot);   // rangement retenu pendant une saisie : fait des qu'elle est finie
+    // Un panneau apparait ou disparait (blocs poses ou retires, reglages replies...) : classes qui changent.
+    new MutationObserver(rangerBientot).observe(liste, { subtree: true, attributes: true, attributeFilter: ['class', 'hidden', 'style'] });
 }
 
 /** Place la carte, la scene et le choix de la carte d'extension selon le mode voulu. */
 function appliquerMode() {
     const carte = $('microbit-board'), cadreCarte = $('carte-cadre'), cadreScene = scene.parentElement;
     if (!carte) return;
-    const enColonne = utile && colonneAssezLarge();
-    const voulu = utile && grandDemande ? 'grand' : enColonne ? 'colonne' : 'carte';
+    // Simulation comme espace de travail (nov. 2026) : la scene (micro:bit seule ou montage) est TOUJOURS affichee,
+    // dans la colonne ou agrandie ; plus de seuil de largeur (on zoome et on se deplace dans la vue).
+    const enColonne = true;
+    const voulu = grandDemande ? 'grand' : 'colonne';
     const ancien = mode;
     if (voulu !== ancien) {
         mode = voulu;
@@ -1087,33 +1814,31 @@ function appliquerMode() {
             emplacement = { parent: carte.parentNode, suivant: carte.nextSibling };
             place.appendChild(carte);
         }
-        // Scene et choix de la carte : dans la colonne, ou dans l'en-tete de la vue agrandie.
-        if (voulu === 'grand') {
-            zoneGrand.appendChild(cadreScene);
-            enteteGrand.insertBefore(choixAuto, fermer);
-            enteteGrand.insertBefore(choix, choixAuto);
-        } else if (voulu === 'colonne') {
-            zoneColonne.appendChild(cadreScene);
-            outilsColonne.insertBefore(choix, agrandir);
-            outilsColonne.insertBefore(choixAuto, agrandir);
-        }
+        // Scene : dans la colonne, ou dans la vue agrandie (par-dessus les colonnes de categories et de blocs).
+        if (voulu === 'grand') zoneGrand.appendChild(cadreScene);
+        else if (voulu === 'colonne') zoneColonne.appendChild(cadreScene);
     }
-    // Ce que montre la colonne : la carte seule, le montage, ou un rappel quand il est agrandi.
+    // Vue agrandie (comme le modele) : la simulation passe par-dessus les blocs ; la colonne ne garde que la barre, les
+    // boutons d'action et le tableau, qui prend toute la hauteur.
     panneau.hidden = mode !== 'grand';
-    colonne.hidden = !(mode === 'colonne' || (mode === 'grand' && enColonne));
+    colonne.hidden = mode === 'grand';
+    conteneur.classList.toggle('simulation-agrandie', mode === 'grand');
     colonne.classList.toggle('agrandi', mode === 'grand');
     console_.classList.toggle('montage-en-colonne', !colonne.hidden);
     cadreCarte.classList.toggle('montage-carte-absente', mode === 'grand' && !enColonne);
-    bouton.hidden = !(utile && !enColonne);
+    bouton.hidden = true;   // « Voir le montage » : la scene est toujours visible dans la colonne
     bouton.setAttribute('aria-expanded', String(mode === 'grand'));
-    bouton.textContent = mode === 'grand' ? '🔌 Fermer le montage' : '🔌 Voir le montage';
-    caseAgrandir.checked = mode === 'grand';
-    placerZoom();
+    bouton.innerHTML = window.icone('prise') + (mode === 'grand' ? 'Fermer le montage' : 'Voir le montage');
+    if (boutonAgrandir) {
+        const grand = mode === 'grand';
+        boutonAgrandir.innerHTML = (grand ? ICONE_FERMER : ICONE_AGRANDIR) + '<span class="sim-lib">' + (grand ? 'Fermer' : 'Agrandir') + '</span>';
+        boutonAgrandir.title = grand ? 'Fermer la simulation agrandie (Échap)' : 'Agrandir la simulation';
+        boutonAgrandir.setAttribute('aria-expanded', String(grand));
+    }
     majReglages();
     if (voulu !== ancien) {
-        if (voulu === 'grand') fermer.focus();
-        else if (ancien === 'grand') (voulu === 'colonne' ? caseAgrandir : bouton).focus();
-        if (voulu !== 'carte') { Blockly.svgResize(window.workspace); requestAnimationFrame(() => redessiner()); }
+        if (boutonAgrandir && (voulu === 'grand' || ancien === 'grand')) boutonAgrandir.focus();
+        if (voulu !== 'carte') { Blockly.svgResize(window.workspace); requestAnimationFrame(() => { redessiner(); recentrerVue(); }); }
         else Blockly.svgResize(window.workspace);
     }
 }
@@ -1124,28 +1849,29 @@ function ouvrirGrand(ouvrir) {
 }
 
 function installer() {
-    if (!panneau || !bouton || !colonne || !caseAgrandir || !window.workspace) return false;
+    if (!panneau || !bouton || !colonne || !boutonAgrandir || !window.workspace) return false;
     bouton.addEventListener('click', () => ouvrirGrand(mode !== 'grand'));
     fermer.addEventListener('click', () => ouvrirGrand(false));
-    caseAgrandir.addEventListener('change', () => ouvrirGrand(caseAgrandir.checked));
-    installerZoom();
+    boutonAgrandir.addEventListener('click', () => ouvrirGrand(mode !== 'grand'));
+    installerVue();
     if (choix) {
-        const radio = choix.querySelector(`input[value="${choixCarte()}"]`);
-        if (radio) radio.checked = true;
-        choix.addEventListener('change', e => {
-            try { localStorage.setItem(CLE_CARTE, e.target.value); } catch (erreur) { /* choix oublie au rechargement */ }
+        choix.querySelectorAll('[data-carte]').forEach(b => b.addEventListener('click', () => {
+            try { localStorage.setItem(CLE_CARTE, b.dataset.carte); } catch (erreur) { /* choix oublie au rechargement */ }
             redessiner();
-        });
+        }));
     }
-    document.addEventListener('keydown', e => { if (mode === 'grand' && e.key === 'Escape') { e.preventDefault(); ouvrirGrand(false); } });
+    // Echap ferme la vue agrandie, sauf si une fenetre (nom du programme...) est ouverte par-dessus : elle se ferme d'abord.
+    document.addEventListener('keydown', e => {
+        if (mode !== 'grand' || e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.fen-voile')) return;
+        e.preventDefault();
+        ouvrirGrand(false);
+    });
     window.workspace.addChangeListener(e => {
         if (e.isUiEvent) return;
         clearTimeout(attente);
         attente = setTimeout(redessiner, 150);
     });
-    // Colonne redimensionnee (poignee, fenetre) : montage sur place ou carte seule, puis mise a l'echelle.
-    new ResizeObserver(() => { appliquerMode(); ajusterEchelle(); }).observe(conteneur);
-    new ResizeObserver(ajusterEchelle).observe(zoneGrand);
+    // Taille du cadre de la vue : surveillee par installerVue (meme echelle, recentrage tant que la vue n'est pas touchee).
     const ruban = $('grove-ruban');
     if (ruban) new MutationObserver(() => { if (mode !== 'carte' && rubanSurCarte) copierLedsCarte(); })
         .observe(ruban, { childList: true, subtree: true, attributes: true, attributeFilter: ['style'] });
@@ -1153,6 +1879,8 @@ function installer() {
     // mutation a observer).
     setInterval(() => { if (mode !== 'carte' && document.visibilityState === 'visible') majVivant(); }, 200);
     installerAppuis();
+    installerDeplacement();
+    installerTableau();
     redessiner();
     return true;
 }

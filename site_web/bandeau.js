@@ -204,9 +204,19 @@ if (racine.dataset.editeur && $('tb-logo')) {
     $('tb-logo').after(pastille);
 }
 
+// Repere de saison du bandeau : la meme icone SVG au trait que le menu Affichage (pas d'emoji, comme la version Arduino R4).
 function majRepereSaison() {
     const repere = $('tb-saison');
-    if (repere) repere.textContent = { halloween: '🎃', noel: '🎄', salon: '🎓' }[racine.dataset.saison] || '';
+    if (!repere) return;
+    const bouton = $({ halloween: 'aff-saison-halloween', noel: 'aff-saison-noel', salon: 'aff-saison-salon' }[racine.dataset.saison]);
+    const icone = bouton && bouton.querySelector('svg');
+    repere.innerHTML = '';
+    if (icone) {
+        const copie = icone.cloneNode(true);
+        copie.setAttribute('width', '20');
+        copie.setAttribute('height', '20');
+        repere.appendChild(copie);
+    }
 }
 
 function majCoches() {
@@ -371,6 +381,9 @@ window.bandeauTest = { demarrerCartes, chargerCartes, cartes: () => cartes };
 // prend la couleur de sa categorie principale.
 function colorerPuces() {
     document.querySelectorAll('.blocklyToolboxCategory .blocklyTreeRow').forEach(ligne => {
+        // Colonne de 160 px : « Entrees/Sorties » passe a la ligne apres la barre oblique, pas au milieu d'un mot.
+        const nom = ligne.querySelector('.blocklyTreeLabel');
+        if (nom && nom.textContent.includes('/') && !nom.textContent.includes('/​')) nom.textContent = nom.textContent.replace(/\//g, '/​');
         const base = getComputedStyle(ligne).borderLeftColor;
         if (!base || ligne.dataset.puceBase === base) return;
         ligne.dataset.puceBase = base;
@@ -382,6 +395,19 @@ const boiteOutils = document.querySelector('.blocklyToolboxDiv');
 if (boiteOutils) {
     // La boite a outils est reconstruite (panneau administrateur, changement de langue...) : on recolore.
     new MutationObserver(colorerPuces).observe(boiteOutils, { childList: true, subtree: true });
+}
+// Categorie parente (Radio, Grove, Cartes d'extension, Robots) d'une sous-categorie ouverte : classe contient-actif
+// (lisere et texte blanc, voir index.html), comme la version Arduino R4.
+function marquerParentActif() {
+    document.querySelectorAll('.blocklyTreeRow.contient-actif').forEach(l => l.classList.remove('contient-actif'));
+    const boite = window.workspace && window.workspace.getToolbox && window.workspace.getToolbox();
+    const choix = boite && boite.getSelectedItem && boite.getSelectedItem();
+    const parent = choix && choix.getParent && choix.getParent();
+    const ligne = parent && parent.getDiv && parent.getDiv() && parent.getDiv().querySelector('.blocklyTreeRow');
+    if (ligne) ligne.classList.add('contient-actif');
+}
+if (window.workspace && window.Blockly) {
+    window.workspace.addChangeListener(e => { if (e.type === Blockly.Events.TOOLBOX_ITEM_SELECT) marquerParentActif(); });
 }
 
 // ---------- Recherche de blocs (au-dessus de la premiere categorie) ----------
@@ -415,8 +441,9 @@ function construireIndex() {
             texte = b.toString(200, '?');
             b.dispose(false);
         } catch (erreur) { texte = def.type; }
-        const nomCategorie = chemin.map(c => c === 'Communication' ? 'Radio' : c).join(' ');
-        resultat.push({ def, texte: normaliser(texte + ' ' + def.type.replace(/_/g, ' ')), aide: normaliser(aides[def.type] || ''), categorie: normaliser(nomCategorie) });
+        const noms = chemin.map(c => c === 'Communication' ? 'Radio' : c);
+        resultat.push({ def, texte: normaliser(texte + ' ' + def.type.replace(/_/g, ' ')), aide: normaliser(aides[def.type] || ''),
+            categorie: normaliser(noms.join(' ')), titre: noms.join(' · ') });   // titre des resultats : « Grove · LED »
     }
     scratch.dispose();
     return resultat;
@@ -456,7 +483,7 @@ function blocsDynamiques() {
                 } catch (erreur) { texte = ''; }
             }
             const synonymes = SYNONYMES_DYNAMIQUES[def.type] || (String(def.kind).toUpperCase() === 'BUTTON' ? 'nouvelle variable ajouter' : '');
-            liste.push({ def, texte: normaliser(texte + ' ' + synonymes + ' ' + String(def.type || '').replace(/_/g, ' ')), aide: '', categorie: normaliser(categorie) });
+            liste.push({ def, texte: normaliser(texte + ' ' + synonymes + ' ' + String(def.type || '').replace(/_/g, ' ')), aide: '', categorie: normaliser(categorie), titre: categorie });
         }
         scratch.dispose();
     };
@@ -465,7 +492,7 @@ function blocsDynamiques() {
     return liste;
 }
 
-function chercherBlocs(requete) {
+function chercherEntrees(requete) {
     const mots = normaliser(requete).split(/\s+/).filter(Boolean);
     if (!mots.length) return [];
     if (!indexBlocs) indexBlocs = construireIndex();
@@ -475,7 +502,29 @@ function chercherBlocs(requete) {
         if (mots.every(m => base.includes(m))) premier.push(e);
         else if (e.aide && mots.every(m => (base + ' ' + e.aide).includes(m))) second.push(e);
     }
-    return premier.concat(second).slice(0, 40).map(e => e.def);
+    return premier.concat(second).slice(0, 40);
+}
+function chercherBlocs(requete) { return chercherEntrees(requete).map(e => e.def); }
+
+// Contenu du tiroir de resultats, comme la version Arduino R4 : un petit titre par categorie (« Grove · LED »), ses
+// blocs, puis un espace. Les categories gardent l'ordre de la colonne ; dans chacune, les blocs trouves par leur
+// libelle passent avant ceux trouves par leur texte d'aide.
+function contenuRecherche(requete) {
+    const groupes = new Map();
+    for (const e of chercherEntrees(requete)) {
+        if (!groupes.has(e.titre)) groupes.set(e.titre, []);
+        groupes.get(e.titre).push(e);
+    }
+    const rang = new Map();   // rang de chaque categorie dans la colonne (Variables et Fonctions, hors index : a la fin)
+    (indexBlocs || []).forEach((e, i) => { if (!rang.has(e.titre)) rang.set(e.titre, i); });
+    const titres = [...groupes.keys()].sort((a, b) => (rang.has(a) ? rang.get(a) : 1e6) - (rang.has(b) ? rang.get(b) : 1e6));
+    const contenu = [];
+    for (const titre of titres) {
+        contenu.push({ kind: 'label', text: titre, 'web-class': 'titre-recherche' });
+        groupes.get(titre).forEach(e => contenu.push(e.def));
+        contenu.push({ kind: 'sep', gap: 28 });
+    }
+    return contenu;
 }
 
 const zoneRecherche = document.createElement('div');
@@ -483,8 +532,10 @@ zoneRecherche.id = 'recherche-blocs';
 zoneRecherche.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true">' +
     '<circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="21" y2="21"/></svg>' +
     '<input type="search" id="recherche-blocs-champ" placeholder="Rechercher un bloc…" autocomplete="off" spellcheck="false" ' +
-    'aria-label="Rechercher un bloc" title="Tapez un mot (« attendre », « LED », « servo »…) : les blocs correspondants s\'affichent">';
+    'aria-label="Rechercher un bloc" title="Tapez au moins 2 lettres (« attendre », « LED », « servo »…) : les blocs correspondants s\'affichent">' +
+    '<button type="button" id="recherche-blocs-effacer" title="Effacer la recherche" aria-label="Effacer la recherche">✕</button>';
 const champRecherche = zoneRecherche.querySelector('input');
+const boutonEffacer = zoneRecherche.querySelector('button');
 
 function installerRecherche() {
     const boite = document.querySelector('.blocklyToolboxDiv');
@@ -499,25 +550,28 @@ function lancerRecherche() {
     const tiroir = toolbox.getFlyout && toolbox.getFlyout();
     if (!tiroir) return;
     const requete = champRecherche.value;
-    if (!requete.trim()) {
+    zoneRecherche.classList.toggle('remplie', !!requete);   // affiche la croix d'effacement
+    if (requete.trim().length < 2) {             // comme la version Arduino R4 : la recherche commence a 2 lettres
         if (toolbox.clearSelection) toolbox.clearSelection();
         tiroir.autoClose = true;                 // comportement normal des categories
         tiroir.hide();
         return;
     }
-    const blocs = chercherBlocs(requete);
+    const contenu = contenuRecherche(requete);
     if (toolbox.clearSelection) toolbox.clearSelection();
     tiroir.autoClose = false;                    // le tiroir de resultats RESTE ouvert apres un depot (Echap ou effacer pour le fermer)
-    tiroir.show(blocs.length ? blocs : [{ kind: 'label', text: 'Aucun bloc ne correspond à « ' + requete.trim() + ' »' }]);
+    tiroir.show(contenu.length ? contenu : [{ kind: 'label', text: 'Aucun bloc ne correspond à « ' + requete.trim() + ' »' }]);
 }
+function effacerRecherche() { champRecherche.value = ''; lancerRecherche(); }
 champRecherche.addEventListener('input', () => { clearTimeout(minuterieRecherche); minuterieRecherche = setTimeout(lancerRecherche, 150); });
 champRecherche.addEventListener('keydown', e => {
-    if (e.key === 'Escape') { champRecherche.value = ''; lancerRecherche(); e.stopPropagation(); }
+    if (e.key === 'Escape') { effacerRecherche(); e.stopPropagation(); }
 });
+boutonEffacer.addEventListener('click', () => { effacerRecherche(); champRecherche.focus(); });
 // Choisir une categorie vide la recherche (le tiroir montre alors cette categorie).
 document.addEventListener('click', e => {
     if (e.target.closest && e.target.closest('.blocklyToolboxCategory')) {
-        if (champRecherche.value) champRecherche.value = '';
+        if (champRecherche.value) { champRecherche.value = ''; zoneRecherche.classList.remove('remplie'); }
         const toolbox = window.workspace && window.workspace.getToolbox && window.workspace.getToolbox();
         const tiroir = toolbox && toolbox.getFlyout && toolbox.getFlyout();
         if (tiroir) tiroir.autoClose = true;     // une categorie se referme apres un depot, comme avant
@@ -531,6 +585,193 @@ installerRecherche();
     if (boite) new MutationObserver(installerRecherche).observe(boite, { childList: true });
 }
 window.bandeauTest = Object.assign(window.bandeauTest || {}, { chercherBlocs, blocsDynamiques, construireIndex: () => (indexBlocs = construireIndex()) });
+
+// ---------- Nom du programme : largeur ajustee au texte, nom complet dans la bulle ----------
+// Comme la version Arduino R4 : le cadre suit la longueur du nom (80 a 240 px, voir index.html) ; un nom plus long est
+// coupe par « … » et la bulle le montre en entier. Le nom change aussi par programme (chargement d'un fichier, un.js) :
+// le setter de .value du champ est enveloppe pour suivre ces changements.
+const champNom = $('nom-fichier');
+const cadreNom = $('tb-nomfichier');
+const TITRE_NOM = cadreNom ? cadreNom.title : '';
+function ajusterNom() {
+    if (!champNom) return;
+    const texte = champNom.value || champNom.placeholder || '';
+    const ctx = (ajusterNom.c = ajusterNom.c || document.createElement('canvas')).getContext('2d');
+    const style = getComputedStyle(champNom);
+    ctx.font = style.fontWeight + ' ' + style.fontSize + ' ' + style.fontFamily;
+    champNom.style.width = Math.min(216, Math.max(56, Math.ceil(ctx.measureText(texte).width) + 4)) + 'px';
+    if (cadreNom) cadreNom.title = champNom.value ? champNom.value + ' — cliquez pour le renommer.' : TITRE_NOM;
+}
+if (champNom) {
+    const valeur = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    Object.defineProperty(champNom, 'value', {
+        configurable: true,
+        get() { return valeur.get.call(this); },
+        set(v) { valeur.set.call(this, v); ajusterNom(); compacterBientot(); },
+    });
+    champNom.addEventListener('input', () => { ajusterNom(); compacterBientot(); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(ajusterNom);
+}
+
+// ---------- Fenetre « Donnez un nom a votre programme » / « Renommer le programme » ----------
+// Comme la version Arduino R4 (demanderNomProgramme de blockly-jeulin.html, nov. 2026) : fond grise, titre sur le bandeau
+// de couleur, champ, exemple, Valider (et Annuler si annulable). Renvoie une Promise : le nom saisi, ou null si annule.
+// annulable = false : l'eleve doit donner un nom (premier bloc pose).
+// options (fenetre « Exporter le modele » de l'IA) : { etiquette, exemple } a la place de ceux du nom du programme
+function demanderNomProgramme(titre, texte, valeur, annulable, options) {
+    return new Promise(resolve => {
+        const ancien = $('fenetre-nom-voile');
+        if (ancien) ancien.remove();
+        const voile = document.createElement('div');
+        voile.id = 'fenetre-nom-voile';
+        voile.className = 'fen-voile';
+        voile.innerHTML = '<div class="fen-boite" role="dialog" aria-modal="true" aria-labelledby="fenetre-nom-titre">'
+            + '<h3 class="fen-titre" id="fenetre-nom-titre"></h3><div class="fen-corps"><p></p>'
+            + '<input type="text" maxlength="60" autocomplete="off" spellcheck="false" aria-label="Nom du programme">'
+            + '<span class="fen-exemple">Par exemple : feu-tricolore-groupe3</span></div>'
+            + '<div class="fen-pied">' + (annulable ? '<button type="button" class="fen-btn annuler">Annuler</button>' : '')
+            + '<button type="button" class="fen-btn principal">Valider</button></div></div>';
+        voile.querySelector('h3').textContent = titre;
+        voile.querySelector('p').textContent = texte;
+        if (options && options.etiquette) voile.querySelector('input').setAttribute('aria-label', options.etiquette);
+        if (options && options.exemple) voile.querySelector('.fen-exemple').textContent = options.exemple;
+        const champ = voile.querySelector('input');
+        const ok = voile.querySelector('.principal');
+        champ.value = valeur || '';
+        const majOk = () => { ok.disabled = !champ.value.trim(); };
+        const finir = v => {
+            voile.remove();
+            document.removeEventListener('keydown', clavier, true);
+            resolve(v);
+        };
+        const clavier = e => {
+            if (e.key === 'Escape' && annulable) { e.stopPropagation(); finir(null); }
+            else if (e.key === 'Enter' && !ok.disabled) { e.preventDefault(); finir(champ.value.trim()); }
+        };
+        champ.addEventListener('input', majOk);
+        ok.onclick = () => finir(champ.value.trim());
+        if (annulable) voile.querySelector('.annuler').onclick = () => finir(null);
+        document.addEventListener('keydown', clavier, true);
+        document.body.appendChild(voile);
+        majOk();
+        setTimeout(() => { champ.focus(); champ.select(); }, 30);
+    });
+}
+window.demanderNomProgramme = demanderNomProgramme;
+
+// Renommer : clic (ou Entree) sur le cadre du nom, dans le bandeau.
+async function renommerProgramme() {
+    if (!champNom) return;
+    const saisie = await demanderNomProgramme('Renommer le programme', 'Nouveau nom pour votre programme :', champNom.value, true);
+    if (saisie !== null) champNom.value = saisie.replace(/\.(hex|py)$/i, '');
+}
+if (cadreNom) {
+    cadreNom.addEventListener('click', e => { e.preventDefault(); renommerProgramme(); });
+    cadreNom.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); renommerProgramme(); } });
+}
+
+// Premier bloc pose par l'eleve dans un programme sans nom : il le nomme (comme le modele). Seuls les blocs poses a la
+// main comptent (evenement enregistre pour « Annuler ») : le chargement d'un fichier, d'un exemple, d'un exercice ou d'une
+// seance ne declenche rien. Pendant une visite guidee ou une autre fenetre de nom, on attend.
+let nomEnAttente = false;
+function visiteEnCours() { const b = $('tuto-bulle'); return !!b && getComputedStyle(b).display !== 'none'; }
+function demanderNomAuPremierBloc() {
+    if (!champNom || champNom.value.trim() || nomEnAttente) return;
+    nomEnAttente = true;
+    const essayer = () => {
+        if (champNom.value.trim()) { nomEnAttente = false; return; }
+        if (visiteEnCours() || $('fenetre-nom-voile')) { setTimeout(essayer, 800); return; }
+        if (window.workspace && window.workspace.isDragging()) { setTimeout(essayer, 300); return; }   // bloc encore tenu
+        demanderNomProgramme('Donnez un nom à votre programme',
+            'Votre programme commence ! Quel nom voulez-vous lui donner ? C\'est le nom du fichier quand vous le téléchargerez.',
+            '', false).then(nom => {
+                nomEnAttente = false;
+                if (nom) champNom.value = nom.replace(/\.(hex|py)$/i, '');
+            });
+    };
+    setTimeout(essayer, 400);   // le bloc finit d'etre pose
+}
+if (window.workspace && window.Blockly) {
+    window.workspace.addChangeListener(e => {
+        if (e.type === Blockly.Events.BLOCK_CREATE && e.recordUndo) demanderNomAuPremierBloc();
+    });
+}
+
+// ---------- Bandeau du haut : JAMAIS sur deux lignes ----------
+// Comme la version Arduino R4 (r4-interface.js § 10) : le bandeau ne passe pas a la ligne (flex-wrap: nowrap, index.html) ;
+// on choisit le plus petit palier de compactage qui le fait tenir (classes .compact-1 a .compact-5, cumulees), a chaque
+// changement de taille de la fenetre et de texte dans le bandeau (nom du programme, « Arreter », « Masquer la console »...).
+const PALIERS_BANDEAU = 5;
+let compactageEnCours = false;
+function compacterBandeau() {
+    const barre = $('toolbar');
+    if (!barre || compactageEnCours) return;
+    compactageEnCours = true;
+    const deborde = () => barre.scrollWidth > barre.clientWidth + 1;
+    for (let n = 1; n <= PALIERS_BANDEAU; n++) barre.classList.remove('compact-' + n);
+    for (let n = 1; n <= PALIERS_BANDEAU && deborde(); n++) barre.classList.add('compact-' + n);
+    barre.dataset.palier = String([...barre.classList].filter(c => c.startsWith('compact-')).length);
+    compactageEnCours = false;
+}
+let minuterieBandeau = null;
+function compacterBientot() { clearTimeout(minuterieBandeau); minuterieBandeau = setTimeout(compacterBandeau, 30); }
+ajusterNom();
+compacterBandeau();
+window.addEventListener('resize', compacterBientot);
+if ($('toolbar')) new MutationObserver(compacterBientot).observe($('toolbar'), { subtree: true, childList: true, characterData: true });
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(compacterBandeau);
+window.bandeauTest.compacterBandeau = compacterBandeau;
+
+// ---------- Barre de la simulation (comme la version Arduino R4, nov. 2026) ----------
+// Menu « Affichage » : simulation seule, tableau seul (panneau « Peripheriques »...), ou les deux ; choix memorise.
+const CLE_VUE_SIMU = 'affichageSimulation';
+const conteneurSimu = $('simulator-container');
+function appliquerVueSimu(vue) {
+    if (!conteneurSimu) return;
+    conteneurSimu.classList.toggle('vue-simulation', vue === 'simulation');
+    conteneurSimu.classList.toggle('vue-tableau', vue === 'tableau');
+    document.querySelectorAll('#sim-affichage [data-vue]').forEach(b => b.classList.toggle('choisi', b.dataset.vue === vue));
+}
+document.querySelectorAll('#sim-affichage [data-vue]').forEach(b => b.addEventListener('click', () => {
+    try { localStorage.setItem(CLE_VUE_SIMU, b.dataset.vue); } catch (erreur) { /* choix oublie au rechargement */ }
+    appliquerVueSimu(b.dataset.vue);
+    window.dispatchEvent(new Event('resize'));   // la vue de la simulation se recale sur sa nouvelle taille
+}));
+let vueSimu = 'deux';
+try { vueSimu = localStorage.getItem(CLE_VUE_SIMU) || 'deux'; } catch (erreur) { /* stockage indisponible */ }
+appliquerVueSimu(['simulation', 'tableau', 'deux'].includes(vueSimu) ? vueSimu : 'deux');
+
+// « Reinitialiser » = « Arreter » puis « Lancer la simulation », en un clic. Si la simulation tourne, on attend qu'elle
+// soit vraiment arretee (3 s au plus) avant de la relancer ; sinon on la lance.
+const boutonReinit = $('sim-reinit');
+if (boutonReinit) {
+    boutonReinit.addEventListener('click', () => {
+        if (boutonReinit.disabled) return;
+        if (window.simuEnCours !== true) { if ($('run-sim')) $('run-sim').click(); return; }
+        boutonReinit.disabled = true;
+        if ($('btn-reset')) $('btn-reset').click();
+        const debut = performance.now();
+        (function attendre() {
+            if (window.simuEnCours === true && performance.now() - debut < 3000) { setTimeout(attendre, 30); return; }
+            boutonReinit.disabled = false;
+            if (window.simuEnCours !== true && $('run-sim')) $('run-sim').click();
+        })();
+    });
+}
+
+// Barre jamais sur deux lignes : libelles masques par paliers quand la colonne est etroite (icones seules).
+const barreSimu = $('sim-barre');
+function compacterBarreSimu() {
+    if (!barreSimu) return;
+    for (let n = 1; n <= 4; n++) barreSimu.classList.remove('compact-' + n);
+    for (let n = 1; n <= 4 && barreSimu.scrollWidth > barreSimu.clientWidth + 1; n++) barreSimu.classList.add('compact-' + n);
+}
+if (barreSimu) {
+    new ResizeObserver(compacterBarreSimu).observe(barreSimu);
+    new MutationObserver(() => requestAnimationFrame(compacterBarreSimu)).observe(barreSimu, { subtree: true, childList: true, attributes: true, attributeFilter: ['hidden'] });
+    compacterBarreSimu();
+}
+
 // ---------- Bouton « Accueil » : retour a la page d'accueil du lanceur (blockly_ts_lanceur) ----------
 // L'editeur ouvert depuis la page d'accueil recoit l'adresse de retour :
 //  - ?lanceur=<port>  lanceur local : retour vers http://localhost:<port>/ ;

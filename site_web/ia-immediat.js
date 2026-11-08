@@ -5,10 +5,10 @@
 // envoyee au programme :
 //     IA:vision:<classe>:<confiance>\n   IA:son:<classe>:<confiance>\n   IA:qr:<texte>:100\n
 //
-// 1. Apprentissage immediat (colonne « ⚡ Apprentissage immédiat »)
+// 1. Apprentissage immediat (onglet « IA »)
 //    Chaque exemple est resume en une EMPREINTE (des nombres) :
 //      - objets et images : MobileNet v3 (MediaPipe Image Embedder), 1024 nombres ;
-//      - gestes de la main : les 21 points de la main (MediaPipe Hands), ramenes au
+//      - signes de la main : les 21 points de la main (MediaPipe Hands), ramenes au
 //        poignet et a la taille de la main, main gauche retournee : 63 nombres ;
 //      - positions des bras : epaules, coudes, poignets (MediaPipe Pose), ramenes au
 //        milieu des epaules et a leur largeur : 12 nombres ;
@@ -19,13 +19,14 @@
 //    aussitot. Camera : les votes des LISSAGE dernieres images sont moyennes. Son : un
 //    son reconnu le reste DUREE_SON ms, puis plus rien n'est reconnu.
 //    Exemples (fenetre IA, une carte par classe) : « Une photo », « Plusieurs photos » jusqu'a « Arreter »,
-//    « Ajouter des images » (.png / .jpg) ; sons : « Enregistrer » jusqu'a « Arreter ». La camera s'allume
-//    toute seule quand la fenetre s'ouvre sur l'apprentissage immediat, et s'eteint quand elle se ferme.
+//    « Ajouter des images » (.png / .jpg) ; sons : « Enregistrer » jusqu'a « Arreter ». Comme le modele R4 (et la
+//    consigne du professeur, nov. 2026) : la camera et le micro ne s'allument JAMAIS sans un clic de l'eleve
+//    (« Allumer la camera / le micro », une capture, « Demarrer ») ; ils s'eteignent quand la fenetre se ferme.
 //    Chaque exemple a sa VIGNETTE (cliquer dessus le supprime) : petite photo pour les
 //    objets et images (en memoire seulement, jamais enregistree), squelette dessine pour
 //    les gestes et positions, dessin du timbre pour les sons.
 //
-// 2. QR codes et codes-barres (colonne « 🔳 QR codes ») : ZXing lit l'image de la
+// 2. QR codes et codes-barres (onglet « QR code ») : ZXing lit l'image de la
 //    camera ; le texte (sans accents) part vers le programme. Un code qui n'est plus
 //    vu depuis 700 ms n'est plus « visible ». La meme colonne cree un QR code a imprimer.
 //
@@ -40,7 +41,7 @@
 
 const MP = 'lib/mediapipe/';
 const MAX_CLASSES = 8;
-const MAX_EXEMPLES = 150;          // par classe (taille du .py : environ 1,4 Ko par exemple d'image)
+const MAX_EXEMPLES = 200;          // par classe, comme le modele R4 (taille du .py : environ 1,4 Ko par exemple d'image)
 const K = 5;
 const LISSAGE = 3;
 const INTERVALLE_RECO_MS = 150;
@@ -52,13 +53,27 @@ const QR_LONGUEUR_MAX = 60;        // un texte plus long est coupe (affichage su
 const VIGNETTE_L = 48, VIGNETTE_H = 36;
 
 const TYPES = {
-    images: { nom: 'objets et images', fichier: 'mobilenet_v3_small.tflite', genre: 'vision' },
-    mains: { nom: 'gestes de la main', fichier: 'hand_landmarker.task', genre: 'vision' },
+    images: { nom: 'objets ou images', fichier: 'mobilenet_v3_small.tflite', genre: 'vision' },
+    mains: { nom: 'signes de la main', fichier: 'hand_landmarker.task', genre: 'vision' },
     bras: { nom: 'positions des bras', fichier: 'pose_landmarker_lite.task', genre: 'vision' },
-    sons: { nom: 'sons et mots', fichier: null, genre: 'son' },
+    sons: { nom: 'sons ou mots', fichier: null, genre: 'son' },
 };
 
 const $ = (sel, racine = document) => racine.querySelector(sel);
+
+// Icones au trait de la fenetre IA (consigne du professeur : pas d'emojis, icones SVG au trait, nov. 2026)
+const TRAITS_IA = {
+    photo: '<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3z"/><circle cx="12" cy="13" r="3"/>',
+    rafale: '<rect x="3" y="7" width="14" height="14" rx="2"/><path d="M7 3h12a2 2 0 0 1 2 2v12"/>',
+    dossier: '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+    micro: '<rect x="9" y="2" width="6" height="12" rx="3"/><path d="M19 10v1a7 7 0 0 1-14 0v-1"/><path d="M12 18v4"/>',
+    gomme: '<path d="m7 21-4.3-4.3c-1-1-1-2.5 0-3.4l9.6-9.6c1-1 2.5-1 3.4 0l5.6 5.6c1 1 1 2.5 0 3.4L13 21"/><path d="M22 21H7"/><path d="m5 11 9 9"/>',
+    stop: '<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+};
+const icone = nom => '<svg class="ia-icone" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + TRAITS_IA[nom] + '</svg>';
+const avecIcone = (nom, texte) => icone(nom) + '<span>' + texte + '</span>';
+
 const col = $('.ia-colonne[data-genre="immediat"]');
 const colQR = $('.ia-colonne[data-genre="qr"]');
 const noyau = () => window.iaNoyau;
@@ -66,11 +81,14 @@ const son = () => window.iaSonImmediat;
 const attente = ms => new Promise(r => setTimeout(r, ms));
 const messageErreur = e => (e && e.message ? e.message : String(e));
 
+/** Nom d'une classe creee par le logiciel (« Classe 1 », « Class 1 » en anglais). */
+const nomClasse = n => window.tr ? window.tr('Classe {n}', { n }) : 'Classe ' + n;
+
 // ---------- etat ----------
 // classes : [{ nom, ex: [{ v: Float32Array, vignette: dataURL | null }] }]
 const etat = {
     type: 'images',
-    classes: [{ nom: 'Classe 1', ex: [] }, { nom: 'Classe 2', ex: [] }],
+    classes: [{ nom: nomClasse(1), ex: [] }, { nom: nomClasse(2), ex: [] }],
     enMarche: false, minuteur: null, occupe: false, historique: [], finSon: null,
 };
 const estSon = () => etat.type === 'sons';
@@ -362,30 +380,30 @@ function renommerDansLesBlocs(ancien, nouveau) {
 
 // Textes qui changent selon ce que l'on apprend : images (camera) ou sons (micro).
 const AIDES = {
-    images: 'Pour chaque classe, prenez des photos avec la webcam : « 📸 Une photo » à chaque clic, ou « 🎞 Plusieurs photos » ' +
-        'en montrant l\'objet sous plusieurs angles, puis « ■ Arrêter ». Vous pouvez aussi ajouter des images (.png, .jpg). Une ' +
+    images: 'Pour chaque classe, prenez des photos avec la webcam : « Une photo » à chaque clic, ou « Plusieurs photos » ' +
+        'en montrant l\'objet sous plusieurs angles, puis « Arrêter ». Vous pouvez aussi ajouter des images (.png, .jpg). Une ' +
         'vingtaine d\'exemples par classe suffit souvent. Ensuite, testez : les barres montrent ce que l\'IA reconnaît. ' +
         'Cliquer sur une vignette supprime cet exemple.',
-    mains: 'Pour chaque classe, montrez le geste à la webcam (une seule main, bien éclairée) : « 📸 Une photo » à chaque clic, ou ' +
-        '« 🎞 Plusieurs photos » en bougeant un peu la main, puis « ■ Arrêter ». Une vingtaine d\'exemples par classe suffit souvent. ' +
+    mains: 'Pour chaque classe, montrez le signe de la main à la webcam (une seule main, bien éclairée) : « Une photo » à chaque clic, ou ' +
+        '« Plusieurs photos » en bougeant un peu la main, puis « Arrêter ». Une vingtaine d\'exemples par classe suffit souvent. ' +
         'Ensuite, testez : les barres montrent ce que l\'IA reconnaît. Cliquer sur une vignette supprime cet exemple.',
-    bras: 'Reculez pour que le haut du corps soit dans l\'image, puis prenez la position de chaque classe : « 📸 Une photo » à chaque ' +
-        'clic, ou « 🎞 Plusieurs photos » en bougeant un peu, puis « ■ Arrêter ». Ensuite, testez : les barres montrent ce que l\'IA ' +
+    bras: 'Reculez pour que le haut du corps soit dans l\'image, puis prenez la position de chaque classe : « Une photo » à chaque ' +
+        'clic, ou « Plusieurs photos » en bougeant un peu, puis « Arrêter ». Ensuite, testez : les barres montrent ce que l\'IA ' +
         'reconnaît. Cliquer sur une vignette supprime cet exemple.',
-    sons: 'Pour chaque classe, cliquez « 🎤 Enregistrer », faites le son (ou dites le mot) plusieurs fois avec un court silence entre ' +
-        'deux, puis « ■ Arrêter » : chaque son détecté devient un exemple. Pas besoin de classe « bruit de fond » : le silence ne ' +
+    sons: 'Pour chaque classe, cliquez « Enregistrer », faites le son (ou dites le mot) plusieurs fois avec un court silence entre ' +
+        'deux, puis « Arrêter » : chaque son détecté devient un exemple. Pas besoin de classe « bruit de fond » : le silence ne ' +
         'déclenche rien. Ensuite, testez. Cliquer sur une vignette supprime cet exemple.',
 };
 const PRIVE = {
-    images: '🔒 Les images restent dans l\'ordinateur. Seul un résumé chiffré de chaque exemple est gardé, et il est enregistré avec votre programme (.py).',
-    mains: '🔒 Les images restent dans l\'ordinateur. Seul le squelette de la main (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
-    bras: '🔒 Les images restent dans l\'ordinateur. Seul le squelette du haut du corps (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
-    sons: '🔒 Le son reste dans l\'ordinateur. Seul un dessin du timbre (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
+    images: 'Les images restent dans l\'ordinateur. Seul un résumé chiffré de chaque exemple est gardé, et il est enregistré avec votre programme (.py).',
+    mains: 'Les images restent dans l\'ordinateur. Seul le squelette de la main (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
+    bras: 'Les images restent dans l\'ordinateur. Seul le squelette du haut du corps (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
+    sons: 'Le son reste dans l\'ordinateur. Seul un dessin du timbre (des nombres) est gardé, et il est enregistré avec votre programme (.py).',
 };
 function majTextesType() {
     const bouton = $('.ia-imm-camera', col);
     const allume = capteurAllume('imm-capture');
-    bouton.textContent = estSon() ? (allume ? '🎤 Éteindre le micro' : '🎤 Allumer le micro') : (allume ? '📷 Éteindre la caméra' : '📷 Allumer la caméra');
+    bouton.innerHTML = estSon() ? avecIcone('micro', allume ? 'Éteindre le micro' : 'Allumer le micro') : avecIcone('photo', allume ? 'Éteindre la caméra' : 'Allumer la caméra');
     bouton.title = estSon() ? 'Allumer ou éteindre le micro' : 'Allumer ou éteindre la caméra';
     bouton.classList.toggle('en-marche', allume);
     col.classList.toggle('type-sons', estSon());
@@ -430,7 +448,8 @@ function majLignes() {
         const n = document.createElement('span'); n.className = 'ia-ex-n';
         compte.append(n, document.createElement('span'));
         majCompte(n, c.ex.length);
-        const vider = bouton('ia-ex-icone ia-ex-vider', '🧹', 'Effacer les exemples de cette classe (la classe reste)');
+        const vider = bouton('ia-ex-icone ia-ex-vider', '', 'Effacer les exemples de cette classe (la classe reste)');
+        vider.innerHTML = icone('gomme');
         vider.addEventListener('click', () => {
             if (c.ex.length && !confirm('Effacer les ' + c.ex.length + ' exemple(s) de « ' + c.nom + ' » ?')) return;
             c.ex = []; apresModification();
@@ -448,17 +467,19 @@ function majLignes() {
         const actions = document.createElement('div');
         actions.className = 'ia-ex-actions';
         if (estSon()) {
-            const enr = bouton('ia-ex-capt', '🎤 Enregistrer', 'Écouter le micro : chaque son détecté devient un exemple, jusqu\'à « Arrêter »');
-            enr.dataset.texte = enr.textContent;
+            const enr = bouton('ia-ex-capt', '', 'Écouter le micro : chaque son détecté devient un exemple, jusqu\'à « Arrêter »');
+            enr.innerHTML = enr.dataset.html = avecIcone('micro', 'Enregistrer');
             enr.addEventListener('click', () => basculerRafale(enr, c, n, vignettes));
             actions.append(enr);
         } else {
-            const une = bouton('ia-ex-photo', '📸 Une photo', 'Ajouter un exemple : l\'image actuelle de la caméra');
+            const une = bouton('ia-ex-photo', '', 'Ajouter un exemple : l\'image actuelle de la caméra');
+            une.innerHTML = avecIcone('photo', 'Une photo');
             une.addEventListener('click', () => unePhoto(c, n, vignettes));
-            const plusieurs = bouton('ia-ex-capt', '🎞 Plusieurs photos', 'Ajouter des exemples en rafale, jusqu\'à « Arrêter »');
-            plusieurs.dataset.texte = plusieurs.textContent;
+            const plusieurs = bouton('ia-ex-capt', '', 'Ajouter des exemples en rafale, jusqu\'à « Arrêter »');
+            plusieurs.innerHTML = plusieurs.dataset.html = avecIcone('rafale', 'Plusieurs photos');
             plusieurs.addEventListener('click', () => basculerRafale(plusieurs, c, n, vignettes));
-            const fichiers = bouton('ia-imm-images', '📁 Ajouter des images', 'Ajouter des exemples depuis des images (.png, .jpg)');
+            const fichiers = bouton('ia-imm-images', '', 'Ajouter des exemples depuis des images (.png, .jpg)');
+            fichiers.innerHTML = avecIcone('dossier', 'Ajouter des images');
             fichiers.addEventListener('click', () => { entreeImages.dataset.classe = String(i); entreeImages.click(); });
             actions.append(une, plusieurs, fichiers);
         }
@@ -485,7 +506,7 @@ function majBarres() {
 
 function majDemarrer() {
     const b = $('.ia-demarrer', col);
-    b.textContent = etat.enMarche ? '■ Arrêter' : '▶ Démarrer';
+    b.innerHTML = etat.enMarche ? avecIcone('stop', 'Arrêter la comparaison') : '▶ Démarrer la comparaison';   // libelles du modele R4
     b.classList.toggle('en-marche', etat.enMarche);
     b.disabled = !etat.enMarche && etat.classes.filter(c => c.ex.length).length < 2;
 }
@@ -568,7 +589,7 @@ function arreterRafale() {
     const b = rafale.bouton;
     rafale = null; captureSon = null;
     b.classList.remove('enregistre');
-    b.textContent = b.dataset.texte;
+    b.innerHTML = b.dataset.html;
     majDemarrer();
 }
 async function basculerRafale(bouton, c, compteur, vignettes) {
@@ -578,7 +599,7 @@ async function basculerRafale(bouton, c, compteur, vignettes) {
     const moi = { bouton };
     rafale = moi;
     bouton.classList.add('enregistre');
-    bouton.textContent = '■ Arrêter';
+    bouton.innerHTML = avecIcone('stop', 'Arrêter');
     if (estSon()) {
         // Le micro ecoute deja : chaque son detecte pendant l'enregistrement devient un exemple.
         direCreer('Faites le son « ' + c.nom + ' » (plusieurs fois, avec un court silence entre deux).');
@@ -750,30 +771,49 @@ function decoder(texte, type) {
     return v.map(x => x / n);
 }
 
+// Noms des classes par defaut selon le type, comme le modele R4 (NOMS_DEFAUT) : a l'ouverture, apres « Tout effacer »
+// et au changement de type tant que l'eleve n'a pas renomme ses classes.
+// Noms crees par le logiciel : dans la langue de l'interface (ensuite, ce sont ceux de l'eleve, jamais traduits).
+const NOMS_DEFAUT = { images: [nomClasse(1), nomClasse(2)], mains: [window.tr('Main ouverte'), window.tr('Poing')],
+                      bras: [window.tr('Bras en haut'), window.tr('Bras en bas')], sons: [window.tr('Avance'), window.tr('Stop')] };
+const classesParDefaut = type => (NOMS_DEFAUT[type] || NOMS_DEFAUT.images).map(nom => ({ nom, ex: [] }));
+const nomsParDefaut = () => etat.classes.length === 2 && Object.values(NOMS_DEFAUT).some(n => n[0] === etat.classes[0].nom && n[1] === etat.classes[1].nom);
+
+let nomModele = '';   // dernier nom donne au modele (propose a l'export suivant, repris a l'import)
 function versDonnees() {
     return {
-        format: 'apprentissage-ia-microbit', version: 1, type: etat.type,
+        format: 'apprentissage-ia-microbit', version: 1, nom: nomModele || undefined, type: etat.type,
         classes: etat.classes.map(c => ({ nom: c.nom, exemples: c.ex.map(e => coder(e.v, etat.type)) })),
     };
 }
 
 // Les vignettes ne sont pas dans le fichier : celles des squelettes et des sons se
 // redessinent a partir des empreintes ; les photos (objets et images) ne reviennent pas.
-function depuisDonnees(d) {
-    if (!d || d.format !== 'apprentissage-ia-microbit' || !Array.isArray(d.classes)) throw new Error('ce fichier ne contient pas d\'apprentissage IA');
+function depuisDonnees(d, demander) {
+    if (!d || d.format !== 'apprentissage-ia-microbit' || !Array.isArray(d.classes)) throw new Error('ce fichier ne contient pas de modèle IA d\'EasyBloc micro:bit');
     const type = TYPES[d.type] ? d.type : 'images';
+    // Import par le bouton (comme le modele R4) : confirmation avant de remplacer des exemples, ou de changer de type
+    if (demander) {
+        const n = etat.classes.reduce((s, c) => s + c.ex.length, 0);
+        if (type !== etat.type) {
+            if (!confirm('Ce modèle est pour les « ' + TYPES[type].nom + ' » : l\'IA va passer à ce type' +
+                         (n ? ' et remplacer vos ' + etat.classes.length + ' classes et leurs ' + n + ' exemples' : '') + '. Continuer ?')) return;
+        } else if (n && !confirm('Importer ce modèle remplace vos ' + etat.classes.length + ' classes et leurs ' + n + ' exemples. Continuer ?')) return;
+    }
+    if (typeof d.nom === 'string' && d.nom.trim()) nomModele = d.nom.trim().slice(0, 60);
     const classes = d.classes.slice(0, MAX_CLASSES).map((c, i) => ({
-        nom: String(c.nom || ('Classe ' + (i + 1))).slice(0, 30),
+        nom: String(c.nom || nomClasse(i + 1)).slice(0, 30),
         ex: (c.exemples || []).slice(0, MAX_EXEMPLES).map(e => ({ v: decoder(e, type), vignette: undefined })),
     }));
     arreter();
     eteindreCapteur('imm-capture');
     etat.type = type;
-    etat.classes = classes.length ? classes : [{ nom: 'Classe 1', ex: [] }, { nom: 'Classe 2', ex: [] }];
+    etat.classes = classes.length ? classes : [{ nom: nomClasse(1), ex: [] }, { nom: nomClasse(2), ex: [] }];
     $('.ia-imm-type', col).value = type;
     apresModification();
     const total = etat.classes.reduce((s, c) => s + c.ex.length, 0);
-    direCreer('Apprentissage chargé : ' + TYPES[type].nom + ', ' + etat.classes.length + ' classes, ' + total + ' exemples.');
+    direCreer((nomModele && d.nom ? 'Modèle « ' + nomModele + ' » importé : ' : 'Modèle importé : ') + TYPES[type].nom + ', ' +
+              etat.classes.length + ' classes, ' + total + ' exemple' + (total > 1 ? 's' : '') + '.');
 }
 
 const aDesExemples = () => etat.classes.some(c => c.ex.length);
@@ -809,15 +849,26 @@ function lireAnnexePy(texte) {
     return texte.replace(motif, '\n');
 }
 
-function exporter() {
+// Comme le modele R4 : l'eleve nomme son modele, c'est le nom du fichier telecharge.
+async function exporter() {
     if (!aDesExemples()) { direCreer('Rien à exporter : ajoutez d\'abord des exemples.'); return; }
-    const nom = (($('#nom-fichier') && $('#nom-fichier').value.trim()) || 'programme') + '-apprentissage-ia.json';
+    arreterRafale();
+    const programme = ($('#nom-fichier') && $('#nom-fichier').value.trim()) || '';
+    const propose = nomModele || ('Modèle IA - ' + TYPES[etat.type].nom + (programme ? ' - ' + programme : ''));
+    const saisi = window.demanderNomProgramme
+        ? await window.demanderNomProgramme('Exporter le modèle', 'Quel nom voulez-vous donner à votre modèle IA ? C\'est le nom du fichier téléchargé.',
+                                            propose, true, { etiquette: 'Nom du modèle IA', exemple: 'Par exemple : signes-robot-groupe3' })
+        : propose;
+    if (saisi === null) return;   // annule
+    nomModele = saisi.replace(/\.json$/i, '').replace(/[\\/:*?"<>|]+/g, '-').trim() || 'Modèle IA';
+    const nom = nomModele + '.json';
     const lien = document.createElement('a');
     lien.href = URL.createObjectURL(new Blob([JSON.stringify(versDonnees())], { type: 'application/json' }));
     lien.download = nom;
     document.body.appendChild(lien); lien.click(); lien.remove();
     setTimeout(() => URL.revokeObjectURL(lien.href), 10000);
-    direCreer('Fichier téléchargé : ' + nom + '.');
+    const n = etat.classes.reduce((s, c) => s + c.ex.length, 0);
+    direCreer('Modèle exporté dans le fichier « ' + nom + ' » (' + etat.classes.length + ' classes, ' + n + ' exemple' + (n > 1 ? 's' : '') + ').');
 }
 
 const entreeImport = $('.ia-imm-import-fichier', col);
@@ -825,7 +876,7 @@ entreeImport.addEventListener('change', async () => {
     const f = entreeImport.files[0];
     entreeImport.value = '';
     if (!f) return;
-    try { depuisDonnees(JSON.parse(await f.text())); } catch (erreur) { direCreer('Import impossible : ' + messageErreur(erreur)); }
+    try { depuisDonnees(JSON.parse(await f.text()), true); } catch (erreur) { direCreer('Import impossible : ' + messageErreur(erreur) + '. Rien n\'a été changé.'); }
 });
 
 // ---------- branchement de l'interface ----------
@@ -837,8 +888,9 @@ $('.ia-imm-type', col).addEventListener('change', evenement => {
     arreter();
     arreterRafale();
     eteindreCapteur('imm-capture');
+    const parDefaut = nomsParDefaut();
     etat.type = nouveau;
-    etat.classes.forEach(c => { c.ex = []; });
+    if (parDefaut) etat.classes = classesParDefaut(nouveau); else etat.classes.forEach(c => { c.ex = []; });
     apresModification();
     direCreer('Type : ' + TYPES[nouveau].nom + '. Ajoutez des exemples à chaque classe.');
     synchroCapteurAuto();
@@ -856,33 +908,29 @@ video.addEventListener('loadedmetadata', () => ajusterCadre(video));
 $('.ia-ajouter-classe', col).addEventListener('click', () => {
     if (etat.classes.length >= MAX_CLASSES) return;
     let n = etat.classes.length + 1;
-    while (etat.classes.some(c => window.slugIA(c.nom) === window.slugIA('Classe ' + n))) n++;
-    etat.classes.push({ nom: 'Classe ' + n, ex: [] });
+    while (etat.classes.some(c => window.slugIA(c.nom) === window.slugIA(nomClasse(n)))) n++;
+    etat.classes.push({ nom: nomClasse(n), ex: [] });
     apresModification();
 });
 $('.ia-tout-effacer', col).addEventListener('click', () => {
     if (aDesExemples() && !confirm('Supprimer toutes les classes et leurs exemples ?')) return;
     arreter();
-    etat.classes = [{ nom: 'Classe 1', ex: [] }, { nom: 'Classe 2', ex: [] }];
+    etat.classes = classesParDefaut(etat.type);
     apresModification();
     direCreer('Exemples effacés.');
 });
 $('.ia-demarrer', col).addEventListener('click', () => (etat.enMarche ? arreter() : demarrer()));
-$('.ia-imm-exporter', col).addEventListener('click', exporter);
-$('.ia-imm-importer', col).addEventListener('click', () => entreeImport.click());
+// Boutons dans le pied de la fenetre (comme le modele R4)
+$('#ia-pied .ia-imm-exporter').addEventListener('click', exporter);
+$('#ia-pied .ia-imm-importer').addEventListener('click', () => entreeImport.click());
 apresModification();
 
-// Fenetre IA ouverte sur l'apprentissage immediat (images) : la camera s'allume toute seule, comme dans la version
-// Arduino ; fenetre fermee ou autre onglet : la camera de capture s'eteint (une reconnaissance en cours continue, elle).
-// Le micro, lui, ne s'allume qu'a « Enregistrer » ou « Allumer le micro ».
+// Comme le modele R4 : la camera et le micro ne s'allument qu'a un clic de l'eleve (jamais a l'ouverture de la
+// fenetre). Fenetre fermee ou autre onglet : le capteur de capture s'eteint (une reconnaissance en cours continue, elle).
 const panneauIA = document.getElementById('ia-panneau');
 function synchroCapteurAuto() {
     const visible = !!panneauIA && !panneauIA.classList.contains('replie') && panneauIA.dataset.onglet === 'immediat';
-    if (visible && !estSon()) {
-        if (capteurAllume('imm-capture')) return;
-        allumerCapteur('imm-capture').then(() => { majTextesType(); modele(etat.type).catch(() => {}); })
-            .catch(erreur => { direCreer(messageCapteur(erreur)); majTextesType(); });
-    } else if (capteurAllume('imm-capture')) {
+    if (!visible && capteurAllume('imm-capture')) {
         arreterRafale();
         eteindreCapteur('imm-capture');
         majTextesType();
@@ -995,7 +1043,7 @@ function arreterQR() {
 
 function majQR() {
     const b = $('.ia-demarrer', colQR);
-    b.textContent = qr.enMarche ? '■ Arrêter' : '▶ Lire les codes';
+    b.innerHTML = qr.enMarche ? avecIcone('stop', 'Arrêter') : '▶ Lire les codes';
     b.classList.toggle('en-marche', qr.enMarche);
 }
 
