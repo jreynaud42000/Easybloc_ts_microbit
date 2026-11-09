@@ -1075,9 +1075,18 @@
     #montage-svg-haut { pointer-events: none; z-index: 3; }
     #montage-carte { position: absolute; left: 360px; top: 20px; width: 280px; height: 230px; z-index: 2;
         filter: drop-shadow(0 10px 16px rgba(0,0,0,0.55)); }
-    /* Pendant « Secouer la carte » (classe .secoue), l'animation doit pouvoir deplacer la carte : sans ce :not(), le
-       !important annulait la secousse dans le montage (nov. 2026). */
-    #montage-carte #microbit-board:not(.secoue) { transform: none !important; }
+    /* Dans le montage, la carte garde toujours sa taille reelle (la reduction du simulateur est annulee), sinon elle
+       ne tombe plus dans la fente du shield. La secousse y passe par translate et rotate, que ce !important ne bloque
+       pas (nov. 2026 : la classe .secoue reste posee apres l'animation, elle ne doit donc rien changer d'autre). */
+    #montage-carte #microbit-board { transform: none !important; }
+    @keyframes secousse-montage {
+        0%, 100% { translate: 0 0; rotate: 0deg; }
+        20% { translate: -7px 0; rotate: -2deg; }
+        40% { translate: 7px 0; rotate: 2deg; }
+        60% { translate: -5px 0; rotate: -1.5deg; }
+        80% { translate: 5px 0; rotate: 1.5deg; }
+    }
+    #montage-carte #microbit-board.secoue { animation: secousse-montage 0.4s ease-in-out; }
     .montage-fil { fill: none; stroke-width: 3.2; stroke-linecap: round; }
     .montage-fil-ombre { fill: none; stroke: rgba(0,0,0,0.45); stroke-width: 5.4; stroke-linecap: round; }
     .montage-serigraphie { fill: #f2f2f2; font: 600 18px sans-serif; }   /* lisible une fois la scene reduite */

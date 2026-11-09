@@ -851,6 +851,7 @@ function dessinerScene(etat) {
     for (const m of etat.modules) {
         if (m.x === undefined) continue;
         const fin = arrivee(m), n = m.fils.length;
+        m.routeBas = false;
         const geo = geometrie(m), contacts = geo && geo.def.connecteur.contacts;
         // Hub I2C : le cable de la carte entre dans J1 et chaque fil finit sur sa broche, marquee d'un point ; dessine
         // par-dessus le hub (sinon le boitier de la prise le cacherait).
@@ -867,11 +868,17 @@ function dessinerScene(etat) {
             const conn = geo.def.connecteur, vertical = conn.sens === 'haut' || conn.sens === 'bas';
             m.fils.forEach((f, i) => {
                 const p = vertical ? geo.point(contacts[i], conn.y) : geo.point(conn.x, contacts[i]);
-                // Prise au milieu du circuit (ecran LCD RGB) : le cable contourne l'ecran par la gauche, puis passe
-                // par-dessus le bord du circuit jusqu'a elle (le fil du contact le plus bas a l'exterieur)
-                const xc = geo.cx - geo.w0 / 2 - 24 - (n - 1 - i) * 7;
-                const yDessus = geo.cy - geo.h0 / 2 - 28 - (n - 1 - i) * 7;   // au-dessus du module, avant de descendre
-                const contour = geo.def.filsDessus && Object.assign({}, f, { passage: [[f.x, yDessus], [xc, yDessus], [xc, p.y - 14], [xc + 14, p.y]] });
+                // Prise en bas a gauche du circuit, ouverte vers la gauche (ecrans LCD) : le cable contourne le module
+                // par le cote le plus court (demande de l'utilisateur, nov. 2026 ; avant, toujours par le haut, meme
+                // quand le cable arrivait a hauteur du module) : par le haut, ou sous le module puis par son coin bas
+                // gauche (le texte du module descend alors sous les fils). Fils ranges pour ne pas se croiser au coin.
+                const haut = geo.cy - geo.h0 / 2, basM = geo.cy + geo.h0 / 2;
+                const yDessus = haut - 28, yDessous = basM + 12;
+                const parBas = Math.abs(yDessous - f.y) + (yDessous - p.y) < Math.abs(f.y - yDessus) + (p.y - yDessus);
+                if (parBas) m.routeBas = true;
+                const xc = geo.cx - geo.w0 / 2 - 22 - (parBas ? i : n - 1 - i) * 7;
+                const yPassage = parBas ? yDessous + i * 6 : yDessus - (n - 1 - i) * 7;
+                const contour = geo.def.filsDessus && Object.assign({}, f, { passage: [[f.x, yPassage], [xc, yPassage], [xc, p.y], [xc + 14, p.y]] });
                 const fil = dessinFil(m.fixe ? routeRuban(f, i, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
                 if (geo.def.filsDessus || depuisHub) filsDessus += fil; else bas += fil;
             });
@@ -895,7 +902,9 @@ function dessinerScene(etat) {
         const reglable = vivant === 'pot' && DESSINS_MODULES[m.picto]
             ? ` role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="1023" aria-label="${echap(m.nom)} ${echap(m.etiquette)} : tourner le bouton (flèches du clavier)"` : '';
         // Ruban fixe au-dessus de la carte : ses libelles au-dessus de lui (sous lui, il y a la carte)
-        const yLib = m.fixe ? m.y - 92 : m.y + hMod;
+        // Cable passe sous le module (ecrans LCD) : le texte descend sous les fils.
+        const yLib = m.fixe ? m.y - 92 : m.y + hMod + (m.routeBas ? 34 : 0);
+        if (m.routeBas) hauteur = Math.max(hauteur, yLib + 96);
         // Hub I2C : ses libelles a droite, les cables de ses modules partent par le bas
         const geoHub = m.hub && geometrie(m);
         const xLib = geoHub ? geoHub.cx + (geoHub.rot % 180 ? geoHub.h0 : geoHub.w0) / 2 + 14 : cx;
