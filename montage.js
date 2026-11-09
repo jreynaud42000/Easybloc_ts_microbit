@@ -577,13 +577,14 @@ function dessinCarteGrove() {
         const tx = g ? p.x + 26 : p.x - 26;
         s += texte(tx, p.y, nom, `class="montage-serigraphie petite" text-anchor="middle" dominant-baseline="central" transform="rotate(${g ? 90 : -90} ${tx} ${p.y})"`);
     }
-    // Ports Grove blancs, ouverts vers le bas ; leur nom est imprime dessous sur la carte, mais les cables le
-    // cacheraient : il passe au-dessus, a la place des noms de fils (GND, 3V3...) trop petits a cette echelle.
+    // Ports Grove ouverts vers le bas, dessines comme ceux de la BitMaker (choix de l'utilisateur, nov. 2026) :
+    // boitier beige vu de profil, ouverture plus foncee cote cable, 4 broches dorees cote carte. Leur nom est imprime
+    // dessous sur la carte, mais les cables le cacheraient : il passe au-dessus.
     for (const [nom, p] of Object.entries(PORTS_GROVE)) {
-        s += r(p.x - 27, p.y - 52, 54, 52, 'rx="3" fill="#f2f2f2" stroke="#b9b9b9"');
-        s += r(p.x - 20, p.y - 32, 40, 30, 'rx="2" fill="#d6d6d6" stroke="#c2c2c2"') + r(p.x - 8, p.y - 40, 16, 8, 'fill="#d6d6d6"');
-        [-12, -4, 4, 12].forEach(dx => { s += r(p.x + dx - 1.5, p.y - 26, 3, 14, 'fill="#c9a54a"'); });
-        s += texte(p.x, p.y - 62, nom, 'class="montage-serigraphie" text-anchor="middle"');
+        s += r(p.x - 27, p.y - 52, 54, 52, 'rx="3" fill="#ece3d6" stroke="#bfb3a2"');
+        s += r(p.x - 18, p.y - 28, 36, 25, 'rx="2" fill="#d8cdbb" stroke="#c9bca7"');
+        [-12, -4, 4, 12].forEach(dx => { s += r(p.x + dx - 1.75, p.y - 60, 3.5, 8, 'fill="#c9a54a"'); });
+        s += texte(p.x, p.y - 64, nom, 'class="montage-serigraphie" text-anchor="middle"');
     }
     return s;
 }
@@ -878,7 +879,10 @@ function dessinerScene(etat) {
         // Module dessine (modele R4) : chaque fil arrive sur son contact de la prise (SIG, NC, VCC, GND), d'apres la serigraphie.
         if (contacts && contacts.length === n) {
             const conn = geo.def.connecteur, vertical = conn.sens === 'haut' || conn.sens === 'bas';
-            m.fils.forEach((f, i) => {
+            m.fils.forEach((f, iFil) => {
+                // Contact choisi par la couleur du fil (jaune SIG1, blanc SIG2, rouge VCC, noir GND) : l'ordre des fils
+                // depend de la carte (inverse sur la BitMaker, ou le noir arrivait sur SCL ; nov. 2026).
+                const iCouleur = GROVE.indexOf(f.c), i = iCouleur >= 0 ? iCouleur : iFil;
                 const p = vertical ? geo.point(contacts[i], conn.y) : geo.point(conn.x, contacts[i]);
                 // Prise en bas a gauche du circuit, ouverte vers la gauche (ecrans LCD) : le cable contourne le module
                 // par le cote le plus court (demande de l'utilisateur, nov. 2026 ; avant, toujours par le haut, meme
@@ -902,12 +906,45 @@ function dessinerScene(etat) {
                 const rangee = rangees.length ? rangees[0] : sy !== 0 ? sortie.y : basCarte + 28;
                 const parBas = rangee > p.y;
                 if (parBas && rangee >= yDessous) m.routeBas = true;
-                const k = parBas ? i : n - 1 - i;   // fils ranges pour ne pas se croiser aux coins
-                const xc = xGauche - k * 7, yPassage = rangee + (parBas ? k : -k) * 6;
-                const passage = sy !== 0 ? [[f.x, yPassage]] : [[sortie.x + sx * k * 6, f.y], [sortie.x + sx * k * 6, yPassage]];
+                // Fils ranges pour ne pas se croiser : kd a l'arrivee (ordre des contacts de l'ecran), ks a la sortie
+                // (ordre dans la prise de la carte). Les deux ordres different souvent : l'echange se fait une seule
+                // fois, en biais, au milieu du trajet horizontal, comme un cable legerement vrille (nov. 2026).
+                const kd = parBas ? i : n - 1 - i, v = parBas ? 1 : -1;
+                const rang = cle => { const tri = m.fils.map((g, j) => j).sort((a, b) => cle(m.fils[b]) - cle(m.fils[a])); return tri.indexOf(iFil); };
+                const xc = xGauche - kd * 7, yArrivee = rangee + v * kd * 6;
+                const passage = [];
+                let xDebut;
+                if (sy !== 0) {
+                    // Sortie verticale : le fil le plus proche du cote ou part le cable tourne le premier.
+                    const ks = rang(g => g.x * Math.sign(xc - f.x));
+                    // Rangees de rangee a rangee + v * 18 ; le premier a tourner prend celle la plus proche de la prise.
+                    const yDepart = rangee + v * (Math.sign(sy) === v ? ks : n - 1 - ks) * 6;
+                    passage.push([f.x, yDepart]);
+                    xDebut = f.x;
+                    if (yDepart !== yArrivee && Math.abs(xc - xDebut) > 90) {
+                        const xm = (xDebut + xc) / 2, h = Math.sign(xc - xDebut), demi = Math.min(45, Math.abs(xc - xDebut) / 4);
+                        passage.push([xm - h * demi, yDepart], [xm + h * demi, yArrivee]);
+                    } else if (yDepart !== yArrivee) passage.push([xc + 30, yDepart], [xc + 30, yArrivee]);
+                } else {
+                    // Sortie laterale : le fil le plus proche du cote ou monte (ou descend) le cable tourne le premier,
+                    // puis, au coin suivant, celui qui est le plus loin de la carte.
+                    // t : sens dans lequel le cable monte ou descend vers sa rangee (pas forcement v).
+                    const t = Math.sign(rangee - f.y) || v;
+                    const ks1 = rang(g => g.y * t), xVoie = sortie.x + sx * ks1 * 6;
+                    const memeSens = Math.sign(xc - xVoie) === sx;
+                    const ordre = memeSens ? n - 1 - ks1 : ks1;   // ordre de passage au coin suivant
+                    const yDepart = rangee + v * (t === v ? ordre : n - 1 - ordre) * 6;
+                    passage.push([xVoie, f.y], [xVoie, yDepart]);
+                    xDebut = sortie.x;
+                    if (yDepart !== yArrivee && Math.abs(xc - xDebut) > 90) {
+                        const xm = (xDebut + xc) / 2, h = Math.sign(xc - xDebut), demi = Math.min(45, Math.abs(xc - xDebut) / 4);
+                        passage.push([xm - h * demi, yDepart], [xm + h * demi, yArrivee]);
+                    } else if (yDepart !== yArrivee) passage.push([xc + 30, yDepart], [xc + 30, yArrivee]);
+                }
+                const yPassage = yArrivee;
                 passage.push([xc, yPassage], [xc, p.y], [xc + 14, p.y]);
                 const contour = geo.def.filsDessus && Object.assign({}, f, { passage });
-                const fil = dessinFil(m.fixe ? routeRuban(f, i, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
+                const fil = dessinFil(m.fixe ? routeRuban(f, iFil, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
                 if (geo.def.filsDessus || depuisHub) filsDessus += fil; else bas += fil;
             });
             continue;
