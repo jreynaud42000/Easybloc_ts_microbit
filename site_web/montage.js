@@ -897,9 +897,14 @@ function dessinerScene(etat) {
                 // Modules d'un hub (prises ouvertes vers le bas) : chaque prise a sa rangee, J2 la plus haute, J4 la plus
                 // basse ; sinon les cables de J2 et J3 suivent la meme rangee et se croisent (nov. 2026). Jamais plus
                 // haut que la sortie de la prise.
+                let basHub;
                 if (depuisHub) {
                     const hubM = etat.modules.find(x => x.id === m.source.hub), gh = hubM && geometrie(hubM);
-                    if (gh) yDessus = Math.max(yDessus - (4 - m.source.prise) * 26, gh.cy + gh.h0 / 2 + 14);
+                    if (gh) basHub = gh.cy + gh.h0 / 2;
+                    // Module au-dessus du hub (deplace par l'eleve) : le cable descend sous le hub puis remonte ; la
+                    // rangee de J2 est alors la plus basse (la plus eloignee des modules), sinon les cables se superposent.
+                    const decal = (4 - m.source.prise) * 26;
+                    if (gh) yDessus = haut > basHub ? Math.max(yDessus - decal, basHub + 14) : basHub + 14 + decal;
                 }
                 const [sx, sy] = f.d, surCarte = !depuisHub;
                 const sortie = { x: f.x + sx * 22, y: f.y + sy * 22 };
