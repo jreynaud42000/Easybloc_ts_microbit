@@ -1445,10 +1445,14 @@ function dessinHub(x, y) {
             <path d="M ${X(40)} ${Y(10) - re} A ${re} ${re} 0 0 0 ${X(40)} ${Y(10) + re}" fill="none" stroke="${C_MODULE.bord}" stroke-width="1"/>`);
     // Pistes du bus qui relient les 4 prises
     [6.5, 8.5, 10.5, 12.5].forEach(v => s.push(`<path d="M ${X(5.9)} ${Y(v)} H ${X(32.9)}" stroke="#1d5f9e" stroke-width="${0.5 * k}"/>`));
+    // J1 s'ouvre vers le haut (cable de la carte, au-dessus) ; J2 a J4 vers le bas, vers leurs modules places dessous
+    // (variante B choisie par l'utilisateur, nov. 2026 : avant, leurs cables montaient puis contournaient le hub).
+    // Prise ouverte vers le bas : broches dans l'ordre inverse (GND, la moins enfoncee, cote ouverture), J au-dessus.
     HUB_PRISES.forEach((cx, i) => {
+        const bas = i > 0, y = v => bas ? 19 - v : v;
         s.push(priseDroite(X, Y, k, cx - 2.7, 4.5, cx + 2.7, 14.5, [6.5, 8.5, 10.5, 12.5], cx - 0.4));
-        [['GND', 6.5], ['VCC', 8.5], ['SDA', 10.5], ['SCL', 12.5]].forEach(([t, v]) => s.push(T(cx + 3.1, v, t, 0.75)));
-        s.push(T(cx, 16.4, 'J' + (i + 1), 1.0, 'middle'));
+        [['GND', 6.5], ['VCC', 8.5], ['SDA', 10.5], ['SCL', 12.5]].forEach(([t, v]) => s.push(T(cx + 3.1, y(v), t, 0.75)));
+        s.push(T(cx, bas ? 2.9 : 16.4, 'J' + (i + 1), 1.0, 'middle'));
     });
     return s.join('\n');
 }
@@ -1739,7 +1743,8 @@ export const DESSINS_MODULES = {
     // comme pour le LCD RGB), GND VCC SDA SCL de haut en bas
     lcd: { largeur: 80, hauteur: 40, afficheur: true, filsDessus: true, connecteur: { x: 15.5, y: 34.15, sens: 'gauche', contacts: [37.1, 35.2, 33.1, 31.2] },
            dessin: (x, y) => dessinLcd16x2(x, y) },
-    // Hub I2C : cable de la carte sur J1 (arrive par le haut) ; les modules partent de J2, J3, J4 (montage.js, HUB_PRISES).
+    // Hub I2C : cable de la carte sur J1 (arrive par le haut) ; les modules partent de J2, J3, J4, ouvertes vers le bas
+    // (montage.js, HUB_PRISES).
     // Jamais tourne (afficheur) : ses modules sont toujours sur la rangee du dessous, leurs cables partent par le bas.
     hub: { largeur: 40, hauteur: 20, afficheur: true, connecteur: { x: 5.9, y: 4.5, sens: 'haut', contacts: [7.4, 6.4, 5.4, 4.4] },
            dessin: (x, y) => dessinHub(x, y) },

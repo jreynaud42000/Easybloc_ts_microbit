@@ -356,20 +356,21 @@ function avecHubs(liste, i2c) {
     l'utilisateur, nov. 2026) : chaque fil entre par l'ouverture et finit sur sa broche, les fils decales en biais pour
     ne pas se cacher (noir a gauche et le moins enfonce, jaune a droite et le plus enfonce). */
 const HUB_BROCHES_Y = [12.5, 10.5, 8.5, 6.5];
+// J2 a J4 s'ouvrent vers le bas (variante B, nov. 2026) : broches en ordre inverse, GND la moins enfoncee en bas.
 function brochesHub(geo, prise) {
     const cx = HUB_PRISES[prise - 1];
-    return GROVE.map((c, i) => geo.point(cx - 1.6 + (3 - i) * 0.95, HUB_BROCHES_Y[i]));
+    return GROVE.map((c, i) => geo.point(cx - 1.6 + (3 - i) * 0.95, prise > 1 ? 19 - HUB_BROCHES_Y[i] : HUB_BROCHES_Y[i]));
 }
 const pointBroche = (p, c) => cercle(p.x, p.y, 2.4, `fill="${c}" stroke="#333" stroke-width="0.8"`);
 
-/** Cables des modules branches sur un hub : ils partent des broches de la prise (J2 a J4) du hub, vers le haut (la
-    prise s'ouvre vers le haut), une fois celui-ci place. */
+/** Cables des modules branches sur un hub : ils partent des broches de la prise (J2 a J4) du hub, vers le bas (la
+    prise s'ouvre vers le bas, vers les modules ; variante B, nov. 2026), une fois celui-ci place. */
 function relierHubs(modules) {
     for (const m of modules) {
         if (!m.source) continue;
         const hub = modules.find(x => x.id === m.source.hub), geo = hub && geometrie(hub);
         if (!geo) continue;
-        const a = geo.rot * Math.PI / 180, d = [Math.round(Math.sin(a)), Math.round(-Math.cos(a))];
+        const a = geo.rot * Math.PI / 180, d = [Math.round(-Math.sin(a)), Math.round(Math.cos(a))];
         const broches = brochesHub(geo, m.source.prise);
         m.fils = GROVE.map((c, i) => ({ x: broches[i].x, y: broches[i].y, d, c, surHub: true }));
     }
@@ -891,7 +892,15 @@ function dessinerScene(etat) {
                 // Le cable sort d'abord de sa prise dans le sens ou elle s'ouvre (vers le bas sous le shield Grove,
                 // sur le cote pour les prises laterales), sans traverser la carte ni les prises voisines (nov. 2026).
                 const haut = geo.cy - geo.h0 / 2, basM = geo.cy + geo.h0 / 2;
-                const yDessus = haut - 28, yDessous = basM + 12, xGauche = geo.cx - geo.w0 / 2 - 22;
+                let yDessus = haut - 28;
+                const yDessous = basM + 12, xGauche = geo.cx - geo.w0 / 2 - 22;
+                // Modules d'un hub (prises ouvertes vers le bas) : chaque prise a sa rangee, J2 la plus haute, J4 la plus
+                // basse ; sinon les cables de J2 et J3 suivent la meme rangee et se croisent (nov. 2026). Jamais plus
+                // haut que la sortie de la prise.
+                if (depuisHub) {
+                    const hubM = etat.modules.find(x => x.id === m.source.hub), gh = hubM && geometrie(hubM);
+                    if (gh) yDessus = Math.max(yDessus - (4 - m.source.prise) * 26, gh.cy + gh.h0 / 2 + 14);
+                }
                 const [sx, sy] = f.d, surCarte = !depuisHub;
                 const sortie = { x: f.x + sx * 22, y: f.y + sy * 22 };
                 if (surCarte && sy > 0) sortie.y = Math.max(sortie.y, basCarte + 14);
