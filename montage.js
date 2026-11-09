@@ -872,13 +872,29 @@ function dessinerScene(etat) {
                 // par le cote le plus court (demande de l'utilisateur, nov. 2026 ; avant, toujours par le haut, meme
                 // quand le cable arrivait a hauteur du module) : par le haut, ou sous le module puis par son coin bas
                 // gauche (le texte du module descend alors sous les fils). Fils ranges pour ne pas se croiser au coin.
+                // Le cable sort d'abord de sa prise dans le sens ou elle s'ouvre (vers le bas sous le shield Grove,
+                // sur le cote pour les prises laterales), sans traverser la carte ni les prises voisines (nov. 2026).
                 const haut = geo.cy - geo.h0 / 2, basM = geo.cy + geo.h0 / 2;
-                const yDessus = haut - 28, yDessous = basM + 12;
-                const parBas = Math.abs(yDessous - f.y) + (yDessous - p.y) < Math.abs(f.y - yDessus) + (p.y - yDessus);
-                if (parBas) m.routeBas = true;
-                const xc = geo.cx - geo.w0 / 2 - 22 - (parBas ? i : n - 1 - i) * 7;
-                const yPassage = parBas ? yDessous + i * 6 : yDessus - (n - 1 - i) * 7;
-                const contour = geo.def.filsDessus && Object.assign({}, f, { passage: [[f.x, yPassage], [xc, yPassage], [xc, p.y], [xc + 14, p.y]] });
+                const yDessus = haut - 28, yDessous = basM + 12, xGauche = geo.cx - geo.w0 / 2 - 22;
+                const [sx, sy] = f.d, surCarte = !depuisHub;
+                const sortie = { x: f.x + sx * 22, y: f.y + sy * 22 };
+                if (surCarte && sy > 0) sortie.y = Math.max(sortie.y, basCarte + 14);
+                if (surCarte && sy < 0) sortie.y = Math.min(sortie.y, CARTE.y - 14);
+                // Rangee du passage (au-dessus ou au-dessous du module) : dans le prolongement de la sortie, et hors de
+                // la carte si la prise s'ouvre a l'oppose du module ; la plus courte des rangees possibles.
+                const opposee = sx !== 0 && (xGauche - sortie.x) * sx < 0;
+                const permise = y => sy > 0 ? y >= sortie.y : sy < 0 ? y <= sortie.y
+                    : !(surCarte && opposee) || y < CARTE.y - 14 || y > basCarte + 14;
+                const cout = y => Math.abs(y - sortie.y) + Math.abs(p.y - y);
+                const rangees = [yDessus, yDessous].filter(permise).sort((a, b) => cout(a) - cout(b));
+                const rangee = rangees.length ? rangees[0] : sy !== 0 ? sortie.y : basCarte + 28;
+                const parBas = rangee > p.y;
+                if (parBas && rangee >= yDessous) m.routeBas = true;
+                const k = parBas ? i : n - 1 - i;   // fils ranges pour ne pas se croiser aux coins
+                const xc = xGauche - k * 7, yPassage = rangee + (parBas ? k : -k) * 6;
+                const passage = sy !== 0 ? [[f.x, yPassage]] : [[sortie.x + sx * k * 6, f.y], [sortie.x + sx * k * 6, yPassage]];
+                passage.push([xc, yPassage], [xc, p.y], [xc + 14, p.y]);
+                const contour = geo.def.filsDessus && Object.assign({}, f, { passage });
                 const fil = dessinFil(m.fixe ? routeRuban(f, i, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
                 if (geo.def.filsDessus || depuisHub) filsDessus += fil; else bas += fil;
             });
