@@ -215,7 +215,9 @@ function broches(bloc, champs) {
 
 /** Modules a dessiner, chacun avec ses fils : [{ nom, picto, large, etiquette, note, fils: [{x, y, d, c}] }]. */
 function lireMontage() {
-    const blocs = window.workspace ? window.workspace.getAllBlocks(false) : [];
+    // Blocs desactives (hachures), ou poses dans un bloc desactive : ignores, comme dans le programme envoye a la carte.
+    const blocs = (window.workspace ? window.workspace.getAllBlocks(false) : [])
+        .filter(b => b.isEnabled() && !(b.getInheritedDisabled && b.getInheritedDisabled()));
     const types = blocs.map(b => b.type);
     const dfr = types.some(t => /^dfr_/.test(t));
     // Des blocs Motor:bit imposent cette carte, comme ceux de la DFR0548 (celle-ci l'emporte si les deux sont poses).
@@ -298,7 +300,17 @@ function lireMontage() {
     // Deux modules sur le meme port (ou la meme broche) : possible dans le programme, pas sur la table.
     const parPort = {};
     for (const m of modules.values()) for (const k of new Set(m.occupe || [])) (parPort[k] = parPort[k] || []).push(m);
-    for (const liste of Object.values(parPort)) if (liste.length > 1) liste.forEach(m => { m.alerte = m.alerte || 'port partagé'; });
+    // Danger signale par un bandeau rouge et un contour rouge autour des modules (choix de l'utilisateur, nov. 2026).
+    // Un meme couple peut se partager le port et la broche : une seule ligne, avec la broche (pin0 -> P0) si connue.
+    const conflits = new Map();
+    for (const [port, liste] of Object.entries(parPort)) {
+        if (liste.length < 2) continue;
+        const cle = liste.map(m => m.id).sort().join('|'), broche = /^pin\d+$/.test(port) ? 'P' + port.slice(3) : '';
+        const deja = conflits.get(cle);
+        if (!deja) conflits.set(cle, { port: broche || port.replace(/^port\s*/, ''), noms: liste.map(m => m.nom) });
+        else if (broche) deja.port = broche;
+        liste.forEach(m => { m.alerte = m.alerte || 'broche partagée'; m.conflit = true; });
+    }
     const i2c = [...modules.values()].filter(m => m.i2c);
     let liste = [...modules.values()];
     if (i2c.length > 1 && !dfr && !motorbit) liste = avecHubs(liste, i2c);
@@ -306,7 +318,7 @@ function lireMontage() {
 
     // Sans bloc d'extension : la micro:bit seule dans la scene (carte « aucune »), comme la simulation du modele.
     const carte = !utile ? 'aucune' : dfr ? 'dfr' : motorbit ? 'motorbit' : bitmaker ? 'bitmaker' : 'grove';
-    return { utile, imposee, carte, modules: liste };
+    return { utile, imposee, carte, modules: liste, conflits: [...conflits.values()] };
 }
 
 /** Plusieurs modules I2C sur une carte a prises Grove (Grove Shield, BitMaker) : une prise ne prend qu'un cable, on
@@ -928,9 +940,15 @@ function dessinerScene(etat) {
         bas += `<g class="montage-module${appui ? ' montage-appui' : ''}" data-id="${echap(m.id || '')}" data-vivant="${vivant}" data-cle="${echap(m.cle || '')}" data-zone="${m.zone || ''}"${m.fixe ? ' data-fixe="1"' : ''}${appui}${reglable}>${dessinModule(m, cx, cy)}` +
                texte(xLib, yLibH + 22, echap(m.nom), `class="montage-libelle" text-anchor="${ancreLib}"`) +
                texte(xLib, yLibH + 42, echap(m.etiquette), `class="montage-note" text-anchor="${ancreLib}"`);
+        if (m.conflit) {
+            const g = geometrie(m), tourne = g && g.rot % 180;
+            const l = g ? (tourne ? g.h0 : g.w0) : MODULE.l, h = g ? (tourne ? g.w0 : g.h0) : hMod;
+            const x0 = g ? g.cx - l / 2 : m.x, y0 = g ? g.cy - h / 2 : m.y;
+            bas += r(x0 - 8, y0 - 8, l + 16, h + 16, 'rx="10" class="montage-conflit"');
+        }
         bas += texte(cx, yLib + 62, '', 'class="montage-valeur" text-anchor="middle"');
         const note = [m.alerte, m.note].filter(Boolean).join(' · ');
-        if (note) bas += texte(cx, yLib + 82, echap(note), `class="montage-note${m.alerte ? ' alerte' : ''}" text-anchor="middle"`);
+        if (note) bas += texte(cx, yLib + 82, echap(note), `class="montage-note${m.alerte ? ' alerte' : ''}${m.conflit ? ' conflit' : ''}" text-anchor="middle"`);
         bas += '</g>';
     }
     bas += filsDessus + points;
@@ -1127,7 +1145,27 @@ function dessinerSvg(etat) {
     }
 }
 
+/** Bandeau rouge en haut du montage : deux modules (ou plus) sur la meme broche. */
+function majBandeauConflit(etat) {
+    let bandeau = $('montage-alerte');
+    if (!bandeau) {
+        bandeau = document.createElement('p');
+        bandeau.id = 'montage-alerte';
+        bandeau.setAttribute('role', 'status');
+    }
+    if (bandeau.parentElement !== cadreVue()) cadreVue().appendChild(bandeau);
+    const en = window.LANGUE === 'en';
+    const lignes = (etat.conflits || []).map(c => {
+        const noms = c.noms.map(trTexte), fin = noms.pop();
+        return en ? noms.join(', ') + ' and ' + fin + ' are on the same pin ' + c.port
+                  : noms.join(', ') + ' et ' + fin + ' sont sur la même broche ' + c.port;
+    });
+    bandeau.hidden = !lignes.length;
+    bandeau.innerHTML = lignes.map(t => '<span>' + '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' + echap(t) + '</span>').join('');
+}
+
 function finirRedessin(etat) {
+    majBandeauConflit(etat);
     // Menu « Carte d'extension » : seulement avec un montage ; carte imposee par les blocs (DFR0548, Motor:bit) :
     // les autres choix sont grises et une phrase dit pourquoi.
     if (choix) {

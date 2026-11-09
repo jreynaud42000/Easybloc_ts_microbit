@@ -958,6 +958,7 @@ window.DICO_EN = {
   "Carte": "Board",
   "Grove Shield v2.0": "Grove Shield v2.0",
   "port partagé": "shared port",
+  "broche partagée": "shared pin",
   "bus I2C partagé": "shared I2C bus",
   "Hub I2C": "I2C hub",
   "J4 du hub {n}": "J4 of hub {n}",

@@ -1152,6 +1152,22 @@
     .montage-segments { fill: #ff3b30; font: 700 30px monospace; letter-spacing: 2px; }
     .montage-libelle { fill: var(--texte-chrome); font: 600 16px sans-serif; }
     .montage-note { fill: var(--texte-chrome); opacity: 0.8; font: 14px sans-serif; }
+    /* Deux modules sur la meme broche (nov. 2026) : bandeau rouge en haut du montage, contour rouge des modules.
+       Contraste du texte : 11,9:1 en sombre, 9:1 en clair, 21:1 en contraste eleve. */
+    #montage-alerte { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 5; margin: 0; pointer-events: none;
+        display: flex; flex-direction: column; gap: 4px; padding: 8px 12px; border-radius: 8px;
+        background: #3b1212; color: #ffd0d0; border: 2px solid #e24b4a; font: 600 14px/1.4 sans-serif; }
+    #montage-alerte[hidden] { display: none; }
+    #montage-alerte span { display: flex; align-items: center; gap: 8px; }
+    #montage-alerte svg { flex: 0 0 auto; color: #ff8a80; }
+    :root[data-theme="light"] #montage-alerte { background: #fcebeb; color: #791f1f; border-color: #a32d2d; }
+    :root[data-theme="light"] #montage-alerte svg { color: #a32d2d; }
+    :root[data-contrast="high"] #montage-alerte { background: #000; color: #fff; border-color: #ff5252; }
+    :root[data-theme="light"][data-contrast="high"] #montage-alerte { background: #fff; color: #000; border-color: #b00020; }
+    .montage-conflit { fill: none; stroke: #e24b4a; stroke-width: 4; stroke-dasharray: 10 6; }
+    .montage-note.alerte.conflit { fill: #ff6b60; }
+    :root[data-theme="light"]:not([data-contrast="high"]) .montage-note.alerte.conflit { fill: #a32d2d; }
+    :root[data-theme="light"][data-contrast="high"] .montage-note.alerte.conflit { fill: #8b0000; }
     .montage-note.alerte { fill: #ffb300; opacity: 1; }
     :root[data-theme="light"]:not([data-contrast="high"]) .montage-note.alerte { fill: #9a5b00; }
     :root[data-theme="light"][data-contrast="high"] .montage-note.alerte { fill: #5c3300; }   /* sur blanc : 9:1 au lieu de 1,8:1 */
