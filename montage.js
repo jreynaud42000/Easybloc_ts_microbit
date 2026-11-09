@@ -339,15 +339,27 @@ function avecHubs(liste, i2c) {
     hubs.forEach(hub => ordonnes.push(hub, ...i2c.filter(m => m.source.hub === hub.id)));
     return autres.concat(ordonnes);
 }
-/** Cables des modules branches sur un hub : ils partent de la prise (J2 a J4) du hub, une fois celui-ci place. */
+/** Broches d'une prise du hub (dessinHub : GND, VCC, SDA, SCL de haut en bas, prise ouverte vers le haut), dans l'ordre
+    des fils GROVE (jaune SCL, blanc SDA, rouge VCC, noir GND). Comme sur la prise D2 de reference (demande de
+    l'utilisateur, nov. 2026) : chaque fil entre par l'ouverture et finit sur sa broche, les fils decales en biais pour
+    ne pas se cacher (noir a gauche et le moins enfonce, jaune a droite et le plus enfonce). */
+const HUB_BROCHES_Y = [12.5, 10.5, 8.5, 6.5];
+function brochesHub(geo, prise) {
+    const cx = HUB_PRISES[prise - 1];
+    return GROVE.map((c, i) => geo.point(cx - 1.6 + (3 - i) * 0.95, HUB_BROCHES_Y[i]));
+}
+const pointBroche = (p, c) => cercle(p.x, p.y, 2.4, `fill="${c}" stroke="#333" stroke-width="0.8"`);
+
+/** Cables des modules branches sur un hub : ils partent des broches de la prise (J2 a J4) du hub, vers le haut (la
+    prise s'ouvre vers le haut), une fois celui-ci place. */
 function relierHubs(modules) {
     for (const m of modules) {
         if (!m.source) continue;
         const hub = modules.find(x => x.id === m.source.hub), geo = hub && geometrie(hub);
         if (!geo) continue;
-        const a = geo.rot * Math.PI / 180, d = [Math.round(-Math.sin(a)), Math.round(Math.cos(a))];
-        const cx = HUB_PRISES[m.source.prise - 1];
-        m.fils = GROVE.map((c, i) => { const p = geo.point(cx + (i - 1.5) * 1.3, HUB_BAS_PRISE); return { x: p.x, y: p.y, d, c }; });
+        const a = geo.rot * Math.PI / 180, d = [Math.round(Math.sin(a)), Math.round(-Math.cos(a))];
+        const broches = brochesHub(geo, m.source.prise);
+        m.fils = GROVE.map((c, i) => ({ x: broches[i].x, y: broches[i].y, d, c, surHub: true }));
     }
 }
 
@@ -788,14 +800,21 @@ function dessinFil(f, fin, o) {
     // Courbe de Bezier : chaque extremite part dans sa direction de sortie, decalee le long du connecteur.
     // Un fil peut d'abord suivre des points de passage (le 3V3 de la Grove contourne la carte par le bas).
     const e = { x: fin.x - fin.d[1] * o, y: fin.y + fin.d[0] * o };
+    // Coins des points de passage arrondis (rayon jusqu'a 22) : pas d'angle droit sur le trajet.
     let d = `M${f.x} ${f.y}`, depart = f, dir = f.d;
-    for (const [px, py] of f.passage || []) {
-        d += ` L${px} ${py}`;
+    const pts = f.passage || [];
+    pts.forEach(([px, py], k) => {
         const n = Math.hypot(px - depart.x, py - depart.y) || 1;
         dir = [(px - depart.x) / n, (py - depart.y) / n];
+        const suiv = pts[k + 1];
+        if (suiv) {
+            const n2 = Math.hypot(suiv[0] - px, suiv[1] - py) || 1, rayon = Math.min(22, n / 2, n2 / 2);
+            d += ` L${px - dir[0] * rayon} ${py - dir[1] * rayon} Q${px} ${py} ${px + (suiv[0] - px) / n2 * rayon} ${py + (suiv[1] - py) / n2 * rayon}`;
+        } else d += ` L${px} ${py}`;
         depart = { x: px, y: py };
-    }
-    const long = Math.max(50, Math.hypot(e.x - depart.x, e.y - depart.y) * 0.45);
+    });
+    // Tangentes moderees : courbes douces, sans « marche » en S entre la prise et le module.
+    const long = Math.max(30, Math.hypot(e.x - depart.x, e.y - depart.y) * 0.33);
     d += ` C${depart.x + dir[0] * long} ${depart.y + dir[1] * long} ${e.x - fin.d[0] * long} ${e.y - fin.d[1] * long} ${e.x} ${e.y}`;
     let s = `<path d="${d}" class="montage-fil-ombre" stroke-linejoin="round"/><path d="${d}" stroke="${f.c}" class="montage-fil" stroke-linejoin="round"/>`;
     if (f.pince) {
@@ -828,12 +847,22 @@ function dessinerScene(etat) {
     if (surCarte) hauteur = Math.max(hauteur, basCarte + 50);
     if (surCarte) bas += texte(LARGEUR / 2, basCarte + 30, echap(surCarte.nom + ' · ' + surCarte.etiquette +
                                (surCarte.note ? ' · ' + surCarte.note : '')), 'class="montage-note" text-anchor="middle"');
-    let filsDessus = '';
+    let filsDessus = '', points = '';   // points des broches du hub : par-dessus les fils
     for (const m of etat.modules) {
         if (m.x === undefined) continue;
         const fin = arrivee(m), n = m.fils.length;
-        // Module dessine (modele R4) : chaque fil arrive sur son contact de la prise (SIG, NC, VCC, GND), d'apres la serigraphie.
         const geo = geometrie(m), contacts = geo && geo.def.connecteur.contacts;
+        // Hub I2C : le cable de la carte entre dans J1 et chaque fil finit sur sa broche, marquee d'un point ; dessine
+        // par-dessus le hub (sinon le boitier de la prise le cacherait).
+        if (m.hub && geo && n === 4) {
+            const broches = brochesHub(geo, 1);
+            m.fils.forEach((f, i) => { filsDessus += dessinFil(f, { x: broches[i].x, y: broches[i].y, d: fin.d }, 0); points += pointBroche(broches[i], f.c); });
+            continue;
+        }
+        // Modules branches sur un hub : leurs fils partent des broches de J2 a J4, par-dessus le hub, avec un point.
+        const depuisHub = m.fils.length && m.fils[0].surHub;
+        if (depuisHub) for (const f of m.fils) points += pointBroche(f, f.c);
+        // Module dessine (modele R4) : chaque fil arrive sur son contact de la prise (SIG, NC, VCC, GND), d'apres la serigraphie.
         if (contacts && contacts.length === n) {
             const conn = geo.def.connecteur, vertical = conn.sens === 'haut' || conn.sens === 'bas';
             m.fils.forEach((f, i) => {
@@ -844,11 +873,11 @@ function dessinerScene(etat) {
                 const yDessus = geo.cy - geo.h0 / 2 - 28 - (n - 1 - i) * 7;   // au-dessus du module, avant de descendre
                 const contour = geo.def.filsDessus && Object.assign({}, f, { passage: [[f.x, yDessus], [xc, yDessus], [xc, p.y - 14], [xc + 14, p.y]] });
                 const fil = dessinFil(m.fixe ? routeRuban(f, i, p, basCarte) : contour || f, { x: p.x, y: p.y, d: fin.d }, 0);
-                if (geo.def.filsDessus) filsDessus += fil; else bas += fil;
+                if (geo.def.filsDessus || depuisHub) filsDessus += fil; else bas += fil;
             });
             continue;
         }
-        m.fils.forEach((f, i) => { bas += dessinFil(f, fin, (i - (n - 1) / 2) * 6); });
+        m.fils.forEach((f, i) => { const fil = dessinFil(f, fin, (i - (n - 1) / 2) * 6); if (depuisHub) filsDessus += fil; else bas += fil; });
     }
     for (const m of etat.modules) {
         if (m.x === undefined) continue;
@@ -879,7 +908,7 @@ function dessinerScene(etat) {
         if (note) bas += texte(cx, yLib + 82, echap(note), `class="montage-note${m.alerte ? ' alerte' : ''}" text-anchor="middle"`);
         bas += '</g>';
     }
-    bas += filsDessus;
+    bas += filsDessus + points;
     return { bas, hauteur };
 }
 
